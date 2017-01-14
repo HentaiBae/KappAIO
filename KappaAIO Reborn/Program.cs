@@ -19,7 +19,7 @@ namespace KappAIO_Reborn
         {
             GlobalMenu = MainMenu.AddMenu("KappAIO", "kappaio");
 
-            var Instance = (ChampionBase)Activator.CreateInstance(null, $"KappaAIO_Reborn.Plugins.Champions.{Player.Instance.ChampionName}.{Player.Instance.ChampionName}").Unwrap();
+            var Instance = (ChampionBase)Activator.CreateInstance(null, $"KappAIO_Reborn.Plugins.Champions.{Player.Instance.ChampionName}.{Player.Instance.ChampionName}").Unwrap();
         }
     }
 }
