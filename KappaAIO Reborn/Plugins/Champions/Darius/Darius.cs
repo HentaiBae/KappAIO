@@ -44,6 +44,12 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
         {
             private static Menu cMenu;
 
+            private static CheckBox Qaoe;
+            public static bool useQaoe => Qaoe.CurrentValue;
+
+            private static Slider Qaoehits;
+            public static int hitsQaoe => Qaoehits.CurrentValue;
+
             private static CheckBox Q;
             public static bool useQ => Q.CurrentValue;
 
@@ -57,6 +63,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             {
                 cMenu = menu.AddSubMenu("Combo");
                 Q = cMenu.CreateCheckBox("q", "Combo Q");
+                Qaoe = cMenu.CreateCheckBox("Qaoe", "Combo Q AOE");
+                Qaoehits = cMenu.CreateSlider("qhits", "Q AOE Hit Count", 2, 2, 6);
                 Blade = cMenu.CreateCheckBox("blade", "Hit blade Combo Q");
                 R = cMenu.CreateCheckBox("r", "Combo R");
             }
@@ -164,11 +172,14 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private static Vector3? qPos()
         {
-            return aoeQPos(2) ?? hitBladePos(_getQTarget());
+            return aoeQPos(ComboConfig.hitsQaoe) ?? hitBladePos(_getQTarget());
         }
 
         private static Vector3? aoeQPos(int hitCount)
         {
+            if (!ComboConfig.useQaoe)
+                return null;
+
             var validEnemies = EntityManager.Heroes.Enemies.FindAll(e => e.IsKillable(Q.Range * 1.5f) && canHitBlade(e)).OrderByDescending(e => hitBladePos(e).GetValueOrDefault().CountEnemyHeroesInRangeWithPrediction((int)Q.Range, (int)_currentQChargeTime));
 
             if (validEnemies.Count() > hitCount)
