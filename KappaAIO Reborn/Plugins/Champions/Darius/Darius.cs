@@ -80,7 +80,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             R = new Spell.Targeted(SpellSlot.R, 460, DamageType.True);
 
             new ComboConfig();
-            
+            new KillStealConfig();
+
             Drawing.OnEndScene += this.Drawing_OnEndScene;
             Obj_AI_Base.OnProcessSpellCast += this.Obj_AI_Base_OnProcessSpellCast;
             Orbwalker.OverrideOrbwalkPosition += this.OverrideOrbwalkPosition;
