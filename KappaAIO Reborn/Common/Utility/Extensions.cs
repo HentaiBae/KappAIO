@@ -41,7 +41,7 @@ namespace KappAIO_Reborn.Common.Utility
         /// <summary>
         ///     Returns true if you can deal damage to the target.
         /// </summary>
-        public static bool IsKillable(this Obj_AI_Base target, float range = -1f, bool SpellShields = true, bool UndyingBuffs = true)
+        public static bool IsKillable(this Obj_AI_Base target, float range = -1f, bool SpellShields = false, bool UndyingBuffs = false, bool ReviveBuffs = false)
         {
             if (range.Equals(-1f))
                 range = int.MaxValue;
@@ -58,12 +58,34 @@ namespace KappAIO_Reborn.Common.Utility
             if (UndyingBuffs && (target.HasBuffOfType(BuffType.Invulnerability) || target.HasBuffOfType(BuffType.PhysicalImmunity) || (target.HasBuff("kindredrnodeathbuff") && target.HealthPercent <= 15) || target.IsInvulnerable))
                 return false;
 
-            if (SpellShields && (target.Buffs.Any(b => b.Name.ToLower().Contains("fioraw")) || target.HasBuff("bansheesveil")))
+            if (SpellShields && (target.Buffs.Any(b => b.Name.ToLower().Contains("fioraw") || b.Name.ToLower().Contains("sivire")) || target.HasBuff("bansheesveil")))
                 return false;
-            if (target is AIHeroClient)
-                return UndyingBuffs && !(target as AIHeroClient).HasUndyingBuff(true);
+
+            var client = target as AIHeroClient;
+            if (client != null)
+                return UndyingBuffs && !client.HasUndyingBuff(true);
+
+            if (ReviveBuffs)
+                return !target.HasReviveBuff();
 
             return true;
+        }
+
+        private static Dictionary<string, string> reviveBuffs = new Dictionary<string, string>
+            {
+            {"Aatrox", "aatroxpassiveready" },
+            {"Zac", "zacrebirthready" },
+            {"Anivia", "rebirthready" }
+            };
+
+        public static bool HasReviveBuff(this Obj_AI_Base target)
+        {
+            if (target == null || !reviveBuffs.ContainsKey(target.BaseSkinName))
+                return false;
+
+            var buff = reviveBuffs.FirstOrDefault(s => s.Key.Equals(target.BaseSkinName));
+
+            return target.HasBuff(buff.Value);
         }
 
         /// <summary>

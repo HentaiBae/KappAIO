@@ -105,7 +105,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
             if (buff == null)
                 return Player.Instance.CalculateDamageOnUnit(target, DamageType.True, currentDamage);
-
+            
             var scalePerStack = new[] { 20f, 40f, 60f }[index];
             var scaleMod = 0.15f;
             var currentStacksDamage = (scalePerStack + (scale * scaleMod)) * buff.Count;
@@ -125,7 +125,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 manacost += Darius.R.ManaCost;
                 result += Rdmg(target);
             }
-
+            /*
             if (Darius.Q.IsReady() && Player.Instance.Mana > manacost)
             {
                 manacost += Darius.Q.ManaCost;
@@ -135,7 +135,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             if (Darius.W.IsReady() && Player.Instance.Mana > manacost)
             {
                 result += Wdmg(target);
-            }
+            }*/
             
             return result;
         }

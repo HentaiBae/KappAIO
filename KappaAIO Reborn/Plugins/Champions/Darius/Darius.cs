@@ -152,7 +152,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private static void ComboR()
         {
-            var ksTarget = EntityManager.Heroes.Enemies.OrderByDescending(TargetSelector.GetPriority).FirstOrDefault(t => t.IsKillable(R.Range) && !t.WillDie(R) && DariusStuff.Rdmg(t) > t.TotalShieldHealth());
+            var ksTarget = EntityManager.Heroes.Enemies.OrderByDescending(TargetSelector.GetPriority).FirstOrDefault(t => t.IsKillable(R.Range, true, true, true) && !t.WillDie(R) && DariusStuff.Rdmg(t) > t.TotalShieldHealth());
             if (ksTarget != null && (R.IsReady() || DariusStuff.HasDariusUltResetBuff))
             {
                 R.Cast(ksTarget);
@@ -180,7 +180,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             if (!ComboConfig.useQaoe)
                 return null;
 
-            var validEnemies = EntityManager.Heroes.Enemies.FindAll(e => e.IsKillable(Q.Range * 1.5f) && canHitBlade(e)).OrderByDescending(e => hitBladePos(e).GetValueOrDefault().CountEnemyHeroesInRangeWithPrediction((int)Q.Range, (int)_currentQChargeTime));
+            var validEnemies = EntityManager.Heroes.Enemies.FindAll(e => e.IsKillable(Q.Range * 1.5f, true) && canHitBlade(e)).OrderByDescending(e => hitBladePos(e).GetValueOrDefault().CountEnemyHeroesInRangeWithPrediction((int)Q.Range, (int)_currentQChargeTime));
 
             if (validEnemies.Count() > hitCount)
             {
