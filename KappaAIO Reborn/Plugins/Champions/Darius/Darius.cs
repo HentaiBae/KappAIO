@@ -14,32 +14,6 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 {
     public class Darius : ChampionBase
     {
-        internal static Spell.Active Q, W;
-        internal static Spell.Skillshot E;
-        internal static Spell.Targeted R;
-        private static float _lastQCast;
-        private static float _qChargeLeft => _lastQCast + Q.CastDelay - Core.GameTickCount;
-        private static float _currentQChargeTime => _qChargeLeft < 0 ? Q.CastDelay : _qChargeLeft;
-        private static bool IsCastingQ => Core.GameTickCount - _lastQCast < Q.CastDelay;
-        private static bool IsChargingQ => DariusStuff.HasDariusQChargingBuff || !DariusStuff.HasDariusQChargingBuff && IsCastingQ;
-
-        private static float outerBlade => Q.Range;
-        private static float bladeStart => 250;
-
-        public override void OnLoad()
-        {
-            Q = new Spell.Active(SpellSlot.Q, 425, DamageType.Physical) { CastDelay = 750 };
-            W = new Spell.Active(SpellSlot.W, 200, DamageType.Physical);
-            E = new Spell.Skillshot(SpellSlot.E, 450, SkillShotType.Cone, 250, int.MaxValue, 70, DamageType.Physical);
-            R = new Spell.Targeted(SpellSlot.R, 460, DamageType.True);
-
-            new ComboConfig();
-            
-            Drawing.OnEndScene += this.Drawing_OnEndScene;
-            Obj_AI_Base.OnProcessSpellCast += this.Obj_AI_Base_OnProcessSpellCast;
-            Orbwalker.OverrideOrbwalkPosition += this.OverrideOrbwalkPosition;
-        }
-
         internal class ComboConfig // hellsing's style
         {
             private static Menu cMenu;
@@ -64,12 +38,54 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 cMenu = menu.AddSubMenu("Combo");
                 Q = cMenu.CreateCheckBox("q", "Combo Q");
                 Qaoe = cMenu.CreateCheckBox("Qaoe", "Combo Q AOE");
-                Qaoehits = cMenu.CreateSlider("qhits", "Q AOE Hit Count", 2, 2, 6);
+                Qaoehits = cMenu.CreateSlider("qhits", "Q AOE Hit Count", 2, 1, 6);
                 Blade = cMenu.CreateCheckBox("blade", "Hit blade Combo Q");
                 R = cMenu.CreateCheckBox("r", "Combo R");
             }
         }
 
+        internal class KillStealConfig
+        {
+            private static Menu kMenu;
+
+            private static CheckBox R;
+            public static bool useR => R.CurrentValue;
+
+            public KillStealConfig()
+            {
+                kMenu = menu.AddSubMenu("KillSteal");
+                R = kMenu.CreateCheckBox("r", "Use R");
+            }
+        }
+
+        internal static Spell.Active Q, W;
+        internal static Spell.Skillshot E;
+        internal static Spell.Targeted R;
+
+        private static float _lastQCast;
+        private static float _qChargeLeft => _lastQCast + Q.CastDelay - Core.GameTickCount;
+        private static float _currentQChargeTime => _qChargeLeft < 0 ? Q.CastDelay : _qChargeLeft;
+
+        private static bool IsCastingQ => Core.GameTickCount - _lastQCast < Q.CastDelay;
+        private static bool IsChargingQ => DariusStuff.HasDariusQChargingBuff || !DariusStuff.HasDariusQChargingBuff && IsCastingQ;
+
+        private static float outerBlade => Q.Range;
+        private static float bladeStart => 250;
+
+        public override void OnLoad()
+        {
+            Q = new Spell.Active(SpellSlot.Q, 425, DamageType.Physical) { CastDelay = 750 };
+            W = new Spell.Active(SpellSlot.W, 200, DamageType.Physical);
+            E = new Spell.Skillshot(SpellSlot.E, 450, SkillShotType.Cone, 250, int.MaxValue, 70, DamageType.Physical);
+            R = new Spell.Targeted(SpellSlot.R, 460, DamageType.True);
+
+            new ComboConfig();
+            
+            Drawing.OnEndScene += this.Drawing_OnEndScene;
+            Obj_AI_Base.OnProcessSpellCast += this.Obj_AI_Base_OnProcessSpellCast;
+            Orbwalker.OverrideOrbwalkPosition += this.OverrideOrbwalkPosition;
+        }
+        
         private Vector3? OverrideOrbwalkPosition()
         {
             return ComboConfig.hitBlade && IsChargingQ && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) ? qPos() : null;
@@ -137,7 +153,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         public override void KillSteal()
         {
-
+            if (KillStealConfig.useR)
+                ComboR();
         }
 
         private static void ComboQ()
@@ -161,7 +178,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private static AIHeroClient _getQTarget()
         {
-            var target = TargetSelector.GetTarget(Q.Range * 1.45f, DamageType.Physical);
+            var target = TargetSelector.GetTarget(Q.Range * 1.4f, DamageType.Physical);
             if (target != null && canHitBlade(target))
             {
                 return target;
