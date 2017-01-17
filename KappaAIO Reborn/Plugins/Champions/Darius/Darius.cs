@@ -105,6 +105,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
         {
             foreach (var e in EntityManager.Heroes.Enemies.Where(e => e.HPBarPosition.IsOnScreen() && e.IsValidTarget()))
             {
+                Drawing.DrawText(e.ServerPosition.WorldToScreen(), Color.AliceBlue, e.HasReviveBuff().ToString(), 10);
                 e.DrawDamage(DariusStuff.ComboDamage(e));
             }
 

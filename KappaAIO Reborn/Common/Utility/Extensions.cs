@@ -52,6 +52,9 @@ namespace KappAIO_Reborn.Common.Utility
             if (!target.IsValidTarget(range))
                 return false;
 
+            if (ReviveBuffs)
+                return !target.HasReviveBuff();
+
             if (target.IsZombie || target.IsDead || target.Health <= 0)
                 return false;
 
@@ -62,12 +65,9 @@ namespace KappAIO_Reborn.Common.Utility
                 return false;
 
             var client = target as AIHeroClient;
-            if (client != null)
-                return UndyingBuffs && !client.HasUndyingBuff(true);
-
-            if (ReviveBuffs)
-                return !target.HasReviveBuff();
-
+            if (client != null && UndyingBuffs && client.HasUndyingBuff(true))
+                return false;
+            
             return true;
         }
 
@@ -83,9 +83,9 @@ namespace KappAIO_Reborn.Common.Utility
             if (target == null || !reviveBuffs.ContainsKey(target.BaseSkinName))
                 return false;
 
-            var buff = reviveBuffs.FirstOrDefault(s => s.Key.Equals(target.BaseSkinName));
+            var buff = reviveBuffs[target.BaseSkinName];
 
-            return target.HasBuff(buff.Value);
+            return target.HasBuff(buff);
         }
 
         /// <summary>
