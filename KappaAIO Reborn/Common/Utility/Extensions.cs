@@ -38,6 +38,11 @@ namespace KappAIO_Reborn.Common.Utility
             return vectors.Aggregate(Vector3.Zero, (current, vector) => current + vector) / vectors.Length;
         }
 
+        public static bool IsChampion(this GameObject obj)
+        {
+            return obj != null && obj.IsValid && obj is AIHeroClient;
+        }
+
         /// <summary>
         ///     Returns true if you can deal damage to the target.
         /// </summary>

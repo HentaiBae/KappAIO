@@ -14,47 +14,84 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 {
     public class Darius : ChampionBase
     {
-        internal class ComboConfig // hellsing's style
+        internal class Config // hellsing's style
         {
             private static Menu cMenu;
+            private static Menu kMenu;
+            private static Menu dMenu;
 
             private static CheckBox Qaoe;
             public static bool useQaoe => Qaoe.CurrentValue;
+
+            private static CheckBox QAA;
+            public static bool noQAA => QAA.CurrentValue;
 
             private static Slider Qaoehits;
             public static int hitsQaoe => Qaoehits.CurrentValue;
 
             private static CheckBox Q;
-            public static bool useQ => Q.CurrentValue;
+            public static bool useComboQ => Q.CurrentValue;
 
             private static CheckBox Blade;
             public static bool hitBlade => Blade.CurrentValue;
 
-            private static CheckBox R;
-            public static bool useR => R.CurrentValue;
+            private static CheckBox W;
+            public static bool useComboW => W.CurrentValue;
 
-            public ComboConfig()
+            private static CheckBox R;
+            public static bool useComboR => R.CurrentValue;
+
+            private static CheckBox ksR;
+            public static bool useKSR => ksR.CurrentValue;
+
+            private static CheckBox outQ;
+            public static bool drawoutQ => outQ.CurrentValue;
+
+            private static CheckBox inQ;
+            public static bool drawinQ => inQ.CurrentValue;
+
+            private static CheckBox dmgR;
+            public static bool drawinRdmg => dmgR.CurrentValue;
+
+            private static CheckBox dE;
+            public static bool drawE => dE.CurrentValue;
+
+            private static CheckBox dR;
+            public static bool drawR => dR.CurrentValue;
+
+            public Config()
             {
-                cMenu = menu.AddSubMenu("Combo");
+                #region combo
+
+                cMenu = menu.AddSubMenu("Darius: Combo");
                 Q = cMenu.CreateCheckBox("q", "Combo Q");
+                QAA = cMenu.CreateCheckBox("noAAQ", "No Q When target in AA Range");
                 Qaoe = cMenu.CreateCheckBox("Qaoe", "Combo Q AOE");
                 Qaoehits = cMenu.CreateSlider("qhits", "Q AOE Hit Count", 2, 1, 6);
                 Blade = cMenu.CreateCheckBox("blade", "Hit blade Combo Q");
+
+                W = cMenu.CreateCheckBox("W", "Combo W AA Reset");
                 R = cMenu.CreateCheckBox("r", "Combo R");
-            }
-        }
 
-        internal class KillStealConfig
-        {
-            private static Menu kMenu;
+                #endregion combo
 
-            private static CheckBox R;
-            public static bool useR => R.CurrentValue;
+                #region killsteal
 
-            public KillStealConfig()
-            {
-                kMenu = menu.AddSubMenu("KillSteal");
-                R = kMenu.CreateCheckBox("r", "Use R");
+                kMenu = menu.AddSubMenu("Darius: KillSteal");
+                ksR = kMenu.CreateCheckBox("r", "Use R");
+
+                #endregion killsteal
+
+                #region drawing
+
+                dMenu = menu.AddSubMenu("Darius: Drawing");
+                outQ = dMenu.CreateCheckBox("outQ", "draw Outer Q Range");
+                inQ = dMenu.CreateCheckBox("inQ", "draw Inner Q Range");
+                dE = dMenu.CreateCheckBox("dE", "Draw E Range");
+                dR = dMenu.CreateCheckBox("dR", "Draw R Range");
+                dmgR = dMenu.CreateCheckBox("dmgR", "Draw R Damage");
+                
+                #endregion drawing
             }
         }
 
@@ -70,26 +107,35 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
         private static bool IsChargingQ => DariusStuff.HasDariusQChargingBuff || !DariusStuff.HasDariusQChargingBuff && IsCastingQ;
 
         private static float outerBlade => Q.Range;
-        private static float bladeStart => 250;
+        private static float bladeStart => 245;
 
         public override void OnLoad()
         {
             Q = new Spell.Active(SpellSlot.Q, 425, DamageType.Physical) { CastDelay = 750 };
             W = new Spell.Active(SpellSlot.W, 200, DamageType.Physical);
-            E = new Spell.Skillshot(SpellSlot.E, 450, SkillShotType.Cone, 250, int.MaxValue, 70, DamageType.Physical);
+            E = new Spell.Skillshot(SpellSlot.E, 510, SkillShotType.Cone, 250, int.MaxValue, 70, DamageType.Physical);
             R = new Spell.Targeted(SpellSlot.R, 460, DamageType.True);
 
-            new ComboConfig();
-            new KillStealConfig();
+            new Config();
 
             Drawing.OnEndScene += this.Drawing_OnEndScene;
             Obj_AI_Base.OnProcessSpellCast += this.Obj_AI_Base_OnProcessSpellCast;
             Orbwalker.OverrideOrbwalkPosition += this.OverrideOrbwalkPosition;
+            Orbwalker.OnPostAttack += Orbwalker_OnPostAttack;
         }
-        
+
+        private void Orbwalker_OnPostAttack(AttackableUnit target, EventArgs args)
+        {
+            if(!target.IsValidTarget() || !target.IsChampion() || !W.IsReady())
+                return;
+
+            if (Config.useComboW && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
+                W.Cast();
+        }
+
         private Vector3? OverrideOrbwalkPosition()
         {
-            return ComboConfig.hitBlade && IsChargingQ && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) ? qPos() : null;
+            return Config.hitBlade && IsChargingQ && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) ? qPos() : null;
         }
 
         private void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -105,19 +151,24 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
         {
             foreach (var e in EntityManager.Heroes.Enemies.Where(e => e.HPBarPosition.IsOnScreen() && e.IsValidTarget()))
             {
-                Drawing.DrawText(e.ServerPosition.WorldToScreen(), Color.AliceBlue, e.HasReviveBuff().ToString(), 10);
                 e.DrawDamage(DariusStuff.ComboDamage(e));
             }
 
             qPos()?.DrawCircle(100, SharpDX.Color.Red);
+            
+            if(Config.drawoutQ)
+                Circle.Draw(SharpDX.Color.AliceBlue, outerBlade, user);
 
-            //var pos = hitBladePos(_getQTarget());
-            //pos?.DrawCircle(100, SharpDX.Color.Red);
+            if (Config.drawinQ)
+                Circle.Draw(SharpDX.Color.AliceBlue, bladeStart, user);
 
-            Circle.Draw(SharpDX.Color.AliceBlue, outerBlade, Player.Instance);
-            Circle.Draw(SharpDX.Color.AliceBlue, bladeStart, Player.Instance);
+            if (Config.drawE)
+                E.DrawRange(Color.AliceBlue);
 
-            Drawing.DrawText(Player.Instance.ServerPosition.WorldToScreen(), Color.AliceBlue, IsChargingQ.ToString(), 10);
+            if (Config.drawR)
+                R.DrawRange(Color.AliceBlue);
+
+            Drawing.DrawText(user.ServerPosition.WorldToScreen(), Color.AliceBlue, IsChargingQ.ToString(), 10);
         }
 
         public override void OnTick()
@@ -126,10 +177,10 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         public override void Combo()
         {
-            if(ComboConfig.useQ)
+            if(Config.useComboQ)
                 ComboQ();
 
-            if(ComboConfig.useR)
+            if(Config.useComboR)
                 ComboR();
         }
 
@@ -155,15 +206,16 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         public override void KillSteal()
         {
-            if (KillStealConfig.useR)
+            if (Config.useKSR)
                 ComboR();
         }
 
         private static void ComboQ()
         {
             var target = qPos();
+            var QAACheck = !Config.noQAA || Config.noQAA && user.CountEnemyChampionsInRange((int)user.GetAutoAttackRange()) == 0;
 
-            if (target != null)
+            if (target != null && QAACheck)
             {
                 Q.Cast();
             }
@@ -191,12 +243,12 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private static Vector3? qPos()
         {
-            return aoeQPos(ComboConfig.hitsQaoe) ?? hitBladePos(_getQTarget());
+            return aoeQPos(Config.hitsQaoe) ?? hitBladePos(_getQTarget());
         }
 
         private static Vector3? aoeQPos(int hitCount)
         {
-            if (!ComboConfig.useQaoe)
+            if (!Config.useQaoe)
                 return null;
 
             var validEnemies = EntityManager.Heroes.Enemies.FindAll(e => e.IsKillable(Q.Range * 1.5f, true) && canHitBlade(e)).OrderByDescending(e => hitBladePos(e).GetValueOrDefault().CountEnemyHeroesInRangeWithPrediction((int)Q.Range, (int)_currentQChargeTime));
@@ -223,7 +275,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 return null;
 
             var pred = target.PrediectPosition(_currentQChargeTime);
-            var pos = pred.Extend(Player.Instance, bladeStart + target.BoundingRadius).To3D();
+            var pos = pred.Extend(user, bladeStart + target.BoundingRadius).To3D();
 
             return pos;
         }
@@ -232,7 +284,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
         {
             var chargeTime = _currentQChargeTime;
             var pred = target.PrediectPosition(chargeTime);
-            var mypred = Player.Instance.PrediectPosition(_currentQChargeTime);
+            var mypred = user.PrediectPosition(_currentQChargeTime);
 
             return _isInsideBlade(target) || mypred.IsInRange(pred, outerBlade - target.BoundingRadius);
         }
@@ -244,7 +296,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private static bool _isInsideBlade(Vector3 target)
         {
-            var distance = target.Distance(Player.Instance);
+            var distance = target.Distance(user);
             return distance > bladeStart && distance < outerBlade;
         }
     }

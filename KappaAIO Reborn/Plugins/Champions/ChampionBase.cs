@@ -9,6 +9,7 @@ namespace KappAIO_Reborn.Plugins.Champions
     public abstract class ChampionBase
     {
         public static Menu menu;
+        public static AIHeroClient user => Player.Instance;
         public abstract void OnLoad();
         public abstract void OnTick();
         public abstract void Combo();
