@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using EloBuddy;
@@ -13,6 +14,30 @@ namespace KappAIO_Reborn.Common.Utility
 {
     static class Extensions
     {
+        /// <summary>
+        ///     Returns true if you can deal damage to the target.
+        /// </summary>
+        public static Vector3 CenterVectors(this List<Vector3> vectors)
+        {
+            return vectors.ToArray().CenterVectors();
+        }
+
+        /// <summary>
+        ///     Returns true if you can deal damage to the target.
+        /// </summary>
+        public static Vector3 CenterVectors(this IEnumerable<Vector3> vectors)
+        {
+            return vectors.ToArray().CenterVectors();
+        }
+
+        /// <summary>
+        ///     Returns true if you can deal damage to the target.
+        /// </summary>
+        public static Vector3 CenterVectors(this Vector3[] vectors)
+        {
+            return vectors.Aggregate(Vector3.Zero, (current, vector) => current + vector) / vectors.Length;
+        }
+
         /// <summary>
         ///     Returns true if you can deal damage to the target.
         /// </summary>

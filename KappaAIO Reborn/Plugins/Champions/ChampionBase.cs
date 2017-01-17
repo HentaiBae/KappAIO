@@ -8,7 +8,7 @@ namespace KappAIO_Reborn.Plugins.Champions
 {
     public abstract class ChampionBase
     {
-        public Menu menu;
+        public static Menu menu;
         public abstract void OnLoad();
         public abstract void OnTick();
         public abstract void Combo();
@@ -25,7 +25,8 @@ namespace KappAIO_Reborn.Plugins.Champions
 
         private void Loading_OnLoadingComplete(EventArgs args)
         {
-            this.menu = MainMenu.AddMenu($"Kappa {Player.Instance.ChampionName}", $"kappaio{Player.Instance.ChampionName}");
+            menu = Program.GlobalMenu;
+            menu.AddSubMenu($"- Champion: {Player.Instance.ChampionName}");
             this.OnLoad();
             Game.OnTick += this.Game_OnTick;
         }

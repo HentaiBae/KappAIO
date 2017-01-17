@@ -3,6 +3,8 @@ using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
+using EloBuddy.SDK.Menu;
+using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Rendering;
 using KappAIO_Reborn.Common.Utility;
 using SharpDX;
@@ -12,8 +14,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 {
     public class Darius : ChampionBase
     {
-        internal static Spell.Skillshot Q, E;
-        internal static Spell.Active W;
+        internal static Spell.Active Q, W;
+        internal static Spell.Skillshot E;
         internal static Spell.Targeted R;
         private static float _lastQCast;
         private static float _qChargeLeft => _lastQCast + Q.CastDelay - Core.GameTickCount;
@@ -26,54 +28,43 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         public override void OnLoad()
         {
-            Q = new Spell.Skillshot(SpellSlot.Q, 425, SkillShotType.Circular, 750, int.MaxValue, 425, DamageType.Physical);
+            Q = new Spell.Active(SpellSlot.Q, 425, DamageType.Physical) { CastDelay = 750 };
             W = new Spell.Active(SpellSlot.W, 200, DamageType.Physical);
             E = new Spell.Skillshot(SpellSlot.E, 450, SkillShotType.Cone, 250, int.MaxValue, 70, DamageType.Physical);
             R = new Spell.Targeted(SpellSlot.R, 460, DamageType.True);
 
-            this.menu.CreateCheckBox("q", "Combo Q");
-            this.menu.CreateCheckBox("blade", "Hit blade Combo Q");
-            this.menu.CreateCheckBox("r", "Combo R");
+            new ComboConfig();
             
             Drawing.OnEndScene += this.Drawing_OnEndScene;
             Obj_AI_Base.OnProcessSpellCast += this.Obj_AI_Base_OnProcessSpellCast;
             Orbwalker.OverrideOrbwalkPosition += this.OverrideOrbwalkPosition;
         }
 
+        internal class ComboConfig // hellsing's style
+        {
+            private static Menu cMenu;
+
+            private static CheckBox Q;
+            public static bool useQ => Q.CurrentValue;
+
+            private static CheckBox Blade;
+            public static bool hitBlade => Blade.CurrentValue;
+
+            private static CheckBox R;
+            public static bool useR => R.CurrentValue;
+
+            public ComboConfig()
+            {
+                cMenu = menu.AddSubMenu("Combo");
+                Q = cMenu.CreateCheckBox("q", "Combo Q");
+                Blade = cMenu.CreateCheckBox("blade", "Hit blade Combo Q");
+                R = cMenu.CreateCheckBox("r", "Combo R");
+            }
+        }
+
         private Vector3? OverrideOrbwalkPosition()
         {
-            if (this.menu.CheckBoxValue("blade"))
-            {
-                var target = TargetSelector.GetTarget(Q.Range * 2, DamageType.Physical);
-                if (target != null && canHitBlade(target) && IsChargingQ)
-                {
-                    var pred = target.PrediectPosition(_currentQChargeTime);
-                    var pos = pred.Extend(Player.Instance, bladeStart + target.BoundingRadius).To3D();
-                    return pos;
-                }
-            }
-
-            return null;
-        }
-
-        private static bool canHitBlade(Obj_AI_Base target)
-        {
-            var chargeTime = _currentQChargeTime;
-            var pred = target.PrediectPosition(chargeTime);
-            var mypred = Player.Instance.PrediectPosition(chargeTime);
-
-            return _isInsideBlade(target) || mypred.IsInRange(pred, outerBlade - target.BoundingRadius);
-        }
-
-        private static bool _isInsideBlade(Obj_AI_Base target)
-        {
-            return _isInsideBlade(target.PrediectPosition(_currentQChargeTime)) && _isInsideBlade(target.ServerPosition);
-        }
-
-        private static bool _isInsideBlade(Vector3 target)
-        {
-            var distance = target.Distance(Player.Instance);
-            return distance > bladeStart && distance < outerBlade;
+            return ComboConfig.hitBlade && IsChargingQ && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) ? qPos() : null;
         }
 
         private void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -87,18 +78,16 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private void Drawing_OnEndScene(EventArgs args)
         {
-            foreach (var e in EntityManager.Heroes.Enemies)
+            foreach (var e in EntityManager.Heroes.Enemies.Where(e => e.HPBarPosition.IsOnScreen() && e.IsValidTarget()))
             {
                 e.DrawDamage(DariusStuff.ComboDamage(e));
             }
 
-            var target = TargetSelector.GetTarget(Q.Range * 2, DamageType.Physical);
-            if (target != null && canHitBlade(target))
-            {
-                var pred = target.PrediectPosition(_currentQChargeTime);
-                var pos = pred.Extend(Player.Instance, bladeStart + target.BoundingRadius).To3D();
-                pos.DrawCircle(100, SharpDX.Color.Red);
-            }
+            qPos()?.DrawCircle(100, SharpDX.Color.Red);
+
+            //var pos = hitBladePos(_getQTarget());
+            //pos?.DrawCircle(100, SharpDX.Color.Red);
+
             Circle.Draw(SharpDX.Color.AliceBlue, outerBlade, Player.Instance);
             Circle.Draw(SharpDX.Color.AliceBlue, bladeStart, Player.Instance);
 
@@ -111,10 +100,10 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         public override void Combo()
         {
-            if(this.menu.CheckBoxValue("q"))
+            if(ComboConfig.useQ)
                 ComboQ();
 
-            if(this.menu.CheckBoxValue("r"))
+            if(ComboConfig.useR)
                 ComboR();
         }
 
@@ -145,10 +134,11 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private static void ComboQ()
         {
-            var target = TargetSelector.GetTarget(Q.Range * 2, DamageType.Physical);
-            if (target != null && canHitBlade(target))
+            var target = qPos();
+
+            if (target != null)
             {
-                Q.Cast(Player.Instance.ServerPosition);
+                Q.Cast();
             }
         }
 
@@ -159,6 +149,73 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             {
                 R.Cast(ksTarget);
             }
+        }
+
+        private static AIHeroClient _getQTarget()
+        {
+            var target = TargetSelector.GetTarget(Q.Range * 1.45f, DamageType.Physical);
+            if (target != null && canHitBlade(target))
+            {
+                return target;
+            }
+
+            return null;
+        }
+
+        private static Vector3? qPos()
+        {
+            return aoeQPos(2) ?? hitBladePos(_getQTarget());
+        }
+
+        private static Vector3? aoeQPos(int hitCount)
+        {
+            var validEnemies = EntityManager.Heroes.Enemies.FindAll(e => e.IsKillable(Q.Range * 1.5f) && canHitBlade(e)).OrderByDescending(e => hitBladePos(e).GetValueOrDefault().CountEnemyHeroesInRangeWithPrediction((int)Q.Range, (int)_currentQChargeTime));
+
+            if (validEnemies.Count() > hitCount)
+            {
+                var predCenter = validEnemies.Select(e => e.PrediectPosition(_currentQChargeTime)).CenterVectors();
+                if (validEnemies.All(e => e.PrediectPosition(_currentQChargeTime).IsInRange(predCenter, Q.Range)))
+                    return predCenter;
+            }
+
+            var mostHitsTarget = validEnemies.FirstOrDefault();
+            if (mostHitsTarget != null && hitBladePos(mostHitsTarget).GetValueOrDefault().CountEnemyHeroesInRangeWithPrediction((int)Q.Range, (int)_currentQChargeTime) >= hitCount)
+            {
+                return hitBladePos(mostHitsTarget);
+            }
+            
+            return null;
+        }
+
+        private static Vector3? hitBladePos(AIHeroClient target)
+        {
+            if (target == null)
+                return null;
+
+            var pred = target.PrediectPosition(_currentQChargeTime);
+            var pos = pred.Extend(Player.Instance, bladeStart + target.BoundingRadius).To3D();
+
+            return pos;
+        }
+        
+        private static bool canHitBlade(Obj_AI_Base target)
+        {
+            var chargeTime = _currentQChargeTime;
+            var pred = target.PrediectPosition(chargeTime);
+            var mypred = Player.Instance.ServerPosition;
+
+            return _isInsideBlade(target) || mypred.IsInRange(pred, outerBlade - target.BoundingRadius);
+        }
+
+        private static bool _isInsideBlade(Obj_AI_Base target)
+        {
+            return _isInsideBlade(target.PrediectPosition(_currentQChargeTime)) && _isInsideBlade(target.ServerPosition);
+        }
+
+        private static bool _isInsideBlade(Vector3 target)
+        {
+            var distance = target.Distance(Player.Instance);
+            return distance > bladeStart && distance < outerBlade;
         }
     }
 }
