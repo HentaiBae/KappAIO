@@ -230,7 +230,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
         {
             var chargeTime = _currentQChargeTime;
             var pred = target.PrediectPosition(chargeTime);
-            var mypred = Player.Instance.ServerPosition;
+            var mypred = Player.Instance.PrediectPosition(_currentQChargeTime);
 
             return _isInsideBlade(target) || mypred.IsInRange(pred, outerBlade - target.BoundingRadius);
         }
