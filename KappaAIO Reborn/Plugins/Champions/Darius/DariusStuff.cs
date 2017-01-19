@@ -125,7 +125,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 manacost += Darius.R.ManaCost;
                 result += Rdmg(target);
             }
-            /*
+            
             if (Darius.Q.IsReady() && Player.Instance.Mana > manacost)
             {
                 manacost += Darius.Q.ManaCost;
@@ -135,7 +135,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             if (Darius.W.IsReady() && Player.Instance.Mana > manacost)
             {
                 result += Wdmg(target);
-            }*/
+            }
             
             return result;
         }

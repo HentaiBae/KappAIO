@@ -78,6 +78,7 @@ namespace KappAIO_Reborn.Common.Utility
 
         private static Dictionary<string, string> reviveBuffs = new Dictionary<string, string>
             {
+            {"all", "willrevive" },
             {"Aatrox", "aatroxpassiveready" },
             {"Zac", "zacrebirthready" },
             {"Anivia", "rebirthready" }
@@ -85,12 +86,18 @@ namespace KappAIO_Reborn.Common.Utility
 
         public static bool HasReviveBuff(this Obj_AI_Base target)
         {
-            if (target == null || !reviveBuffs.ContainsKey(target.BaseSkinName))
+            if (target == null)
                 return false;
 
-            var buff = reviveBuffs[target.BaseSkinName];
+            if (reviveBuffs.ContainsKey(target.BaseSkinName))
+            {
+                if (target.HasBuff(reviveBuffs[target.BaseSkinName]))
+                {
+                    return true;
+                }
+            }
 
-            return target.HasBuff(buff);
+            return target.HasBuff(reviveBuffs["all"]);
         }
 
         /// <summary>
