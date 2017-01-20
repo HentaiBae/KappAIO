@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -22,12 +23,12 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             private static CheckBox Qaoe;
             public static bool useQaoe => Qaoe.CurrentValue;
 
-            private static CheckBox QAA, Q, W, R, ksR, Blade, outQ, inQ, dmgR, dE, dR, antidashE, intE;
-            public static bool noQAA => QAA.CurrentValue;
+            private static CheckBox QAA, Q, W, R, ksR, Blade, outQ, inQ, dunk, dmg, dmgP, dmgQ, dmgW, dmgR, dE, dR, antidashE, intE, stackTime, RexpireTime;
 
             private static Slider Qaoehits;
             public static int hitsQaoe => Qaoehits.CurrentValue;
-            
+
+            public static bool noQAA => QAA.CurrentValue;
             public static bool useComboQ => Q.CurrentValue;
             public static bool hitBlade => Blade.CurrentValue;
             public static bool useComboW => W.CurrentValue;
@@ -40,6 +41,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             public static bool drawR => dR.CurrentValue;
             public static bool dashE => antidashE.CurrentValue;
             public static bool interE => intE.CurrentValue;
+            public static bool drawDmg => dmg.CurrentValue;
+            public static bool calcP=> dmgP.CurrentValue;
+            public static bool calcQ => dmgQ.CurrentValue;
+            public static bool calcW => dmgW.CurrentValue;
+            public static bool calcR => dmgR.CurrentValue;
+            public static bool dunkable => dunk.CurrentValue;
+
+            public static bool stacksTimer => stackTime.CurrentValue;
+            public static bool ultTimer => RexpireTime.CurrentValue;
 
             public Config()
             {
@@ -71,7 +81,16 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 inQ = dMenu.CreateCheckBox("inQ", "draw Inner Q Range");
                 dE = dMenu.CreateCheckBox("dE", "Draw E Range");
                 dR = dMenu.CreateCheckBox("dR", "Draw R Range");
-                dmgR = dMenu.CreateCheckBox("dmgR", "Draw R Damage");
+                stackTime = dMenu.CreateCheckBox("stackTime", "Draw Stacks Timer");
+                dunk = dMenu.CreateCheckBox("dunk", "Draw Text above Killable Enemies by R");
+                RexpireTime = dMenu.CreateCheckBox("RexpireTime", "Draw Time until R Expires on HUD");
+
+                dMenu.AddGroupLabel("Damage Drawings");
+                dmg = dMenu.CreateCheckBox("dmg", "Draw Damage");
+                dmgP = dMenu.CreateCheckBox("dmgP", "Passive Damage", false);
+                dmgQ = dMenu.CreateCheckBox("dmgQ", "Q Damage", false);
+                dmgW = dMenu.CreateCheckBox("dmgW", "W Damage", false);
+                dmgR = dMenu.CreateCheckBox("dmgR", "R Damage");
 
                 #endregion drawing
 
@@ -94,6 +113,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
         private static float _qChargeLeft => _lastQCast + Q.CastDelay - Core.GameTickCount;
         private static float _currentQChargeTime => _qChargeLeft < 0 ? Q.CastDelay : _qChargeLeft;
 
+        private static bool ultReady => R.IsReady() || DariusStuff.HasDariusUltResetBuff;
         private static bool IsCastingQ => Core.GameTickCount - _lastQCast < Q.CastDelay;
         private static bool IsChargingQ => DariusStuff.HasDariusQChargingBuff || !DariusStuff.HasDariusQChargingBuff && IsCastingQ;
 
@@ -126,12 +146,14 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private void Dash_OnDash(Obj_AI_Base sender, Dash.DashEventArgs e)
         {
-            antiDashE(sender, e.EndPos);
+            if(sender.IsEnemy)
+                antiDashE(sender, e.EndPos);
         }
 
         private void Gapcloser_OnGapcloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
         {
-            antiDashE(sender, e.End);
+            if (sender.IsEnemy)
+                antiDashE(sender, e.End);
         }
 
         private void Orbwalker_OnPostAttack(AttackableUnit target, EventArgs args)
@@ -158,13 +180,54 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 _lastQCast = Core.GameTickCount;
         }
 
+        private static Text passive = new Text("", new Font("Arial", 13, FontStyle.Bold));
+        private static Text dunktext = new Text("", new Font("Arial", 15, FontStyle.Bold));
+        private static Text ulttext = new Text("", new Font("Arial", 15, FontStyle.Bold));
+
         private void Drawing_OnEndScene(EventArgs args)
         {
             foreach (var e in EntityManager.Heroes.Enemies.Where(e => e.HPBarPosition.IsOnScreen() && e.IsValidTarget()))
             {
-                e.DrawDamage(DariusStuff.ComboDamage(e));
+                if (Config.drawDmg)
+                    e.DrawDamage(DariusStuff.ComboDamage(e, Config.calcP, Config.calcQ, Config.calcW, Config.calcR));
+
+                if (Config.stacksTimer)
+                {
+                    var buff = DariusStuff.GetDariusPassive(e);
+                    if (buff != null)
+                    {
+                        var timeLeft = buff.EndTime - Game.Time;
+                        var mypos = e.ServerPosition.WorldToScreen();
+                        var buffcount = Math.Max(1, buff.Count);
+                        var ra = 51 * buffcount;
+                        var ba = 255 - ra;
+                        var ga = 255 - ra;
+                        var c = Color.FromArgb(ra, ga, ba);
+                        passive.Draw($"Stacks: {buff.Count} ({timeLeft.ToString("F1")})", c, new Vector2(mypos.X, mypos.Y - 36));
+                    }
+                }
+                
+                if (Config.dunkable)
+                {
+                    var killable = R.IsReady() && DariusStuff.Rdmg(e) > e.TotalShieldHealth() && e.IsKillable(-1, true, true, true);
+                    if (killable)
+                    {
+                        var hpos = e.HPBarPosition;
+                        var drawpos = new Vector2(hpos.X, hpos.Y - 24);
+                        dunktext.Draw("DUNK = KILL", Color.Red, drawpos);
+                    }
+                }
             }
 
+            if (Config.ultTimer && DariusStuff.HasDariusUltResetBuff)
+            {
+                var x = Drawing.Width * 0.35f;
+                var y = Drawing.Height * 0.75f;
+                var drawpos = new Vector2(x, y);
+                var timer = (DariusStuff.DariusUltResetBuff.EndTime - Game.Time).ToString("F1");
+                ulttext.Draw($"R Expire Timer: {timer}", Color.OrangeRed, drawpos);
+            }
+            
             var pos = qPos();
             if(pos != null && pos != Vector3.Zero)
                 pos.Value.DrawCircle(100, SharpDX.Color.Red);
@@ -180,8 +243,6 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
             if (Config.drawR)
                 R.DrawRange(Color.AliceBlue);
-
-            Drawing.DrawText(user.ServerPosition.WorldToScreen(), Color.AliceBlue, IsChargingQ.ToString(), 10);
         }
 
         public override void OnTick()
@@ -236,12 +297,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private static void ComboR()
         {
+            if(!ultReady)
+                return;
+
             var validEnemies = EntityManager.Heroes.Enemies.FindAll(e => e.IsKillable(R.Range, true, true, true));
             if(!validEnemies.Any())
                 return;
 
             var ksTarget = validEnemies.OrderByDescending(TargetSelector.GetPriority).FirstOrDefault(t => !t.WillDie(R) && DariusStuff.Rdmg(t) > t.TotalShieldHealth());
-            if (ksTarget != null && (R.IsReady() || DariusStuff.HasDariusUltResetBuff))
+            if (ksTarget != null)
             {
                 R.Cast(ksTarget);
             }
@@ -330,7 +394,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             {
                 var pred = E.GetPrediction(target);
                 if(E.IsInRange(pred.CastPosition))
-                    E.Cast(target.ServerPosition);
+                    E.Cast(pred.CastPosition);
             }
         }
     }

@@ -12,12 +12,11 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
         private static string _ultResetBuff = "DariusExecuteMulticast";
         
         internal static bool HasDariusQChargingBuff => Player.HasBuff(_qChargingBuff);
-        internal static bool HasDariusUltResetBuff => Player.HasBuff(_ultResetBuff);
+        internal static bool HasDariusUltResetBuff => DariusUltResetBuff != null;
 
-        internal static BuffInstance GetDariusPassive(Obj_AI_Base target)
-        {
-            return target.GetBuff(_passiveName);
-        }
+        internal static BuffInstance DariusUltResetBuff => Player.Instance.GetBuff(_ultResetBuff);
+
+        internal static BuffInstance GetDariusPassive(Obj_AI_Base target) => target.GetBuff(_passiveName);
 
         internal static float PassiveDamage(Obj_AI_Base target)
         {
@@ -116,23 +115,27 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             return Player.Instance.CalculateDamageOnUnit(target, DamageType.True, Math.Min(minRDamage, maxRDamage));
         }
 
-        internal static float ComboDamage(Obj_AI_Base target)
+        internal static float ComboDamage(Obj_AI_Base target, bool passive = true, bool q = true, bool w = true, bool r = true)
         {
-            var result = PassiveDamageLeft(target);
+            var result = 0f;
             var manacost = 0f;
-            if (Darius.R.IsReady())
+
+            if (passive)
+                result += PassiveDamageLeft(target);
+
+            if (r && Darius.R.IsReady())
             {
                 manacost += Darius.R.ManaCost;
                 result += Rdmg(target);
             }
             
-            if (Darius.Q.IsReady() && Player.Instance.Mana > manacost)
+            if (q && Darius.Q.IsReady() && Player.Instance.Mana > manacost)
             {
                 manacost += Darius.Q.ManaCost;
                 result += QDmg(target);
             }
 
-            if (Darius.W.IsReady() && Player.Instance.Mana > manacost)
+            if (w && Darius.W.IsReady() && Player.Instance.Mana > manacost)
             {
                 result += Wdmg(target);
             }
