@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
+using EloBuddy.SDK.Enumerations;
+using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Rendering;
@@ -272,5 +274,7 @@ namespace KappAIO_Reborn.Common.Utility
             text.Position = new Vector2(x, y);
             text.Draw();
         }
+
+        public static DangerLevel[] DangerLevels = {DangerLevel.Low, DangerLevel.Medium, DangerLevel.High, }; 
     }
 }

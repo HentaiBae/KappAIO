@@ -25,8 +25,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
             private static CheckBox QAA, Q, W, R, ksR, Blade, outQ, inQ, dunk, dmg, dmgP, dmgQ, dmgW, dmgR, dE, dR, antidashE, intE, stackTime, RexpireTime;
 
-            private static Slider Qaoehits;
+            private static Slider Qaoehits, intDanger;
             public static int hitsQaoe => Qaoehits.CurrentValue;
+            public static int Edanger => intDanger.CurrentValue;
 
             public static bool noQAA => QAA.CurrentValue;
             public static bool useComboQ => Q.CurrentValue;
@@ -99,6 +100,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 mMenu = menu.AddSubMenu("Darius: Misc");
                 antidashE = mMenu.CreateCheckBox("antidashE", "Anti-Dash E");
                 intE = mMenu.CreateCheckBox("intE", "Interrupter E");
+                intDanger = mMenu.CreateSlider("intDanger", "Interrupter DangerLevel", 1, 0, 2);
 
                 #endregion misc
 
@@ -140,7 +142,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private void Interrupter_OnInterruptableSpell(Obj_AI_Base sender, Interrupter.InterruptableSpellEventArgs e)
         {
-            if (sender.IsEnemy && E.IsReady() && sender.IsKillable(E.Range, true) && Config.interE)
+            if (sender.IsEnemy && E.IsReady() && sender.IsKillable(E.Range, true) && Config.interE && Common.Utility.Extensions.DangerLevels[Config.Edanger] >= e.DangerLevel)
                 E.Cast(sender);
         }
 
