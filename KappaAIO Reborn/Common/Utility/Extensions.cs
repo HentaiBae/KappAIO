@@ -55,6 +55,9 @@ namespace KappAIO_Reborn.Common.Utility
             if (target == null)
                 return false;
 
+            if (target.HasBuff("SionPassiveZombie"))
+                return false;
+
             if (!target.IsValidTarget(range))
                 return false;
 
