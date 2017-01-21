@@ -129,6 +129,29 @@ namespace KappAIO_Reborn.Common.Utility
         }
 
         /// <summary>
+        ///     Returns true if the target will die before the spell finish him.
+        /// </summary>
+        public static bool WillDie(this Obj_AI_Base target, float delay)
+        {
+            var incDmg = 0f;
+
+            var incSkillshots = SkillshotDetector.SkillshotsDetected.FindAll(s => s.WillHit(target));
+            if (incSkillshots.Any())
+                incDmg += incSkillshots.Sum(s => s.Caster.GetSpellDamage(target, s.Data.slot));
+            var incTargetedSpell = TargetedSpellDetector.DetectedTargetedSpells.FindAll(s => s.Target.IdEquals(target));
+            if (incTargetedSpell.Any())
+                incDmg += incTargetedSpell.Sum(s => s.Caster.GetSpellDamage(target, s.Data.slot));
+            var incDangerBuff = DangerBuffDetector.DangerBuffsDetected.FindAll(s => s.Target.IdEquals(target));
+            if (incDangerBuff.Any())
+                incDmg += incDangerBuff.Sum(s => s.Caster.GetSpellDamage(target, s.Data.Slot));
+            var incAA = EmpoweredAttackDetector.DetectedEmpoweredAttacks.FindAll(s => s.Target.IdEquals(target));
+            if (incAA.Any())
+                incDmg += incAA.Sum(s => s.Caster.GetAutoAttackDamage(target, true));
+
+            return target.PredictHealth((int)delay) <= incDmg;
+        }
+
+        /// <summary>
         ///     Returns a recreated name of the target.
         /// </summary>
         public static string Name(this Obj_AI_Base target)

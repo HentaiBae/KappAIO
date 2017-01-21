@@ -19,12 +19,13 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
     {
         internal class Config // hellsing's style
         {
-            private static Menu cMenu, hMenu, kMenu, dMenu, mMenu;
+            private static Menu cMenu, hMenu, lMenu, kMenu, dMenu, mMenu;
 
             private static CheckBox Qaoe, QAA, q, w, e, aoeE, r, ksR, Blade; // combo ks
             private static CheckBox hQAA, hq, hw, hBlade; // harass
             private static CheckBox outQ, inQ, dunk, dmg, dmgP, dmgQ, dmgW, dmgR, dE, dR, stackTime, RexpireTime; // Drawings
             private static CheckBox antidashE, intE; // Misc
+            private static CheckBox laneW; // LaneClear
 
             private static Slider Qaoehits, EaoeHits, intDanger;
 
@@ -40,6 +41,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             public static bool huseW => hw.CurrentValue;
             public static bool hhitBlade => hBlade.CurrentValue;
 
+            public static bool useWlane => laneW.CurrentValue;
             public static bool useE => e.CurrentValue;
             public static bool useEaoe => aoeE.CurrentValue;
             public static bool useQaoe => Qaoe.CurrentValue;
@@ -94,6 +96,13 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 hw = hMenu.CreateCheckBox("W", "Harass W AA Reset");
 
                 #endregion harass
+
+                #region laneclear
+
+                lMenu = menu.AddSubMenu("Darius: LaneClear");
+                laneW = lMenu.CreateCheckBox("w", "Use W On Unkillable minions");
+
+                #endregion laneclear
 
                 #region killsteal
 
@@ -168,6 +177,18 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             Interrupter.OnInterruptableSpell += this.Interrupter_OnInterruptableSpell;
             Spellbook.OnStopCast += this.Spellbook_OnStopCast;
             Obj_AI_Base.OnBuffGain += this.Obj_AI_Base_OnBuffGain;
+            Orbwalker.OnUnkillableMinion += this.Orbwalker_OnUnkillableMinion;
+        }
+
+        private void Orbwalker_OnUnkillableMinion(Obj_AI_Base target, Orbwalker.UnkillableMinionArgs args)
+        {
+            if(!target.IsKillable(user.GetAutoAttackRange(target)) || !W.IsReady() || !Config.useWlane)
+                return;
+
+            var shoulduse = Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear) || Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit);
+
+            if (shoulduse && user.GetAutoAttackDamage(target) + DariusStuff.Wdmg(target) >= target.PredictHealth(300) && !target.WillDie(300))
+                W.Cast();
         }
 
         private void Obj_AI_Base_OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
