@@ -678,7 +678,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      hero = Champion.Ekko,
                      slot = SpellSlot.W,
                      DangerLevel = 2,
-                     CastDelay = 4250,
+                     CastDelay = 3250,
                      Range = 1600,
                      Speed = int.MaxValue,
                      Width = 375,

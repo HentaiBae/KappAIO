@@ -5,7 +5,6 @@ using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
-using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Rendering;
@@ -253,28 +252,57 @@ namespace KappAIO_Reborn.Common.Utility
         }
 
         private static Text text;
+
+        public static Vector2 HpBarPos(this Obj_AI_Base target) => new Vector2(target.HPBarPosition.X, target.HPBarPosition.Y - 5);
+
         public static void DrawDamage(this Obj_AI_Base target, float dmg)
         {
             if (text == null)
                 text = new Text(string.Empty, new Font("Tahoma", 9, FontStyle.Bold)) { Color = System.Drawing.Color.White };
 
-            if (!target.IsHPBarRendered || !target.HPBarPosition.IsOnScreen())
+            if (!target.IsHPBarRendered || !target.HpBarPos().IsOnScreen())
                 return;
             
             var y2 = target.BaseSkinName.Equals("Annie") ? 12 : target.BaseSkinName.Equals("Jhin") ? 14 : 0;
 
-            float x = target.HPBarPosition.X;
-            float y = target.HPBarPosition.Y - y2 - 12;
+            var twoThirdhealth = (target.TotalShieldHealth() / 3) * 2;
+            float x = target.HpBarPos().X;
+            float y = target.HpBarPos().Y - y2 - 12;
+
             text.Color = System.Drawing.Color.White;
+
             if (dmg >= target.Health)
             {
                 text.Color = System.Drawing.Color.Red;
             }
+            else
+            {
+                if (dmg > twoThirdhealth)
+                {
+                    text.Color = System.Drawing.Color.Yellow;
+                }
+            }
+
             text.TextValue = (int)dmg + " / " + (int)target.Health;
             text.Position = new Vector2(x, y);
             text.Draw();
         }
 
-        public static DangerLevel[] DangerLevels = {DangerLevel.Low, DangerLevel.Medium, DangerLevel.High, }; 
+        public static DangerLevel[] DangerLevels = {DangerLevel.Low, DangerLevel.Medium, DangerLevel.High, };
+
+        /// <summary>
+        ///     Casts spell with selected hitchancepercent.
+        /// </summary>
+        public static void Cast(this Spell.Skillshot spell, Obj_AI_Base target, float hitchancepercent)
+        {
+            if (target != null && spell.IsReady() && target.IsKillable(spell.Range))
+            {
+                var pred = spell.GetPrediction(target);
+                if (pred.HitChancePercent >= hitchancepercent)
+                {
+                    spell.Cast(pred.CastPosition);
+                }
+            }
+        }
     }
 }

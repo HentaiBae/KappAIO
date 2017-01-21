@@ -27,6 +27,7 @@ namespace KappAIO_Reborn
             try
             {
                 var Instance = (ChampionBase)Activator.CreateInstance(null, $"KappAIO_Reborn.Plugins.Champions.{Player.Instance.ChampionName}.{Player.Instance.ChampionName}").Unwrap();
+                GlobalMenu.DisplayName = $"KappAIO: {Player.Instance.ChampionName}";
             }
             catch (Exception)
             {
