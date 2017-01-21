@@ -261,8 +261,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             {
                 if (!args.IsEnemy || !args.WillHit(Player.Instance))
                     return;
-
-                var spellname = $"{args.Data.Hero} {args.Data.Slot} [{args.Data.DisplayName}]";
+                
+                var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
                 if (spell == null || !spell.Enabled)
                 {
@@ -284,7 +284,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 if (args.Caster == null || !args.Caster.IsEnemy || args.Target == null || !args.Target.IsMe)
                     return;
 
-                var spellname = $"{args.Data.Hero} {args.Data.AttackName} {args.Data.Slot}";
+                var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
 
                 var kill = args.Caster.GetAutoAttackDamage(args.Target, true) >= args.Target.Health;
@@ -303,7 +303,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 if (args.Caster == null || args.Target == null || !args.Caster.IsEnemy || !args.Target.IsMe)
                     return;
 
-                var spellname = $"{args.Data.Hero} {args.Data.BuffName}";
+                var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
 
                 var kill = args.Caster.GetSpellDamage(args.Target, args.Data.Slot) >= args.Target.Health;
@@ -323,7 +323,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 if (args.Caster == null || args.Target == null || !args.Caster.IsEnemy || !args.Target.IsMe)
                     return;
 
-                var spellname = $"{args.Data.hero} {args.Data.slot}";
+                var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
 
                 var kill = args.Caster.GetSpellDamage(args.Target, args.Data.slot) >= args.Target.Health;
@@ -363,7 +363,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 if (args.Caster == null || !args.Caster.IsEnemy || !args.WillHit(Player.Instance))
                     return;
 
-                var spellname = $"{args.Data.hero} {args.Data.slot} [{args.Data.SpellName}]";
+                var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
                 var kill = args.Caster.GetSpellDamage(Player.Instance, args.Data.slot) >= Player.Instance.Health;
 
