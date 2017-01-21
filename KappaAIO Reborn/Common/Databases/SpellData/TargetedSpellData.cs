@@ -9,5 +9,6 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public int DangerLevel;
         public float CastDelay;
         public bool FastEvade;
+        public string MenuItemName => $"{this.hero} {this.slot}";
     }
 }

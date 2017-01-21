@@ -131,7 +131,7 @@ namespace KappAIO_Reborn.Common.Utility
         /// <summary>
         ///     Returns true if the target will die before the spell finish him.
         /// </summary>
-        public static bool WillDie(this Obj_AI_Base target, float delay)
+        public static bool WillDie(this Obj_AI_Base target, float delay = 250)
         {
             var incDmg = 0f;
 
@@ -149,6 +149,40 @@ namespace KappAIO_Reborn.Common.Utility
                 incDmg += incAA.Sum(s => s.Caster.GetAutoAttackDamage(target, true));
 
             return target.PredictHealth((int)delay) <= incDmg;
+        }
+
+        /// <summary>
+        ///     Returns true if the spell will kill the target.
+        /// </summary>
+        public static bool WillKill(this Spell.SpellBase spell, Obj_AI_Base target, float MultiplyDmgBy = 1, float ExtraDamage = 0, DamageType ExtraDamageType = DamageType.True)
+        {
+            return Player.Instance.GetSpellDamage(target, spell.Slot) * MultiplyDmgBy + Player.Instance.CalculateDamageOnUnit(target, ExtraDamageType, ExtraDamage) >= spell.GetHealthPrediction(target) && !target.WillDie(spell);
+        }
+        /// <summary>
+        ///     Returns true if the spell will kill the target.
+        /// </summary>
+        public static bool WillKill(this Obj_AI_Base target, float rawDamage, float MultiplyDmgBy = 1, float ExtraDamage = 0, DamageType ExtraDamageType = DamageType.True)
+        {
+            return rawDamage * MultiplyDmgBy + Player.Instance.CalculateDamageOnUnit(target, ExtraDamageType, ExtraDamage) >= target.PredictHealth() && !target.WillDie();
+        }
+
+        public static bool CanKill(this AIHeroClient hero, AIHeroClient target)
+        {
+            return hero.GetAutoAttackDamage(target, true) >= target.TotalShieldHealth() && target.IsKillable(hero.GetAutoAttackRange(target));
+        }
+
+        public static IEnumerable<AIHeroClient> GetKillStealTargets(this Spell.SpellBase spell)
+        {
+            return EntityManager.Heroes.Enemies.OrderByDescending(TargetSelector.GetPriority).Where(o => spell.WillKill(o) && o.IsKillable());
+        }
+
+        public static AIHeroClient GetKillStealTarget(this Spell.SpellBase spell, float dmg = 0, DamageType damageType = DamageType.Mixed)
+        {
+            if (dmg > 0)
+            {
+                return EntityManager.Heroes.Enemies.OrderBy(TargetSelector.GetPriority).FirstOrDefault(t => t.IsKillable(spell.Range) && Player.Instance.CalculateDamageOnUnit(t, damageType, dmg) > spell.GetHealthPrediction(t));
+            }
+            return spell.GetKillStealTargets().FirstOrDefault(o => o.IsKillable(spell.Range));
         }
 
         /// <summary>

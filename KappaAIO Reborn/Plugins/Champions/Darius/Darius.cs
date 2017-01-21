@@ -19,15 +19,16 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
     {
         internal class Config // hellsing's style
         {
-            private static Menu cMenu, hMenu, lMenu, kMenu, dMenu, mMenu;
+            private static Menu fMenu, cMenu, hMenu, lMenu, kMenu, dMenu, mMenu;
 
+            private static CheckBox fleeQ; // flee
             private static CheckBox Qaoe, QAA, q, w, e, aoeE, r, ksR, Blade; // combo ks
             private static CheckBox hQAA, hq, hw, hBlade; // harass
             private static CheckBox outQ, inQ, dunk, dmg, dmgP, dmgQ, dmgW, dmgR, dE, dR, stackTime, RexpireTime; // Drawings
             private static CheckBox antidashE, intE; // Misc
             private static CheckBox laneW; // LaneClear
 
-            private static Slider Qaoehits, EaoeHits, intDanger;
+            private static Slider Qaoehits, EaoeHits, intDanger, fleeQHP;
 
             private static ComboBox antiDashmode;
 
@@ -35,7 +36,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             public static int hitsQaoe => Qaoehits.CurrentValue;
             public static int Edanger => intDanger.CurrentValue;
             public static int dashMode => antiDashmode.CurrentValue;
-            
+            public static int qfleeHP => fleeQHP.CurrentValue;
+
             public static bool hnoQAA => hQAA.CurrentValue;
             public static bool huseQ => hq.CurrentValue;
             public static bool huseW => hw.CurrentValue;
@@ -66,6 +68,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             public static bool dunkable => dunk.CurrentValue;
             public static bool stacksTimer => stackTime.CurrentValue;
             public static bool ultTimer => RexpireTime.CurrentValue;
+            public static bool useQFlee => fleeQ.CurrentValue;
 
             public Config()
             {
@@ -75,10 +78,10 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 q = cMenu.CreateCheckBox("q", "Combo Q");
                 QAA = cMenu.CreateCheckBox("noAAQ", "No Q When target in AA Range");
                 Qaoe = cMenu.CreateCheckBox("Qaoe", "Combo Q AOE");
-                Qaoehits = cMenu.CreateSlider("qhits", "Q AOE Hit Count", 2, 2, 6);
                 Blade = cMenu.CreateCheckBox("blade", "Hit blade Combo Q");
-                e = cMenu.CreateCheckBox("e", "Combo E if target outside E Range");
+                Qaoehits = cMenu.CreateSlider("qhits", "Q AOE Hit Count", 2, 2, 6);
 
+                e = cMenu.CreateCheckBox("e", "Combo E if target outside AA Range");
                 w = cMenu.CreateCheckBox("W", "Combo W AA Reset");
                 r = cMenu.CreateCheckBox("r", "Combo R");
 
@@ -100,6 +103,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 #region laneclear
 
                 lMenu = menu.AddSubMenu("Darius: LaneClear");
+                lMenu.AddGroupLabel("LaneClear and LastHit Settings");
                 laneW = lMenu.CreateCheckBox("w", "Use W On Unkillable minions");
 
                 #endregion laneclear
@@ -110,6 +114,14 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 ksR = kMenu.CreateCheckBox("r", "Use R");
 
                 #endregion killsteal
+
+                #region flee
+
+                fMenu = menu.AddSubMenu("Darius: Flee");
+                fleeQ = fMenu.CreateCheckBox("fleeQ", "Use Q Flee");
+                fleeQHP = fMenu.CreateSlider("fleeQHP", "Use Q Flee under {0}% HP", 90, 0, 100);
+
+                #endregion flee
 
                 #region drawing
 
@@ -162,7 +174,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
         public override void OnLoad()
         {
             Q = new Spell.Active(SpellSlot.Q, 425, DamageType.Physical) { CastDelay = 750 };
-            W = new Spell.Active(SpellSlot.W, 200, DamageType.Physical) { CastDelay = 300 }; ;
+            W = new Spell.Active(SpellSlot.W, 100, DamageType.Physical) { CastDelay = 300 };
             E = new Spell.Skillshot(SpellSlot.E, 510, SkillShotType.Cone, 250, int.MaxValue, 80, DamageType.Physical) { ConeAngleDegrees = 50 };
             R = new Spell.Targeted(SpellSlot.R, 460, DamageType.True) { CastDelay = 250 };
 
@@ -182,13 +194,17 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private void Orbwalker_OnUnkillableMinion(Obj_AI_Base target, Orbwalker.UnkillableMinionArgs args)
         {
-            if(!target.IsKillable(user.GetAutoAttackRange(target)) || !W.IsReady() || !Config.useWlane)
+            if(!target.IsKillable(user.GetAutoAttackRange(target) + W.Range) || !W.IsReady() || !Config.useWlane)
                 return;
 
             var shoulduse = Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear) || Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit);
 
             if (shoulduse && user.GetAutoAttackDamage(target) + DariusStuff.Wdmg(target) >= target.PredictHealth(W.CastDelay) && !target.WillDie(W))
+            {
+                Orbwalker.ForcedTarget = target;
                 W.Cast();
+                Core.DelayAction((() => Orbwalker.ForcedTarget = null), (int)(Orbwalker.AttackCastDelay * 1000f));
+            }
         }
 
         private void Obj_AI_Base_OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
@@ -341,7 +357,14 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         public override void Flee()
         {
-
+            if (Config.useQFlee && Config.qfleeHP > user.HealthPercent && Q.IsReady())
+            {
+                var hitCount = _countHits(user.PrediectPosition(_currentQChargeTime));
+                if (hitCount > 0)
+                {
+                    Q.Cast();
+                }
+            }
         }
 
         public override void Harass()

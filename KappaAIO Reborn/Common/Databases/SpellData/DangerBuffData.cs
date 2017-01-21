@@ -8,5 +8,6 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public SpellSlot Slot;
         public string BuffName;
         public int DangerLevel;
+        public string MenuItemName => $"{this.Hero} {this.Slot} ({this.BuffName})";
     }
 }

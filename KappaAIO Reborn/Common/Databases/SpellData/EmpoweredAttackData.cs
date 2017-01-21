@@ -15,5 +15,6 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public int TargetRequiredBuffCount;
         public int DangerLevel;
         public bool CrowdControl;
+        public string MenuItemName => $"{this.Hero} {this.Slot} ({(!string.IsNullOrEmpty(DisplayName) ? DisplayName : !string.IsNullOrEmpty(AttackName) ? AttackName : !string.IsNullOrEmpty(RequireBuff) ? RequireBuff : TargetRequiredBuff)})";
     }
 }

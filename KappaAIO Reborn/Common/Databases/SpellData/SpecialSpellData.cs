@@ -14,5 +14,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public int CastDelay;
         public int TargetHealth;
         public int DangerLevel;
+        public string MenuItemName
+            => $"{Hero} {this.Slot} ({(!string.IsNullOrEmpty(this.DisplayName) ? DisplayName : !string.IsNullOrEmpty(SpellName) ? SpellName : !string.IsNullOrEmpty(ParticalName) ? ParticalName : TargetName)}";
     }
 }

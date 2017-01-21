@@ -59,6 +59,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\Databases\Items\ItemData.cs" />
+    <Compile Include="Common\Databases\Items\ItemsDatabase.cs" />
     <Compile Include="Common\Databases\SpellData\DangerBuffData.cs" />
     <Compile Include="Common\Databases\SpellData\EmpoweredAttackData.cs" />
     <Compile Include="Common\Databases\SpellData\SkillshotData.cs" />
@@ -88,6 +90,8 @@
     <Compile Include="Plugins\Champions\ChampionBase.cs" />
     <Compile Include="Plugins\Champions\Darius\DariusStuff.cs" />
     <Compile Include="Plugins\Champions\Darius\Darius.cs" />
+    <Compile Include="Plugins\Champions\Fiora\Fiora.cs" />
+    <Compile Include="Plugins\Champions\Fiora\FioraStuff.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

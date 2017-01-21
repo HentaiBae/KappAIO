@@ -34,6 +34,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool FastEvade;
         public bool StartsFromTarget;
         public Collision[] Collisions;
+        public string MenuItemName => $"{this.hero} {this.slot} ({(!string.IsNullOrEmpty(SpellName) ? SpellName : !string.IsNullOrEmpty(MissileName) ? MissileName : ParticalName)})";
     }
 
     public enum Type
