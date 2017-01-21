@@ -162,9 +162,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
         public override void OnLoad()
         {
             Q = new Spell.Active(SpellSlot.Q, 425, DamageType.Physical) { CastDelay = 750 };
-            W = new Spell.Active(SpellSlot.W, 200, DamageType.Physical);
+            W = new Spell.Active(SpellSlot.W, 200, DamageType.Physical) { CastDelay = 300 }; ;
             E = new Spell.Skillshot(SpellSlot.E, 510, SkillShotType.Cone, 250, int.MaxValue, 80, DamageType.Physical) { ConeAngleDegrees = 50 };
-            R = new Spell.Targeted(SpellSlot.R, 460, DamageType.True);
+            R = new Spell.Targeted(SpellSlot.R, 460, DamageType.True) { CastDelay = 250 };
 
             new Config();
 
@@ -187,7 +187,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
             var shoulduse = Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear) || Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit);
 
-            if (shoulduse && user.GetAutoAttackDamage(target) + DariusStuff.Wdmg(target) >= target.PredictHealth(300) && !target.WillDie(300))
+            if (shoulduse && user.GetAutoAttackDamage(target) + DariusStuff.Wdmg(target) >= target.PredictHealth(W.CastDelay) && !target.WillDie(W))
                 W.Cast();
         }
 
