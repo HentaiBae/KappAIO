@@ -11,6 +11,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public int DangerLevel;
         public int RequireBuffCount;
         public float Range;
+        public float ExtraRange;
         public float Angle;
         public float Width;
         public float Speed;

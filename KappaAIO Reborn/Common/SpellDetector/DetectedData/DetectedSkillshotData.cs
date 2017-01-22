@@ -136,8 +136,17 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 {
                     endpos = this.Start.Distance(this.End) > this.Data.Range ? this.Start.Extend(this.End, this.Data.Range).To3D() : this.End;
                 }
+                Vector3 result;
+                if (this.Data.IsFixedRange)
+                {
+                    result = this.Start.Extend(endpos, this.Data.Range).To3D();
+                }
+                else
+                {
+                    result = this.Data.ExtraRange > 0 && Data.ExtraRange < float.MaxValue && Data.ExtraRange < int.MaxValue ? endpos.Extend(this.Start, -this.Data.ExtraRange).To3D() : endpos;
+                }
 
-                return this.Data.IsFixedRange ? this.Start.Extend(endpos, this.Data.Range).To3D() : endpos;
+                return result;
             }
         }
 

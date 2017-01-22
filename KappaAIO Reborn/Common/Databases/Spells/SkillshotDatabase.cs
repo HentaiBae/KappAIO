@@ -575,8 +575,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      Width = 375,
                      SpellName = "DariusCleave",
                      MissileName = "DariusCleave",
-                     IsFixedRange = true,
-                     SticksToCaster = true
+                     EndSticksToCaster = true
                    },
                new SkillshotData
                    {
@@ -1742,13 +1741,13 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      hero = Champion.MonkeyKing,
                      slot = SpellSlot.R,
                      DangerLevel = 5,
-                     CastDelay = 4000,
-                     Range = 500,
+                     CastDelay = 200,
+                     Range = 0,
                      Speed = int.MaxValue,
-                     Width = 0,
+                     Width = 500,
                      SpellName = "MonkeyKingR",
                      MissileName = "",
-                     SticksToCaster = true,
+                     EndSticksToCaster = true,
                      FastEvade = true
                    },
                new SkillshotData
@@ -2068,7 +2067,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CastDelay = 250,
                      Range = 250,
                      Speed = int.MaxValue,
-                     Width = 300,
+                     Width = 200,
                      RequireBuff = "RivenTriCleaveBuff",
                      RequireBuffCount = 2,
                      SpellName = "RivenTriCleave",
@@ -2085,7 +2084,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CastDelay = 100,
                      Range = 0,
                      Speed = int.MaxValue,
-                     Width = 400,
+                     Width = 300,
                      SpellName = "RivenMartyr",
                      MissileName = "",
                      IsFixedRange = true
@@ -2851,12 +2850,13 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      DangerLevel = 3,
                      CastDelay = 250,
                      Range = 800,
+					 ExtraRange = 100,
                      Speed = 1500,
                      Width = 90,
                      SpellName = "Vi-Q",
                      MissileName = "ViQMissile",
                      Collisions = new []{ Collision.Heros },
-                     SticksToMissile = true
+                     SticksToCaster = true
                    },
                new SkillshotData
                    {
@@ -2997,7 +2997,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      slot = SpellSlot.Q,
                      DangerLevel = 3,
                      CastDelay = 250,
-                     Range = 1100,
+                     Range = 1150,
                      Speed = 1000,
                      Width = 110,
                      SpellName = "yasuoq3w",

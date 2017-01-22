@@ -7,6 +7,7 @@ using EloBuddy.SDK.Menu;
 using KappAIO_Reborn.Common.SpellDetector.Detectors;
 using KappAIO_Reborn.Common.Utility;
 using KappAIO_Reborn.Plugins.Champions;
+using KappAIO_Reborn.Plugins.Evade;
 
 namespace KappAIO_Reborn
 {
@@ -22,29 +23,28 @@ namespace KappAIO_Reborn
         private static void Loading_OnLoadingComplete(EventArgs args)
         {
             GlobalMenu = MainMenu.AddMenu("KappAIO", "kappaio");
-            GlobalMenu.CreateCheckBox("skillshots", "Enable Skillshots Drawings");
+            var evade = GlobalMenu.CreateCheckBox("Evade", "Enable Evade");
+            bool loadedChampion;
 
             try
             {
                 var Instance = (ChampionBase)Activator.CreateInstance(null, $"KappAIO_Reborn.Plugins.Champions.{Player.Instance.ChampionName}.{Player.Instance.ChampionName}").Unwrap();
                 GlobalMenu.DisplayName = $"KappAIO: {Player.Instance.ChampionName}";
+                loadedChampion = true;
             }
             catch (Exception)
             {
                 Console.WriteLine($"{Player.Instance.ChampionName} Not Supported");
+                loadedChampion = false;
             }
 
-            Drawing.OnEndScene += Drawing_OnEndScene;
-        }
-
-        private static void Drawing_OnEndScene(EventArgs args)
-        {
-            if(!GlobalMenu.CheckBoxValue("skillshots"))
-                return;
-
-            foreach (var skill in SkillshotDetector.SkillshotsDetected.Where(s => s.Caster.IsEnemy))
+            if (evade.CurrentValue)
             {
-                skill.Polygon?.Draw(Color.AliceBlue, 2);
+                GlobalMenu.AddSubMenu("- Evade");
+                if (!loadedChampion)
+                    GlobalMenu.DisplayName = "KappAIO: Evade";
+
+                Evade.Init();
             }
         }
     }
