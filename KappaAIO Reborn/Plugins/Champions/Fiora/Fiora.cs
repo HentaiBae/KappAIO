@@ -95,19 +95,25 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
             var target = QTarget;
 
-            if (!target.IsKillable(user.GetAutoAttackRange(target) * 1.25f))
+            if (target == null)
                 return null;
+
+            var AAvital = Config.orbAAVital && target.IsKillable(user.GetAutoAttackRange(target) * 1.1f) || !Config.orbAAVital && target.IsKillable(user.GetAutoAttackRange(target) * 1.25f);
 
             var vital = VitalManager.vital(target);
             if (vital == null)
                 return null;
 
+            var orbRVital = Config.orbUltVital && vital.IsRVital || !Config.orbUltVital;
             var validpos = !vital.OrbWalkVitalPos.IsWall() && !vital.OrbWalkVitalPos.IsBuilding();
 
             if (!validpos)
                 return null;
 
-            return vital.OrbWalkVitalPos;
+            if(orbRVital && AAvital)
+                return vital.OrbWalkVitalPos;
+
+            return null;
         }
 
         public override void OnTick()

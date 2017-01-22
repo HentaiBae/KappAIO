@@ -65,12 +65,14 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 public AIHeroClient Caster { get { return EntityManager.Heroes.AllHeroes.OrderBy(e => e.Distance(this.Vital)).FirstOrDefault(h => HasFioraPassiveBuff(h) && h.Distance(this.Vital) <= 300); } }
                 public Obj_GeneralParticleEmitter Vital;
                 public bool ValidVital { get { return !this.Vitalsector.Center.IsWall() && this.Vital.IsValid && !this.Vital.IsDead && !this.OrbWalkVitalPos.IsBuilding() && (this.Vital.Name.Contains("Timeout") || !this.Vital.Name.Contains("Warning")); } }
+                public bool IsRVital => this.Vital != null && this.Vital.Name.Contains("_R_Mark");
                 public Vector3 OrbWalkVitalPos
                 {
                     get
                     {
                         var range = 175;
-                        var pos = this.Caster.PrediectPosition(100);
+                        var travelTime = Player.Instance.Distance(CorrectPos) / Player.Instance.MoveSpeed * 1000f;
+                        var pos = this.Caster.PrediectPosition(travelTime);
                         var x2 = this.Vital.Name.Contains("_NW") ? range : this.Vital.Name.Contains("_SE") ? -range : 0;
                         var y2 = this.Vital.Name.Contains("_NE") ? range : this.Vital.Name.Contains("_SW") ? -range : 0;
                         return new Vector3(pos.X + x2, pos.Y + y2, pos.Z);
@@ -257,6 +259,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 Drawing.OnDraw += Drawing_OnDraw;
             }
 
+            private static float delay => W.CastDelay + (Game.Ping / 2f); 
+
             private static void OnSpecialSpellDetected_OnDetect(DetectedSpecialSpellData args)
             {
                 if (!args.IsEnemy || !args.WillHit(Player.Instance))
@@ -274,7 +278,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     CastW(args.Caster, spellname);
                 else
                 {
-                    if (args.TicksLeft <= W.CastDelay)
+                    if (args.TicksLeft <= delay)
                         CastW(args.Caster, spellname);
                 }
             }
@@ -314,7 +318,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     return;
                 }
 
-                if (args.TicksLeft <= W.CastDelay)
+                if (args.TicksLeft <= delay)
                     CastW(args.Caster, spellname);
             }
 
@@ -338,7 +342,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     CastW(args.Caster, spellname);
                 else
                 {
-                    if (args.TicksLeft <= W.CastDelay)
+                    if (args.TicksLeft <= delay)
                         CastW(args.Caster, spellname);
                 }
             }
@@ -380,7 +384,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     CastW(args.Caster, spellname);
                 else
                 {
-                    if (args.TravelTime(Player.Instance) <= W.CastDelay)
+                    if (args.TravelTime(Player.Instance) <= delay)
                         CastW(args.Caster, spellname);
                 }
             }
@@ -390,15 +394,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 if(!Config.evadeEnabled)
                     return;
 
+                if (!W.IsReady())
+                    return;
+
                 var wtarget =
                     TargetSelector.SelectedTarget != null && W.IsInRange(TargetSelector.SelectedTarget) ? TargetSelector.SelectedTarget
                     : W.GetTarget() != null && W.IsInRange(W.GetTarget()) ? W.GetTarget() : caster;
 
                 var castpos = wtarget != null && W.IsInRange(wtarget) ? wtarget.ServerPosition : Game.CursorPos;
-
-                if (!W.IsReady())
-                    return;
-
+                
                 W.Cast(castpos);
                 Console.WriteLine($"BLOCK {spellname}");
             }
@@ -424,7 +428,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         public static class Config
         {
             public static Menu ComboMenu, spellblock, ksMenu, LMenu, MiscMenu;
-            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk;
+            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, orbRvit, aaVitl;
 
             public static bool validVitals => QValidvitals.CurrentValue;
             public static bool useQShortVital => QShortvital.CurrentValue;
@@ -437,16 +441,24 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public static bool useQks => Qks.CurrentValue;
             public static bool useWks => Wks.CurrentValue;
             public static bool useEUnk => Eunk.CurrentValue;
+            public static bool orbUltVital => orbRvit.CurrentValue;
+            public static bool orbAAVital => aaVitl.CurrentValue;
 
             public static void Init()
             {
                 #region combo
 
                 ComboMenu = Program.GlobalMenu.AddSubMenu("Fiora: Combo");
+
+                ComboMenu.AddGroupLabel("Vital Settings");
                 QValidvitals = ComboMenu.CreateCheckBox("QValidvitals", "Q Valid Vitals Only");
                 QShortvital = ComboMenu.CreateCheckBox("QShortvital", "Q Vital in Range");
                 QLongvital = ComboMenu.CreateCheckBox("QLongvital", "Q Vitals Long Range");
-                orbVital = ComboMenu.CreateCheckBox("orbVital", "Orbwalker To Vitals");
+                orbVital = ComboMenu.CreateCheckBox("orbVital", "Orbwalk To Vitals");
+                orbRvit = ComboMenu.CreateCheckBox("orbUltVital", "Orbwalk to R Vitals Only", false);
+                aaVitl = ComboMenu.CreateCheckBox("aaVitl", "Orbwalk to Vitals in AA Range Only");
+
+                ComboMenu.AddGroupLabel("Extra Settings");
                 EReset = ComboMenu.CreateCheckBox("EReset", "E Reset Auto Attack");
                 Hydra = ComboMenu.CreateCheckBox("Hydra", "Use Hydra");
                 R = ComboMenu.CreateCheckBox("R", "Auto use R");

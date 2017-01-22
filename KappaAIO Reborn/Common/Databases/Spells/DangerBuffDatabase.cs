@@ -10,6 +10,13 @@ namespace KappAIO_Reborn.Common.Databases.Spells
             {
                 new DangerBuffData
                     {
+                        Hero = Champion.Kled,
+                        Slot = SpellSlot.Q,
+                        BuffName = "KledQMark",
+                        DangerLevel = 4
+                    },
+                new DangerBuffData
+                    {
                         Hero = Champion.Karthus,
                         Slot = SpellSlot.R,
                         BuffName = "karthusfallenone",

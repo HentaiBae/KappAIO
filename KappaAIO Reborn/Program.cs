@@ -34,7 +34,7 @@ namespace KappAIO_Reborn
                 Console.WriteLine($"{Player.Instance.ChampionName} Not Supported");
             }
 
-            //Drawing.OnEndScene += Drawing_OnEndScene;
+            Drawing.OnEndScene += Drawing_OnEndScene;
         }
 
         private static void Drawing_OnEndScene(EventArgs args)
