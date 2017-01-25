@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Drawing;
-using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
-using KappAIO_Reborn.Common.SpellDetector.Detectors;
 using KappAIO_Reborn.Common.Utility;
 using KappAIO_Reborn.Plugins.Champions;
 using KappAIO_Reborn.Plugins.Evade;

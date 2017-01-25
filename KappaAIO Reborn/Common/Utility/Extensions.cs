@@ -281,7 +281,7 @@ namespace KappAIO_Reborn.Common.Utility
         }
 
         /// <summary>
-        ///     Returns true if the target is big minion (Siege / Super Minion).
+        ///     Prediects the target Position on the given time
         /// </summary>
         public static Vector3 PrediectPosition(this Obj_AI_Base target, float Time = 250)
         {

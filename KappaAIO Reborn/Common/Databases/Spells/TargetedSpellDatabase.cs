@@ -17,6 +17,13 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
+                     hero = Champion.Alistar,
+                     slot = SpellSlot.W,
+                     DangerLevel = 3,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
                      hero = Champion.Anivia,
                      slot = SpellSlot.E,
                      DangerLevel = 2,
@@ -53,9 +60,23 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
+                     hero = Champion.Camille,
+                     slot = SpellSlot.R,
+                     DangerLevel = 5,
+                     CastDelay = 450
+                 },
+              new TargetedSpellData
+                 {
                      hero = Champion.Cassiopeia,
                      slot = SpellSlot.E,
                      DangerLevel = 1,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.Chogath,
+                     slot = SpellSlot.R,
+                     DangerLevel = 5,
                      CastDelay = 250
                  },
               new TargetedSpellData
@@ -68,6 +89,13 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
+                     hero = Champion.Diana,
+                     slot = SpellSlot.R,
+                     DangerLevel = 2,
+                     CastDelay = 250,
+                 },
+              new TargetedSpellData
+                 {
                      hero = Champion.Elise,
                      slot = SpellSlot.Q,
                      DangerLevel = 1,
@@ -75,14 +103,21 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
-                     hero = Champion.FiddleSticks,
+                     hero = Champion.Evelynn,
                      slot = SpellSlot.E,
-                     DangerLevel = 3,
+                     DangerLevel = 1,
                      CastDelay = 250
                  },
               new TargetedSpellData
                  {
-                     hero = Champion.Rammus,
+                     hero = Champion.FiddleSticks,
+                     slot = SpellSlot.Q,
+                     DangerLevel = 3,
+                     CastDelay = 100
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.FiddleSticks,
                      slot = SpellSlot.E,
                      DangerLevel = 3,
                      CastDelay = 250
@@ -104,6 +139,13 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
+                     hero = Champion.Illaoi,
+                     slot = SpellSlot.W,
+                     DangerLevel = 1,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
                      hero = Champion.Irelia,
                      slot = SpellSlot.E,
                      DangerLevel = 3,
@@ -115,13 +157,6 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      hero = Champion.Janna,
                      slot = SpellSlot.W,
                      DangerLevel = 2,
-                     CastDelay = 250
-                 },
-              new TargetedSpellData
-                 {
-                     hero = Champion.Jhin,
-                     slot = SpellSlot.Q,
-                     DangerLevel = 1,
                      CastDelay = 250
                  },
               new TargetedSpellData
@@ -156,6 +191,13 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
+                     hero = Champion.Jhin,
+                     slot = SpellSlot.Q,
+                     DangerLevel = 1,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
                      hero = Champion.Kassadin,
                      slot = SpellSlot.Q,
                      DangerLevel = 1,
@@ -170,6 +212,13 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
+                     hero = Champion.Katarina,
+                     slot = SpellSlot.E,
+                     DangerLevel = 1,
+                     CastDelay = 0
+                 },
+              new TargetedSpellData
+                 {
                      hero = Champion.Kayle,
                      slot = SpellSlot.Q,
                      DangerLevel = 1,
@@ -177,9 +226,23 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
+                     hero = Champion.Khazix,
+                     slot = SpellSlot.Q,
+                     DangerLevel = 2,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
                      hero = Champion.Leblanc,
                      slot = SpellSlot.Q,
                      DangerLevel = 2,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.Lulu,
+                     slot = SpellSlot.W,
+                     DangerLevel = 3,
                      CastDelay = 250
                  },
               new TargetedSpellData
@@ -207,10 +270,10 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
-                     hero = Champion.Maokai,
-                     slot = SpellSlot.W,
-                     DangerLevel = 3,
-                     CastDelay = 250
+                     hero = Champion.Malzahar,
+                     slot = SpellSlot.E,
+                     DangerLevel = 1,
+                     CastDelay = 100
                  },
               new TargetedSpellData
                  {
@@ -222,11 +285,17 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
-                     hero = Champion.Mordekaiser,
-                     slot = SpellSlot.R,
-                     DangerLevel = 5,
-                     CastDelay = 0,
-                     FastEvade = true
+                     hero = Champion.Maokai,
+                     slot = SpellSlot.W,
+                     DangerLevel = 3,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.MasterYi,
+                     slot = SpellSlot.Q,
+                     DangerLevel = 1,
+                     CastDelay = 250
                  },
               new TargetedSpellData
                  {
@@ -234,6 +303,14 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      slot = SpellSlot.Q,
                      DangerLevel = 1,
                      CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.Mordekaiser,
+                     slot = SpellSlot.R,
+                     DangerLevel = 5,
+                     CastDelay = 0,
+                     FastEvade = true
                  },
               new TargetedSpellData
                  {
@@ -251,6 +328,13 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
+                     hero = Champion.Nocturne,
+                     slot = SpellSlot.E,
+                     DangerLevel = 5,
+                     CastDelay = 2000
+                 },
+              new TargetedSpellData
+                 {
                      hero = Champion.Nunu,
                      slot = SpellSlot.E,
                      DangerLevel = 3,
@@ -258,10 +342,10 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
-                     hero = Champion.Nocturne,
+                     hero = Champion.Olaf,
                      slot = SpellSlot.E,
-                     DangerLevel = 5,
-                     CastDelay = 2000
+                     DangerLevel = 2,
+                     CastDelay = 250
                  },
               new TargetedSpellData
                  {
@@ -296,6 +380,14 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
+                     hero = Champion.Rammus,
+                     slot = SpellSlot.E,
+                     DangerLevel = 5,
+                     CastDelay = 250,
+                     FastEvade = true
+                 },
+              new TargetedSpellData
+                 {
                      hero = Champion.Ryze,
                      slot = SpellSlot.W,
                      DangerLevel = 3,
@@ -318,14 +410,6 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
-                     hero = Champion.Syndra,
-                     slot = SpellSlot.R,
-                     DangerLevel = 5,
-                     CastDelay = 250,
-                     FastEvade = true
-                 },
-              new TargetedSpellData
-                 {
                      hero = Champion.Singed,
                      slot = SpellSlot.E,
                      DangerLevel = 4,
@@ -338,6 +422,29 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      slot = SpellSlot.R,
                      DangerLevel = 5,
                      CastDelay = 0,
+                     FastEvade = true
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.Swain,
+                     slot = SpellSlot.E,
+                     DangerLevel = 1,
+                     CastDelay = 0
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.Syndra,
+                     slot = SpellSlot.R,
+                     DangerLevel = 5,
+                     CastDelay = 250,
+                     FastEvade = true
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.TahmKench,
+                     slot = SpellSlot.W,
+                     DangerLevel = 4,
+                     CastDelay = 250,
                      FastEvade = true
                  },
               new TargetedSpellData
@@ -357,11 +464,10 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                  },
               new TargetedSpellData
                  {
-                     hero = Champion.TahmKench,
-                     slot = SpellSlot.W,
-                     DangerLevel = 4,
-                     CastDelay = 250,
-                     FastEvade = true
+                     hero = Champion.Urgot,
+                     slot = SpellSlot.Q,
+                     DangerLevel = 1,
+                     CastDelay = 250
                  },
               new TargetedSpellData
                  {
@@ -400,6 +506,48 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      slot = SpellSlot.Q,
                      DangerLevel = 1,
                      CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.Vladimir,
+                     slot = SpellSlot.Q,
+                     DangerLevel = 2,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.Volibear,
+                     slot = SpellSlot.W,
+                     DangerLevel = 2,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.Warwick,
+                     slot = SpellSlot.Q,
+                     DangerLevel = 2,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.MonkeyKing,
+                     slot = SpellSlot.E,
+                     DangerLevel = 1,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.XinZhao,
+                     slot = SpellSlot.E,
+                     DangerLevel = 2,
+                     CastDelay = 250
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.Yasuo,
+                     slot = SpellSlot.E,
+                     DangerLevel = 1,
+                     CastDelay = 200
                  }
              };
     }
