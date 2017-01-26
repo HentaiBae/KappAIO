@@ -10,6 +10,12 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public int CollideCount;
         public int DangerLevel;
         public int RequireBuffCount;
+        public float MoveSpeedScaleMod;
+        public float MissileAccel;
+        public float MissileMaxSpeed;
+        public float MissileMinSpeed;
+        public float ExtraDuration;
+        public float RingRadius;
         public float Range;
         public float ExtraRange;
         public float Angle;
@@ -25,6 +31,10 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public string[] ExtraSpellName;
         public string[] ExtraMissileName;
         public string[] DodgeFrom;
+        public bool RangeScaleWithMoveSpeed;
+        public bool DontCross;
+        public bool DontAddExtraDuration;
+        public bool TakeClosestPath;
         public bool EndIsCasterDirection;
         public bool ForceRemove;
         public bool IsFixedRange;
@@ -35,14 +45,17 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool FastEvade;
         public bool StartsFromTarget;
         public Collision[] Collisions;
-        public string MenuItemName => $"{this.hero} {this.slot} ({(!string.IsNullOrEmpty(SpellName) ? SpellName : !string.IsNullOrEmpty(MissileName) ? MissileName : ParticalName)})";
+
+        public string MenuItemName => $"{this.hero} {this.slot} ({(!string.IsNullOrEmpty(this.SpellName) ? this.SpellName : !string.IsNullOrEmpty(this.MissileName) ? this.MissileName : this.ParticalName)})";
     }
 
     public enum Type
     {
         LineMissile,
         CircleMissile,
-        Cone
+        Cone,
+        Arc,
+        Ring
     }
 
     public enum Collision

@@ -86,6 +86,7 @@
     <Compile Include="Common\SpellDetector\Events\OnSkillShotDetected.cs" />
     <Compile Include="Common\SpellDetector\Events\OnSpecialSpellDetected.cs" />
     <Compile Include="Common\SpellDetector\Events\OnTargetedSpellDetected.cs" />
+    <Compile Include="Common\Utility\CustomGeometry.cs" />
     <Compile Include="Common\Utility\Extensions.cs" />
     <Compile Include="Plugins\Champions\ChampionBase.cs" />
     <Compile Include="Plugins\Champions\Darius\DariusStuff.cs" />

@@ -8,6 +8,7 @@ using KappAIO_Reborn.Common.Databases.SpellData;
 using KappAIO_Reborn.Common.Databases.Spells;
 using KappAIO_Reborn.Common.SpellDetector.DetectedData;
 using KappAIO_Reborn.Common.SpellDetector.Events;
+using SharpDX;
 
 namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 {
@@ -82,8 +83,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                         var pdetected = new DetectedSkillshotData
                         {
                             Caster = pcaster,
-                            Start = correctObject.Position,
-                            End = correctObject.Position,
+                            Start = correctObject.Position.To2D(),
+                            End = correctObject.Position.To2D(),
                             Data = pdata,
                             StartTick = Core.GameTickCount
                         };
@@ -113,8 +114,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             {
                 Caster = caster,
                 Missile = missile,
-                Start = missile.StartPosition,
-                End = missile.EndPosition,
+                Start = missile.StartPosition.To2D(),
+                End = missile.EndPosition.To2D(),
                 Data = data,
                 StartTick = Core.GameTickCount
             };
@@ -140,12 +141,27 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 return;
             }
 
-            var start = args.Start;
-            var end = args.End;
+            var start = args.Start.To2D();
+            var end = args.End.To2D();
             if (data.StartsFromTarget && target != null)
             {
-                start = target.ServerPosition;
-                end = start.Extend(caster, -data.Range).To3D();
+                if (data.hero == Champion.LeeSin && data.slot == SpellSlot.R)
+                {
+                    start = target.ServerPosition.To2D();
+                    end = start.Extend(caster, -data.Range);
+                }
+            }
+
+            if (data.RangeScaleWithMoveSpeed)
+            {
+                data.Range = caster.MoveSpeed * data.MoveSpeedScaleMod;
+
+                if (data.hero == Champion.Warwick && data.slot == SpellSlot.R)
+                {
+                    data.Range = Math.Max(275, caster.MoveSpeed * data.MoveSpeedScaleMod);
+                }
+
+                end = start.Extend(end, data.Range);
             }
 
             var detected = new DetectedSkillshotData
@@ -181,8 +197,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             {
                 // Add the Missile
                 replaceByMissile.Missile = data.Missile;
-                replaceByMissile.End = data.Missile.EndPosition;
-                replaceByMissile.Start = data.Missile.StartPosition;
+                replaceByMissile.End = data.Missile.EndPosition.To2D();
+                replaceByMissile.Start = data.Missile.StartPosition.To2D();
                 return;
             }
 
@@ -248,74 +264,135 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
         {
             foreach (var skill in SkillshotDetector.SkillshotsDetected)
             {
-                var collideobjects = new List<Obj_AI_Base>();
+                Check(skill);
+            }
+        }
 
-                var collisionData = skill.Data.Collisions;
+        public static void Check(DetectedSkillshotData skill)
+        {
+            var collideobjects = new List<Obj_AI_Base>();
+            var collidePoints = new List<Vector2>();
 
-                var polygon = skill.OriginalPolygon;
+            var collisionData = skill.Data.Collisions;
 
-                if (collisionData == null)
+            var polygon = skill.OriginalPolygon;
+
+            if (polygon == null)
+                return;
+
+            if (collisionData == null)
+            {
+                collideobjects.AddRange(EntityManager.Allies.Where(h => h.Team != skill.Caster.Team && h.IsValidTarget(2000) && polygon.IsInside(h)));
+                collideobjects.AddRange(EntityManager.Enemies.Where(h => h.Team != skill.Caster.Team && h.IsValidTarget(2000) && polygon.IsInside(h)));
+
+                skill.CollidePoint = null;
+                skill.CollideTarget = null;
+                skill.CollideTargets = collideobjects.ToArray();
+                return;
+            }
+
+            collidePoints.Clear();
+            collideobjects.Clear();
+
+            if (collisionData.Contains(Databases.SpellData.Collision.Caster) && skill.Caster != null && polygon.IsInside(skill.Caster))
+                collideobjects.Add(skill.Caster);
+
+            if (collisionData.Contains(Databases.SpellData.Collision.Heros))
+                collideobjects.AddRange(EntityManager.Heroes.AllHeroes.Where(h => h.Team != skill.Caster.Team && !h.IsMe && h.IsValidTarget(2000) && polygon.IsInside(h)));
+
+            if (collisionData.Contains(Databases.SpellData.Collision.Minions))
+                collideobjects.AddRange(ObjectManager.Get<Obj_AI_Minion>().Where(h => h.Team != skill.Caster.Team && h.Health > 1 && !h.IsWard() && h.IsValidTarget(2000) && polygon.IsInside(h)));
+
+            if (collisionData.Contains(Databases.SpellData.Collision.Walls))
+            {
+                var cells = CellsAnalyze(skill.CurrentPosition, polygon);
+                collidePoints.AddRange(cells.Select(c => c.WorldPosition.To2D()));
+            }
+
+            if (!collideobjects.Any() && !collidePoints.Any())
+            {
+                skill.CollideTarget = null;
+                skill.CollidePoint = null;
+                skill.CollideTargets = null;
+                return;
+            }
+
+            Obj_AI_Base collide = null;
+
+            collidePoints.AddRange(collideobjects.Select(o => o.ServerPosition.To2D()).OrderBy(o => o.Distance(skill.CurrentPosition, true)));
+
+            if (collidePoints.Any() && collisionData.Contains(Databases.SpellData.Collision.Walls))
+            {
+                var pointCollide = collidePoints.OrderBy(p => p.Distance(skill.CurrentPosition, true)).FirstOrDefault();
+                if (pointCollide != null && pointCollide != Vector2.Zero)
                 {
-                    collideobjects.AddRange(EntityManager.Allies.Where(h => h.Team != skill.Caster.Team && h.IsValidTarget(1500) && polygon != null && polygon.IsInside(h)));
-                    collideobjects.AddRange(EntityManager.Enemies.Where(h => h.Team != skill.Caster.Team && h.IsValidTarget(1500) && polygon != null && polygon.IsInside(h)));
-
-                    skill.CollidePoint = null;
-                    skill.CollideTarget = null;
+                    var wallrange = skill.CurrentPosition.Distance(pointCollide);
+                    skill.CollidePoint = skill.CurrentPosition.Extend(skill.EndPosition, wallrange);
                     skill.CollideTargets = collideobjects.ToArray();
                     return;
                 }
+            }
 
-                collideobjects.Clear();
-
-                if (collisionData.Contains(Databases.SpellData.Collision.Caster) && skill.Caster != null && polygon.IsInside(skill.Caster))
-                    collideobjects.Add(skill.Caster);
-
-                if (collisionData.Contains(Databases.SpellData.Collision.Heros))
-                    collideobjects.AddRange(EntityManager.Heroes.AllHeroes.Where(h => h.Team != skill.Caster.Team && !h.IsMe && h.IsValidTarget(1500) && polygon != null && polygon.IsInside(h)));
-
-                if (collisionData.Contains(Databases.SpellData.Collision.Minions))
-                    collideobjects.AddRange(EntityManager.MinionsAndMonsters.CombinedAttackable.Where(h => h.Team != skill.Caster.Team && !h.IsWard() && h.IsValidTarget(1500) && polygon != null && polygon.IsInside(h)));
-
-                if (!collideobjects.Any())
+            if (skill.Data.CollideCount != 0 && skill.Data.CollideCount < int.MaxValue)
+            {
+                if (collideobjects.Count >= skill.Data.CollideCount)
                 {
-                    skill.CollideTarget = null;
-                    skill.CollidePoint = null;
-                    skill.CollideTargets = null;
-                    return;
-                }
-
-                Obj_AI_Base collide = null;
-
-                if (skill.Data.CollideCount != 0)
-                {
-                    if (collideobjects.Count > skill.Data.CollideCount)
+                    if (collideobjects.Count == 1)
                     {
-                        if (collideobjects.Count == 1)
-                            collide = collideobjects.FirstOrDefault();
-                        else if (collideobjects.Count == skill.Data.CollideCount + 1)
-                            collide = collideobjects.OrderBy(o => o.Distance(skill.CurrentPosition)).ToArray().LastOrDefault();
-                        else
-                            collide = collideobjects.OrderBy(o => o.Distance(skill.CurrentPosition)).ToArray()[skill.Data.CollideCount];
+                        collide = collideobjects.FirstOrDefault();
+                    }
+                    else if (collideobjects.Count == skill.Data.CollideCount + 1)
+                        collide = collideobjects.OrderBy(o => o.Distance(skill.CurrentPosition)).ToArray().LastOrDefault();
+                    else
+                        collide = collideobjects.OrderBy(o => o.Distance(skill.CurrentPosition)).ToArray()[skill.Data.CollideCount];
+                }
+            }
+            else
+            {
+                collide = collideobjects.OrderBy(o => o.Distance(skill.CurrentPosition, true)).FirstOrDefault();
+            }
+
+            if (collide == null)
+            {
+                skill.CollideTarget = null;
+                skill.CollidePoint = null;
+                skill.CollideTargets = collideobjects.ToArray();
+                return;
+            }
+
+            var range = skill.CurrentPosition.Distance(collide.ServerPosition);
+            skill.CollidePoint = skill.CurrentPosition.Extend(skill.EndPosition, range);
+            skill.CollideTarget = collide;
+            skill.CollideTargets = collideobjects.ToArray();
+        }
+
+        private static IEnumerable<NavMeshCell> CellsAnalyze(Vector2 pos, EloBuddy.SDK.Geometry.Polygon poly)
+        {
+            var sourceGrid = pos.ToNavMeshCell();
+            var startPos = new NavMeshCell(sourceGrid.GridX - (short)Math.Floor(50f), sourceGrid.GridY - (short)Math.Floor(50f));
+
+            var cells = new List<NavMeshCell> { startPos };
+            for (var y = startPos.GridY; y < startPos.GridY + 50; y++)
+            {
+                for (var x = startPos.GridX; x < startPos.GridX + 50; x++)
+                {
+                    if (x == startPos.GridX && y == startPos.GridY)
+                    {
+                        continue;
+                    }
+                    if (x == sourceGrid.GridX && y == sourceGrid.GridY)
+                    {
+                        if (poly.IsInside(sourceGrid.WorldPosition))
+                            cells.Add(sourceGrid);
+                    }
+                    else
+                    {
+                        if (poly.IsInside(new NavMeshCell(x, y).WorldPosition))
+                            cells.Add(new NavMeshCell(x, y));
                     }
                 }
-                else
-                {
-                    collide = collideobjects.OrderBy(o => o.Distance(skill.CurrentPosition, true)).FirstOrDefault();
-                }
-
-                if (collide == null)
-                {
-                    skill.CollideTarget = null;
-                    skill.CollidePoint = null;
-                    skill.CollideTargets = collideobjects.ToArray();
-                    return;
-                }
-
-                var range = skill.Start.Distance(collide.ServerPosition);
-                skill.CollidePoint = skill.Start.Extend(skill.End, range).To3D();
-                skill.CollideTarget = collide;
-                skill.CollideTargets = collideobjects.ToArray();
             }
+            return cells.Where(c => c.WorldPosition.IsBuilding() || c.WorldPosition.IsWall());
         }
     }
 }

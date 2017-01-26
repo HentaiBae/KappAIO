@@ -15,23 +15,24 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public AIHeroClient Target;
         public MissileClient Missile;
         public SkillshotData Data;
-        public Vector3 Start;
-        public Vector3 End;
-        public Vector3? CollidePoint;
+        public Vector2 Start;
+        public Vector2 End;
+        public Vector2 Direction => (this.End - this.Start).Normalized();
+        public Vector2? CollidePoint;
         public Obj_AI_Base CollideTarget;
         public Obj_AI_Base[] CollideTargets;
         public bool DetectedMissile => this.Missile != null;
 
-        public float MaxTravelTime(Vector3 target)
+        public float MaxTravelTime(Vector2 target)
         {
             return (this.Start.Distance(target) / this.Data.Speed * 1000f) + this.Data.CastDelay;
         }
         public float MaxTravelTime(Obj_AI_Base target)
         {
-            return this.MaxTravelTime(target.ServerPosition);
+            return this.MaxTravelTime(target.ServerPosition.To2D());
         }
 
-        public float TravelTime(Vector3 target)
+        public float TravelTime(Vector2 target)
         {
             var correct = (this.CurrentPosition.Distance(target) / this.Data.Speed * 1000f) + this.Data.CastDelay;
             if (this.DetectedMissile)
@@ -42,7 +43,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
         public float TravelTime(Obj_AI_Base target)
         {
-            return this.TravelTime(target.ServerPosition);
+            return this.TravelTime(target.ServerPosition.To2D());
         }
 
         public float TimeToCollide => this.TravelTime(this.CollideEndPosition);
@@ -61,7 +62,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             return this.Polygon != null && this.Polygon.IsInside(pred);
         }
 
-        public Vector3 CurrentPosition
+        public Vector2 CurrentPosition
         {
             get
             {
@@ -69,21 +70,21 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 {
                     if (this.Data.SticksToMissile)
                     {
-                        return this.Missile.Position.Extend(this.Start, -this.Data.Width / 2f).To3D();
+                        return this.Missile.Position.Extend(this.Start, -this.Data.Width / 2f);
                     }
                 }
                 if (this.Caster != null)
                 {
                     if (this.Data.SticksToCaster)
                     {
-                        return this.Caster.ServerPosition;
+                        return this.Caster.ServerPosition.To2D();
                     }
                 }
                 if (this.Target != null)
                 {
                     if (this.Data.StartsFromTarget)
                     {
-                        return this.Target.ServerPosition;
+                        return this.Target.ServerPosition.To2D();
                     }
                 }
 
@@ -91,36 +92,43 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             }
         }
 
-        public Vector3 EndPosition
+        public Vector2 EndPosition
         {
             get
             {
-                var endpos = Vector3.Zero;
+                var endpos = Vector2.Zero;
 
                 if (this.Data.DodgeFrom != null && this.Data.DodgeFrom.Any())
                 {
                     var obj = ObjectManager.Get<Obj_GeneralParticleEmitter>().FirstOrDefault(o => o.IsValid && this.Data.DodgeFrom.Contains(o.Name));
                     if (obj != null)
                     {
-                        endpos = obj.Position;
+                        endpos = obj.Position.To2D();
                     }
                 }
 
                 if (this.Caster != null)
                 {
-                    var direction = this.Caster.Direction().Distance(this.Caster) < 100 ? this.Caster.Direction().To3D() : this.Caster.Path.LastOrDefault();
+                    var direction = (this.Caster.Direction().Distance(this.Caster) < 100 ? this.Caster.Direction() : this.Caster.Path.LastOrDefault().To2D());
                     if (this.Data.EndIsCasterDirection)
                     {
                         endpos = direction;
                     }
                     if (this.Data.EndSticksToCaster)
                     {
-                        endpos = this.Caster.ServerPosition;
+                        endpos = this.Caster.ServerPosition.To2D();
                     }
                     if (this.Data.SpellName.Equals("SionR"))
                     {
                         this.Data.Speed = this.Caster.MoveSpeed;
-                        endpos = this.CurrentPosition.Extend(this.Start.Extend(this.Caster, -this.Data.Range).To3D(), this.Data.Range).To3D();
+                        endpos = this.CurrentPosition.Extend(Start, -this.Data.Range);
+                    }
+                    if (this.Data.SticksToCaster)
+                    {
+                        if (this.Data.SpellName == "TaricE")
+                        {
+                            return CurrentPosition + Direction * Data.Range;
+                        }
                     }
                 }
 
@@ -128,29 +136,29 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 {
                     if (!string.IsNullOrEmpty(this.Data.TargetName) && this.Target.Name.Equals(this.Data.TargetName))
                     {
-                        endpos = this.Target.Position;
+                        endpos = this.Target.Position.To2D();
                     }
                 }
 
                 if (endpos.IsZero)
                 {
-                    endpos = this.Start.Distance(this.End) > this.Data.Range ? this.Start.Extend(this.End, this.Data.Range).To3D() : this.End;
+                    endpos = this.Start.Distance(this.End) > this.Data.Range ? this.Start.Extend(this.End, this.Data.Range) : this.End;
                 }
-                Vector3 result;
+                Vector2 result;
                 if (this.Data.IsFixedRange)
                 {
-                    result = this.Start.Extend(endpos, this.Data.Range).To3D();
+                    result = this.Start.Extend(endpos, this.Data.Range);
                 }
                 else
                 {
-                    result = this.Data.ExtraRange > 0 && Data.ExtraRange < float.MaxValue && Data.ExtraRange < int.MaxValue ? endpos.Extend(this.Start, -this.Data.ExtraRange).To3D() : endpos;
+                    result = this.Data.ExtraRange > 0 && this.Data.ExtraRange < float.MaxValue && this.Data.ExtraRange < int.MaxValue ? endpos.Extend(this.Start, -this.Data.ExtraRange) : endpos;
                 }
 
                 return result;
             }
         }
 
-        public Vector3 CollideEndPosition
+        public Vector2 CollideEndPosition
         {
             get
             {
@@ -180,6 +188,14 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 if (this.Data.type == Type.Cone)
                 {
                     return new Geometry.Polygon.Sector(this.CurrentPosition, this.CollideEndPosition, (float)(this.Data.Angle * Math.PI / 180), this.Data.Range);
+                }
+                if (this.Data.type == Type.Ring)
+                {
+                    return new CustomGeometry.Ring(CollideEndPosition, width, this.Data.RingRadius).ToSDKPolygon();
+                }
+                if (this.Data.type == Type.Arc)
+                {
+                    return new CustomGeometry.Arc(CurrentPosition, CollideEndPosition, (int)ObjectManager.Player.BoundingRadius).ToSDKPolygon();
                 }
                 return null;
             }

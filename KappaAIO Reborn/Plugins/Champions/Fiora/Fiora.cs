@@ -57,6 +57,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         private void Orbwalker_OnUnkillableMinion(Obj_AI_Base target, Orbwalker.UnkillableMinionArgs args)
         {
+            if(Orbwalker.IsAutoAttacking)
+                return;
             var minion = target as Obj_AI_Minion;
             if (!Config.useEUnk || minion == null || HydraItem.Ready || !E.IsReady() || !(Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear) || Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit)))
                 return;
@@ -98,7 +100,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             if (target == null)
                 return null;
 
-            var AAvital = Config.orbAAVital && target.IsKillable(user.GetAutoAttackRange(target) * 1.1f) || !Config.orbAAVital && target.IsKillable(user.GetAutoAttackRange(target) * 1.25f);
+            var AAvital = Config.orbAAVital && target.IsKillable(user.GetAutoAttackRange(target) * 1.1f) || !Config.orbAAVital && target.IsKillable(user.GetAutoAttackRange(target) * 1.3f);
 
             var vital = VitalManager.vital(target);
             if (vital == null)

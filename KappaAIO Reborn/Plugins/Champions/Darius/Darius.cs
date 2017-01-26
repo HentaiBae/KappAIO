@@ -194,7 +194,10 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         private void Orbwalker_OnUnkillableMinion(Obj_AI_Base target, Orbwalker.UnkillableMinionArgs args)
         {
-            if(!target.IsKillable(user.GetAutoAttackRange(target) + W.Range) || !W.IsReady() || !Config.useWlane)
+            if (Orbwalker.IsAutoAttacking)
+                return;
+
+            if (!target.IsKillable(user.GetAutoAttackRange(target) + W.Range) || !W.IsReady() || !Config.useWlane)
                 return;
 
             var shoulduse = Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear) || Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit);
