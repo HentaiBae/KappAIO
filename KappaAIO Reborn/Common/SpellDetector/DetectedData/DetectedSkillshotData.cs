@@ -23,9 +23,12 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public Obj_AI_Base[] CollideTargets;
         public bool DetectedMissile => this.Missile != null;
 
+        public bool IsVisible
+            => CurrentPosition.IsOnScreen() || CurrentPosition.IsInRange(Player.Instance, 5000) || CollideEndPosition.IsOnScreen() || CollideEndPosition.IsInRange(Player.Instance, 5000);
+
         public float MaxTravelTime(Vector2 target)
         {
-            return (this.Start.Distance(target) / this.Data.Speed * 1000f) + this.Data.CastDelay;
+            return (this.Start.Distance(target) / this.Data.Speed * 1000f) + this.Data.CastDelay + this.Data.ExtraDuration;
         }
         public float MaxTravelTime(Obj_AI_Base target)
         {
@@ -48,10 +51,10 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
         public float TimeToCollide => this.TravelTime(this.CollideEndPosition);
         public float StartTick;
-        public float EndTick => this.StartTick + this.MaxTravelTime(this.EndPosition);
+        public float EndTick => this.StartTick + this.MaxTravelTime(this.CollideEndPosition);
         public float TicksLeft => this.EndTick - Core.GameTickCount;
-        public float TicksPassed => this.StartTick - Core.GameTickCount;
-        public bool Ended => Core.GameTickCount - this.EndTick > 0 || this.TravelTime(this.CollideEndPosition) < 0;
+        public float TicksPassed => Core.GameTickCount - this.StartTick;
+        public bool Ended => (Core.GameTickCount - this.EndTick > 0 || TicksPassed > 66666) || (DetectedMissile && this.Missile.IsDead) || this.Target != null && this.Target.IsDead;
 
         public bool WillHit(Obj_AI_Base target)
         {

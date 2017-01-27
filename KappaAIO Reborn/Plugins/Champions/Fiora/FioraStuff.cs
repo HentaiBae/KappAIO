@@ -32,10 +32,10 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 {
                     if (FioraPassive(emitter) && emitter.IsEnemy)
                     {
-                        var passive = new FioraVital(emitter);
+                        var passive = new FioraVital(emitter) { startTick = Core.GameTickCount };
                         if (!StoredPassives.Contains(passive))
                             StoredPassives.Add(passive);
-                        StoredPassives.RemoveAll(v => v.Vital != null && (v.Vital.IsDead || !v.Vital.IsValid) || v.Caster != null && (!v.Caster.IsValid || v.Caster.IsDead));
+                        StoredPassives.RemoveAll(v => v.Vital != null && (v.Vital.IsDead || !v.Vital.IsValid) || v.Caster != null && (!v.Caster.IsValid || v.Caster.IsDead) || Core.GameTickCount - v.startTick > 15000);
                     }
                 }
             }
@@ -48,7 +48,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     if (FioraPassive(emitter))
                     {
                         if (StoredPassives.Any(p => p.Vital.Name.Equals(emitter.Name)))
-                            StoredPassives.RemoveAll(v => v.Vital != null && (v.Vital.IdEquals(emitter) || v.Vital.IsDead || !v.Vital.IsValid) || v.Caster != null && (!v.Caster.IsValid || v.Caster.IsDead));
+                            StoredPassives.RemoveAll(v => v.Vital != null && (v.Vital.IdEquals(emitter) || v.Vital.IsDead || !v.Vital.IsValid) || v.Caster != null && (!v.Caster.IsValid || v.Caster.IsDead) || Core.GameTickCount - v.startTick > 15000);
                     }
                 }
             }
@@ -62,6 +62,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
             public class FioraVital
             {
+                public float startTick;
                 public AIHeroClient Caster { get { return EntityManager.Heroes.AllHeroes.OrderBy(e => e.Distance(this.Vital)).FirstOrDefault(h => HasFioraPassiveBuff(h) && h.Distance(this.Vital) <= 300); } }
                 public Obj_GeneralParticleEmitter Vital;
                 public bool ValidVital { get { return !this.Vitalsector.Center.IsWall() && this.Vital.IsValid && !this.Vital.IsDead && !this.OrbWalkVitalPos.IsBuilding() && (this.Vital.Name.Contains("Timeout") || !this.Vital.Name.Contains("Warning")); } }

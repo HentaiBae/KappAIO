@@ -262,7 +262,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 
         private static void Game_OnPreTick(EventArgs args)
         {
-            foreach (var skill in SkillshotDetector.SkillshotsDetected)
+            foreach (var skill in SkillshotDetector.SkillshotsDetected.Where(s => s.IsVisible))
             {
                 Check(skill);
             }
