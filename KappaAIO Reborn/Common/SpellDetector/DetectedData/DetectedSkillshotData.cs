@@ -11,8 +11,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 {
     public class DetectedSkillshotData
     {
-        public AIHeroClient Caster;
-        public AIHeroClient Target;
+        public Obj_AI_Base Caster;
+        public Obj_AI_Base Target;
         public MissileClient Missile;
         public SkillshotData Data;
         public Vector2 Start;
@@ -22,6 +22,14 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public Obj_AI_Base CollideTarget;
         public Obj_AI_Base[] CollideTargets;
         public bool DetectedMissile => this.Missile != null;
+
+        public bool IsGlobal
+        {
+            get
+            {
+                return this.Data.Range >= 4000;
+            }
+        }
 
         public bool IsVisible
             => CurrentPosition.IsOnScreen() || CurrentPosition.IsInRange(Player.Instance, 5000) || CollideEndPosition.IsOnScreen() || CollideEndPosition.IsInRange(Player.Instance, 5000);
@@ -56,13 +64,21 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public float TicksPassed => Core.GameTickCount - this.StartTick;
         public bool Ended => (Core.GameTickCount - this.EndTick > 0 || TicksPassed > 66666) || (DetectedMissile && this.Missile.IsDead) || this.Target != null && this.Target.IsDead;
 
-        public bool WillHit(Obj_AI_Base target)
+        public bool WillHit(Obj_AI_Base target, float time = -1f)
         {
             if (!target.IsValidTarget())
                 return false;
 
-            var pred = target.PrediectPosition((int)this.TravelTime(target));
-            return this.Polygon != null && this.Polygon.IsInside(pred);
+            time = time.Equals(-1) ? Math.Max(this.TravelTime(target), 0) : time;
+            var pred = target.PrediectPosition((int)time);
+            return this.WillHit(pred.To2D());
+        }
+        public bool WillHit(Vector2 target)
+        {
+            if (!target.IsValid())
+                return false;
+
+            return this.Polygon != null && this.Polygon.IsInside(target);
         }
 
         public Vector2 CurrentPosition
@@ -89,6 +105,11 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     {
                         return this.Target.ServerPosition.To2D();
                     }
+                }
+
+                if (this.Data.StaticStart)
+                {
+                    return this.Start;
                 }
 
                 return this.Start;
@@ -124,14 +145,22 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     if (this.Data.SpellName.Equals("SionR"))
                     {
                         this.Data.Speed = this.Caster.MoveSpeed;
-                        endpos = this.CurrentPosition.Extend(Start, -this.Data.Range);
+                        endpos = this.CurrentPosition.Extend(this.Start, -this.Data.Range);
                     }
                     if (this.Data.SticksToCaster)
                     {
                         if (this.Data.SpellName == "TaricE")
                         {
-                            return CurrentPosition + Direction * Data.Range;
+                            return this.CurrentPosition + this.Direction * this.Data.Range;
                         }
+                    }
+                }
+
+                if (this.DetectedMissile)
+                {
+                    if (this.Data.EndSticksToMissile)
+                    {
+                        endpos = this.Missile.Position.To2D();
                     }
                 }
 
@@ -148,6 +177,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     endpos = this.Start.Distance(this.End) > this.Data.Range ? this.Start.Extend(this.End, this.Data.Range) : this.End;
                 }
                 Vector2 result;
+
                 if (this.Data.IsFixedRange)
                 {
                     result = this.Start.Extend(endpos, this.Data.Range);
@@ -155,6 +185,16 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 else
                 {
                     result = this.Data.ExtraRange > 0 && this.Data.ExtraRange < float.MaxValue && this.Data.ExtraRange < int.MaxValue ? endpos.Extend(this.Start, -this.Data.ExtraRange) : endpos;
+                }
+
+                if (IsGlobal && this.Data.type == Type.LineMissile)
+                {
+                    result = this.CurrentPosition + this.Direction * (this.Data.Range / 2f);
+                }
+
+                if (this.Data.StaticEnd)
+                {
+                    result = this.End;
                 }
 
                 return result;

@@ -193,6 +193,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             if (!target.IsKillable())
                 return;
 
+            if(target.HasBuff("PoppyWZone"))
+                return;
+
             if (shortQ || longQ)
             {
                 var vital = VitalManager.vital(target, validVitals);

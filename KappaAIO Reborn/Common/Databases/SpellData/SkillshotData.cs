@@ -7,9 +7,11 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public Type type;
         public Champion hero;
         public SpellSlot slot;
+        public GameType GameType;
         public int CollideCount;
         public int DangerLevel;
         public int RequireBuffCount;
+        public float ExplodeWidth;
         public float MoveSpeedScaleMod;
         public float MissileAccel;
         public float MissileMaxSpeed;
@@ -22,15 +24,24 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public float Width;
         public float Speed;
         public float CastDelay;
+        public string CasterName;
         public string TargetName;
         public string MissileName;
         public string ParticalName;
+        public string StartParticalName;
+        public string MidParticalName;
+        public string EndParticalName;
         public string ParticalObjectName;
         public string SpellName;
         public string RequireBuff;
         public string[] ExtraSpellName;
         public string[] ExtraMissileName;
         public string[] DodgeFrom;
+        public bool AllowDuplicates;
+        public bool HasExplodingEnd;
+        public bool StaticStart;
+        public bool StaticEnd;
+        public bool EndSticksToMissile;
         public bool RangeScaleWithMoveSpeed;
         public bool DontCross;
         public bool DontAddExtraDuration;
@@ -46,7 +57,8 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool StartsFromTarget;
         public Collision[] Collisions;
 
-        public string MenuItemName => $"{this.hero} {this.slot} ({(!string.IsNullOrEmpty(this.SpellName) ? this.SpellName : !string.IsNullOrEmpty(this.MissileName) ? this.MissileName : this.ParticalName)})";
+        public string MenuItemName => $"{(this.hero.Equals(Champion.Unknown) ? "All" : this.hero.ToString())} {(this.slot.Equals(SpellSlot.Unknown) ? "Special" : this.slot.ToString())} ({(!string.IsNullOrEmpty(this.SpellName) ? this.SpellName : !string.IsNullOrEmpty(this.MissileName) ? this.MissileName : this.ParticalName)})";
+        public bool CanCollide => this.CollideCount > 0 && this.CollideCount < int.MaxValue;
     }
 
     public enum Type

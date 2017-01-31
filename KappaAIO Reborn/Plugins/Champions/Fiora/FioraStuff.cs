@@ -245,7 +245,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             {
                 get
                 {
-                    var high = EnabledSpells.OrderByDescending(s => s.DangerLevel).FirstOrDefault(s => s.Enabled && s.Caster.IsValidTarget(W.Range));
+                    var high = EnabledSpells.OrderByDescending(s => s.DangerLevel).FirstOrDefault(s => s.Enabled);
                     return null;
                 }
             }
@@ -412,13 +412,11 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
             public class EnabledSpell
             {
-                public EnabledSpell(string spellname, AIHeroClient caster)
+                public EnabledSpell(string spellname)
                 {
                     this.SpellName = spellname;
-                    this.Caster = caster;
                 }
-
-                public AIHeroClient Caster;
+                
                 public string SpellName;
                 public bool Enabled { get { return Config.spellblock.CheckBoxValue($"enable{SpellName}"); } }
                 public bool FastEvade { get { return Config.spellblock.CheckBoxValue($"fast{this.SpellName}"); } }
@@ -484,7 +482,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                                 spellblock.AddLabel(spellname);
                                 spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1 || s.CrowdControl);
                                 spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
-                                SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname, h));
+                                SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
                                 spellblock.AddSeparator(0);
                             }
                         }
@@ -506,7 +504,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                                 spellblock.AddLabel(spellname);
                                 spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1);
                                 spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
-                                SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname, h));
+                                SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
                                 spellblock.AddSeparator(0);
                             }
                         }
@@ -529,30 +527,27 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                                 spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1);
                                 spellblock.CreateCheckBox("fast" + spellname, "Fast Block (Instant)", s.FastEvade);
                                 spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
-                                SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname, h));
+                                SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
                                 spellblock.AddSeparator(0);
                             }
                         }
                     }
                 }
 
-                if (SkillshotDatabase.List.Any(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.hero))))
+                if (SkillshotDatabase.List.Any(x => (x.GameType.Equals(GameType.Normal) || x.GameType.Equals(Game.Type)) && (x.hero.Equals(Champion.Unknown) || EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.hero)))))
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("SkillShots");
                     foreach (var s in SkillshotDatabase.List.OrderBy(s => s.hero))
                     {
-                        foreach (var h in EntityManager.Heroes.Enemies.Where(h => h.Hero.Equals(s.hero)))
+                        var display = s.MenuItemName;
+                        if (!SpellBlocker.EnabledSpells.Any(x => x.SpellName.Equals(display)))
                         {
-                            var display = s.MenuItemName;
-                            if (!SpellBlocker.EnabledSpells.Any(x => x.SpellName.Equals(display)))
-                            {
-                                spellblock.AddLabel(display);
-                                spellblock.CreateCheckBox($"enable{display}", "Enable", s.DangerLevel > 1);
-                                spellblock.CreateCheckBox($"fast{display}", "Fast Block (Instant)", s.FastEvade);
-                                spellblock.CreateSlider($"danger{display}", "Danger Level", s.DangerLevel, 1, 5);
-                                SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(display, h));
-                            }
+                            spellblock.AddLabel(display);
+                            spellblock.CreateCheckBox($"enable{display}", "Enable", s.DangerLevel > 1);
+                            spellblock.CreateCheckBox($"fast{display}", "Fast Block (Instant)", s.FastEvade);
+                            spellblock.CreateSlider($"danger{display}", "Danger Level", s.DangerLevel, 1, 5);
+                            SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(display));
                         }
                     }
                 }

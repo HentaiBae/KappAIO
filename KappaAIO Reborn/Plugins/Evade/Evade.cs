@@ -22,7 +22,7 @@ namespace KappAIO_Reborn.Plugins.Evade
 
             DrawMenu.AddSeparator(0);
 
-            var skillshots = SkillshotDatabase.List.FindAll(s => EntityManager.Heroes.Enemies.Any(h => s.hero.Equals(h.Hero)));
+            var skillshots = SkillshotDatabase.List.FindAll(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type)) && (s.hero.Equals(Champion.Unknown) || EntityManager.Heroes.Enemies.Any(h => s.hero.Equals(h.Hero))));
 
             foreach (var skill in skillshots.OrderBy(s => s.hero))
             {
