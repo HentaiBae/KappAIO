@@ -370,7 +370,13 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                 var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
-                var kill = args.Caster.GetSpellDamage(Player.Instance, args.Data.slot) >= Player.Instance.Health;
+
+                bool kill = false;
+                var hero = args.Caster as AIHeroClient;
+                if (hero != null)
+                {
+                    kill = hero.GetSpellDamage(Player.Instance, args.Data.slot) >= Player.Instance.Health;
+                }
 
                 if (spell == null)
                     return;
@@ -469,76 +475,74 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 spellblock = Program.GlobalMenu.AddSubMenu("Fiora: SpellBlock");
                 spellblockEnable = spellblock.CreateCheckBox("enable", "Enable SpellBlock");
 
-                if (EmpowerdAttackDataDatabase.List.Any(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero))))
+                var validAttacks = EmpowerdAttackDataDatabase.List.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero)));
+                if (validAttacks.Any())
                 {
                     spellblock.AddGroupLabel("Empowered Attacks");
-                    foreach (var s in EmpowerdAttackDataDatabase.List.OrderBy(s => s.Hero).Where(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero))))
+                    foreach (var s in validAttacks.OrderBy(s => s.Hero))
                     {
-                        foreach (var h in EntityManager.Heroes.Enemies.Where(h => h.Hero.Equals(s.Hero)))
+                        var spellname = s.MenuItemName;
+                        if (!SpellBlocker.EnabledSpells.Any(x => x.SpellName.Equals(spellname)))
                         {
-                            var spellname = s.MenuItemName;
-                            if (!SpellBlocker.EnabledSpells.Any(x => x.SpellName.Equals(spellname)))
-                            {
-                                spellblock.AddLabel(spellname);
-                                spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1 || s.CrowdControl);
-                                spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
-                                SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
-                                spellblock.AddSeparator(0);
-                            }
+                            spellblock.AddLabel(spellname);
+                            spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1 || s.CrowdControl);
+                            spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
+                            SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
+                            spellblock.AddSeparator(0);
                         }
                     }
                 }
 
-                if (DangerBuffDataDatabase.List.Any(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero))))
+                var validBuffs = DangerBuffDataDatabase.List.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero)));
+                if (validBuffs.Any())
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("Danger Buffs");
 
-                    foreach (var s in DangerBuffDataDatabase.List.OrderBy(s => s.Hero))
+                    foreach (var s in validBuffs.OrderBy(s => s.Hero))
                     {
-                        foreach (var h in EntityManager.Heroes.Enemies.Where(h => h.Hero.Equals(s.Hero)))
+                        var spellname = s.MenuItemName;
+                        if (!SpellBlocker.EnabledSpells.Any(x => x.SpellName.Equals(spellname)))
                         {
-                            var spellname = s.MenuItemName;
-                            if (!SpellBlocker.EnabledSpells.Any(x => x.SpellName.Equals(spellname)))
-                            {
-                                spellblock.AddLabel(spellname);
-                                spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1);
-                                spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
-                                SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
-                                spellblock.AddSeparator(0);
-                            }
+                            spellblock.AddLabel(spellname);
+                            spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1);
+                            spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
+                            SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
+                            spellblock.AddSeparator(0);
                         }
                     }
                 }
 
 
-                if (TargetedSpellDatabase.List.Any(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.hero))))
+                var validTargeted = TargetedSpellDatabase.List.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.hero)));
+                if (validTargeted.Any())
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("Targeted Spells");
-                    foreach (var s in TargetedSpellDatabase.List.OrderBy(s => s.hero))
+                    foreach (var s in validTargeted.OrderBy(s => s.hero))
                     {
-                        foreach (var h in EntityManager.Heroes.Enemies.Where(h => h.Hero.Equals(s.hero)))
+                        var spellname = s.MenuItemName;
+                        if (!SpellBlocker.EnabledSpells.Any(x => x.SpellName.Equals(spellname)))
                         {
-                            var spellname = s.MenuItemName;
-                            if (!SpellBlocker.EnabledSpells.Any(x => x.SpellName.Equals(spellname)))
-                            {
-                                spellblock.AddLabel(spellname);
-                                spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1);
-                                spellblock.CreateCheckBox("fast" + spellname, "Fast Block (Instant)", s.FastEvade);
-                                spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
-                                SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
-                                spellblock.AddSeparator(0);
-                            }
+                            spellblock.AddLabel(spellname);
+                            spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1);
+                            spellblock.CreateCheckBox("fast" + spellname, "Fast Block (Instant)", s.FastEvade);
+                            spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
+                            SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
+                            spellblock.AddSeparator(0);
                         }
                     }
                 }
 
-                if (SkillshotDatabase.List.Any(x => (x.GameType.Equals(GameType.Normal) || x.GameType.Equals(Game.Type)) && (x.hero.Equals(Champion.Unknown) || EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.hero)))))
+                var validskillshots =
+                    SkillshotDatabase.List.Where(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type))
+                    && EntityManager.Heroes.Enemies.Any(h => s.hero.Equals(Champion.Unknown) || s.hero.Equals(h.Hero))).OrderBy(s => s.hero);
+                if (validskillshots.Any())
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("SkillShots");
-                    foreach (var s in SkillshotDatabase.List.OrderBy(s => s.hero))
+
+                    foreach (var s in validskillshots.OrderBy(s => s.hero))
                     {
                         var display = s.MenuItemName;
                         if (!SpellBlocker.EnabledSpells.Any(x => x.SpellName.Equals(display)))
