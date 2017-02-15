@@ -53,7 +53,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             }
         }
 
-        private float delay => delay > TicksPassed && DetectedMissile && this.Data.type != Type.CircleMissile ? 0 : this.Data.CastDelay;
+        private float delay => Data.CastDelay > TicksPassed && DetectedMissile && this.Data.type != Type.CircleMissile ? 0 : this.Data.CastDelay;
 
         public float MaxTravelTime(Vector2 target)
         {
