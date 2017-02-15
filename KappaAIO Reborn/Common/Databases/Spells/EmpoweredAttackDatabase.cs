@@ -330,13 +330,6 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     },
                 new EmpoweredAttackData
                     {
-                        Hero = Champion.Talon,
-                        Slot = SpellSlot.Q,
-                        AttackName = "TalonNoxianDiplomacyAttack",
-                        DangerLevel = 2
-                    },
-                new EmpoweredAttackData
-                    {
                         Hero = Champion.Trundle,
                         Slot = SpellSlot.Q,
                         AttackName = "TrundleQ",

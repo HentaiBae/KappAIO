@@ -433,7 +433,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         public static class Config
         {
             public static Menu ComboMenu, spellblock, ksMenu, LMenu, MiscMenu;
-            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, orbRvit, aaVitl;
+            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, orbRvit, aaVitl, focusR;
 
             public static bool validVitals => QValidvitals.CurrentValue;
             public static bool useQShortVital => QShortvital.CurrentValue;
@@ -448,6 +448,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public static bool useEUnk => Eunk.CurrentValue;
             public static bool orbUltVital => orbRvit.CurrentValue;
             public static bool orbAAVital => aaVitl.CurrentValue;
+            public static bool focusRTarget => focusR.CurrentValue;
 
             public static void Init()
             {
@@ -462,7 +463,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 orbVital = ComboMenu.CreateCheckBox("orbVital", "Orbwalk To Vitals");
                 orbRvit = ComboMenu.CreateCheckBox("orbUltVital", "Orbwalk to R Vitals Only", false);
                 aaVitl = ComboMenu.CreateCheckBox("aaVitl", "Orbwalk to Vitals in AA Range Only");
-
+                focusR = ComboMenu.CreateCheckBox("focusR", "Force Focus Target with R Mark");
                 ComboMenu.AddGroupLabel("Extra Settings");
                 EReset = ComboMenu.CreateCheckBox("EReset", "E Reset Auto Attack");
                 Hydra = ComboMenu.CreateCheckBox("Hydra", "Use Hydra");
@@ -530,6 +531,25 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                             spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
                             SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
                             spellblock.AddSeparator(0);
+                        }
+                    }
+                }
+
+                var specialSpells = SpecialSpellsDatabase.List.FindAll(s => EntityManager.Heroes.Enemies.Any(h => s.Hero.Equals(h.Hero)));
+                if (specialSpells.Any())
+                {
+                    spellblock.AddSeparator(5);
+                    spellblock.AddGroupLabel("SpecialSpells");
+                    foreach (var s in specialSpells)
+                    {
+                        var display = s.MenuItemName;
+                        if (!SpellBlocker.EnabledSpells.Any(x => x.SpellName.Equals(display)))
+                        {
+                            spellblock.AddLabel(display);
+                            spellblock.CreateCheckBox($"enable{display}", "Enable", s.DangerLevel > 1);
+                            spellblock.CreateCheckBox($"fast{display}", "Fast Block (Instant)", s.DangerLevel > 2);
+                            spellblock.CreateSlider($"danger{display}", "Danger Level", s.DangerLevel, 1, 5);
+                            SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(display));
                         }
                     }
                 }

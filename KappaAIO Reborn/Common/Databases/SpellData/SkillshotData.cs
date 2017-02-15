@@ -7,6 +7,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public Type type;
         public Champion hero;
         public SpellSlot slot;
+        public SpellSlot ExtraSlot;
         public GameType GameType;
         public int CollideCount;
         public int DangerLevel;
@@ -24,9 +25,12 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public float Width;
         public float Speed;
         public float CastDelay;
+        public string DisplayName;
         public string CasterName;
         public string TargetName;
         public string MissileName;
+        public string MinionName;
+        public string MinionBaseSkinName;
         public string ParticalName;
         public string StartParticalName;
         public string MidParticalName;
@@ -37,6 +41,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public string[] ExtraSpellName;
         public string[] ExtraMissileName;
         public string[] DodgeFrom;
+        public bool DontRemoveWithMissile;
         public bool AllowDuplicates;
         public bool HasExplodingEnd;
         public bool StaticStart;
@@ -57,7 +62,12 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool StartsFromTarget;
         public Collision[] Collisions;
 
-        public string MenuItemName => $"{(this.hero.Equals(Champion.Unknown) ? "All" : this.hero.ToString())} {(this.slot.Equals(SpellSlot.Unknown) ? "Special" : this.slot.ToString())} ({(!string.IsNullOrEmpty(this.SpellName) ? this.SpellName : !string.IsNullOrEmpty(this.MissileName) ? this.MissileName : this.ParticalName)})";
+        public string MenuItemName => $"{(this.hero.Equals(Champion.Unknown) ? "All" : this.hero.ToString())} {(this.slot.Equals(SpellSlot.Unknown) ? "Special" : this.slot.ToString())} ({(!string.IsNullOrEmpty(DisplayName) ? DisplayName : !string.IsNullOrEmpty(this.SpellName) ? this.SpellName : !string.IsNullOrEmpty(this.MissileName) ? this.MissileName : this.ParticalName)})";
+        public bool HasRange => (this.Range < int.MaxValue && this.Range < float.MaxValue && this.Range > 0) && this.Range != 25000;
+        public bool HasWidth => this.Width < int.MaxValue && this.Width < float.MaxValue && this.Width > 0;
+        public bool HasAngle => this.Angle < int.MaxValue && this.Angle < float.MaxValue && this.Angle > 0;
+        public bool HasExtraRange => this.ExtraRange < int.MaxValue && this.ExtraRange < float.MaxValue && this.ExtraRange > 0;
+        public bool HasRingRadius => this.RingRadius < int.MaxValue && this.RingRadius < float.MaxValue && this.RingRadius > 0;
         public bool CanCollide => this.CollideCount > 0 && this.CollideCount < int.MaxValue;
     }
 

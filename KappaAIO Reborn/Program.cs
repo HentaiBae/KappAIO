@@ -1,15 +1,20 @@
 ﻿using System;
+using System.Linq;
 using EloBuddy;
+using EloBuddy.SDK;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using KappAIO_Reborn.Common.Utility;
 using KappAIO_Reborn.Plugins.Champions;
 using KappAIO_Reborn.Plugins.Evade;
+using KappAIO_Reborn.Plugins.HUD;
 
 namespace KappAIO_Reborn
 {
-    class Program
+    public class Program
     {
+        public static float LoadTick { get; private set; }
+        public static bool UsingMasterMind;
         public static Menu GlobalMenu;
 
         static void Main(string[] args)
@@ -19,8 +24,10 @@ namespace KappAIO_Reborn
 
         private static void Loading_OnLoadingComplete(EventArgs args)
         {
+            LoadTick = Core.GameTickCount;
             GlobalMenu = MainMenu.AddMenu("KappAIO", "kappaio");
             var evade = GlobalMenu.CreateCheckBox("Evade", "Enable Evade");
+            var hud = GlobalMenu.CreateCheckBox("Hud", "Enable HUD");
             bool loadedChampion;
 
             try
@@ -35,13 +42,35 @@ namespace KappAIO_Reborn
                 loadedChampion = false;
             }
 
+            bool loadedEvade = false;
             if (evade.CurrentValue)
             {
-                GlobalMenu.AddSubMenu("- Evade");
                 if (!loadedChampion)
                     GlobalMenu.DisplayName = "KappAIO: Evade";
 
                 Evade.Init();
+            }
+
+            if (hud.CurrentValue)
+            {
+                if(!loadedEvade && !loadedEvade)
+                    GlobalMenu.DisplayName = "KappAIO: HUD";
+                HUDManager.Init();
+            }
+
+            Game.OnTick += Game_OnTick;
+        }
+
+        private static void Game_OnTick(EventArgs args)
+        {
+            if (Core.GameTickCount - LoadTick > 3000 || UsingMasterMind) // give up or found mastermind kek
+            {
+                Game.OnTick -= Game_OnTick;
+            }
+
+            if (MainMenu.MenuInstances.Any(m => m.Key.ToLower().Contains("mastermind")))
+            {
+                UsingMasterMind = true;
             }
         }
     }

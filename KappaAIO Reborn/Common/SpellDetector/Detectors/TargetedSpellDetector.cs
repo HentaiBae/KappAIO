@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
+using EloBuddy.SDK;
 using KappAIO_Reborn.Common.Databases.Spells;
 using KappAIO_Reborn.Common.SpellDetector.DetectedData;
 using KappAIO_Reborn.Common.SpellDetector.Events;
@@ -51,7 +52,9 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             {
                 Caster = caster,
                 Target = target,
-                Data = data
+                Data = data,
+                Start = args.Start,
+                StartTick = Core.GameTickCount
             };
 
             Add(detected);

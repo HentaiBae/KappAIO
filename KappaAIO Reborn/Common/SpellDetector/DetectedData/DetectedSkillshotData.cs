@@ -13,6 +13,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
     {
         public Obj_AI_Base Caster;
         public Obj_AI_Base Target;
+        public Obj_GeneralParticleEmitter Particle;
         public MissileClient Missile;
         public SkillshotData Data;
         public Vector2 Start;
@@ -23,20 +24,40 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public Obj_AI_Base[] CollideTargets;
         public bool DetectedMissile => this.Missile != null;
 
+        public Type? _type;
+        public Type SkillshotType
+        {
+            get
+            {
+                return _type ?? this.Data.type;
+            }
+            set
+            {
+                this._type = value;
+            }
+        }
+
         public bool IsGlobal
         {
             get
             {
-                return this.Data.Range >= 4000;
+                return this.Data.Range >= 4000 && this.Data.Range < 15000;
             }
         }
 
         public bool IsVisible
-            => CurrentPosition.IsOnScreen() || CurrentPosition.IsInRange(Player.Instance, 5000) || CollideEndPosition.IsOnScreen() || CollideEndPosition.IsInRange(Player.Instance, 5000);
+        {
+            get
+            {
+                return (this.CurrentPosition.IsOnScreen() || this.CurrentPosition.IsInRange(Player.Instance, 3000) || this.CollideEndPosition.IsOnScreen() || this.CollideEndPosition.IsInRange(Player.Instance, 3000)) || DetectedMissile && this.Missile.Position.IsOnScreen();
+            }
+        }
+
+        private float delay => delay > TicksPassed && DetectedMissile && this.Data.type != Type.CircleMissile ? 0 : this.Data.CastDelay;
 
         public float MaxTravelTime(Vector2 target)
         {
-            return (this.Start.Distance(target) / this.Data.Speed * 1000f) + this.Data.CastDelay + this.Data.ExtraDuration;
+            return (this.Start.Distance(target) / this.Data.Speed * 1000f) + delay + this.Data.ExtraDuration;
         }
         public float MaxTravelTime(Obj_AI_Base target)
         {
@@ -45,9 +66,12 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
         public float TravelTime(Vector2 target)
         {
-            var correct = (this.CurrentPosition.Distance(target) / this.Data.Speed * 1000f) + this.Data.CastDelay;
-            if (this.DetectedMissile)
-                return correct;
+            var correct = (this.Start.Distance(target) / this.Data.Speed * 1000f) + this.delay;
+
+            if (this.Data.type == Type.CircleMissile)
+            {
+                correct = CollideEndPosition.Distance(target) / this.Data.Speed * 1000f + this.delay;
+            }
 
             return correct - this.TicksPassed;
         }
@@ -62,7 +86,15 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public float EndTick => this.StartTick + this.MaxTravelTime(this.CollideEndPosition);
         public float TicksLeft => this.EndTick - Core.GameTickCount;
         public float TicksPassed => Core.GameTickCount - this.StartTick;
-        public bool Ended => (Core.GameTickCount - this.EndTick > 0 || TicksPassed > 66666) || (DetectedMissile && this.Missile.IsDead) || this.Target != null && this.Target.IsDead;
+        public bool Ended => (IsGlobal && DetectedMissile ? (this.Missile == null || this.Missile.IsDead) : (Core.GameTickCount - this.EndTick > 0)
+            || (this.DetectedMissile && this.Missile.IsDead) || this.Target != null && this.Target.IsDead) || this.TicksPassed > 20000;
+
+        public bool IsInside(Obj_AI_Base target)
+        {
+            var hitbox = new EloBuddy.SDK.Geometry.Polygon.Circle(target.ServerPosition, target.BoundingRadius);
+            var predhitbox = new EloBuddy.SDK.Geometry.Polygon.Circle(target.PrediectPosition(TravelTime(target)), target.BoundingRadius);
+            return hitbox.Points.Any(OriginalPolygon.IsInside) && predhitbox.Points.Any(OriginalPolygon.IsInside);
+        }
 
         public bool WillHit(Obj_AI_Base target, float time = -1f)
         {
@@ -96,7 +128,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 {
                     if (this.Data.SticksToCaster)
                     {
-                        return this.Caster.ServerPosition.To2D();
+                        return this.Caster.PrediectPosition(TicksLeft).To2D();
                     }
                 }
                 if (this.Target != null)
@@ -106,12 +138,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                         return this.Target.ServerPosition.To2D();
                     }
                 }
-
-                if (this.Data.StaticStart)
-                {
-                    return this.Start;
-                }
-
+                
                 return this.Start;
             }
         }
@@ -140,18 +167,18 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     }
                     if (this.Data.EndSticksToCaster)
                     {
-                        endpos = this.Caster.ServerPosition.To2D();
+                        return this.Caster.ServerPosition.To2D();
                     }
                     if (this.Data.SpellName.Equals("SionR"))
                     {
                         this.Data.Speed = this.Caster.MoveSpeed;
-                        endpos = this.CurrentPosition.Extend(this.Start, -this.Data.Range);
+                        endpos = this.Caster.ServerPosition.Extend(this.Start, -this.Data.Range);
                     }
                     if (this.Data.SticksToCaster)
                     {
                         if (this.Data.SpellName == "TaricE")
                         {
-                            return this.CurrentPosition + this.Direction * this.Data.Range;
+                            return this.Caster.ServerPosition.To2D() + this.Direction * this.Data.Range;
                         }
                     }
                 }
@@ -185,11 +212,6 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 else
                 {
                     result = this.Data.ExtraRange > 0 && this.Data.ExtraRange < float.MaxValue && this.Data.ExtraRange < int.MaxValue ? endpos.Extend(this.Start, -this.Data.ExtraRange) : endpos;
-                }
-
-                if (IsGlobal && this.Data.type == Type.LineMissile)
-                {
-                    result = this.CurrentPosition + this.Direction * (this.Data.Range / 2f);
                 }
 
                 if (this.Data.StaticEnd)
@@ -230,7 +252,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 }
                 if (this.Data.type == Type.Cone)
                 {
-                    return new Geometry.Polygon.Sector(this.CurrentPosition, this.CollideEndPosition, (float)(this.Data.Angle * Math.PI / 180), this.Data.Range);
+                    return new Geometry.Polygon.Sector(this.CurrentPosition, this.CollideEndPosition, (float)((this.Data.Angle + 5) * Math.PI / 180), this.Data.Range + 10);
                 }
                 if (this.Data.type == Type.Ring)
                 {
@@ -238,7 +260,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 }
                 if (this.Data.type == Type.Arc)
                 {
-                    return new CustomGeometry.Arc(CurrentPosition, CollideEndPosition, (int)ObjectManager.Player.BoundingRadius).ToSDKPolygon();
+                    return new CustomGeometry.Arc(CurrentPosition, CollideEndPosition, 25 + (int)ObjectManager.Player.BoundingRadius).ToSDKPolygon();
                 }
                 return null;
             }
@@ -248,8 +270,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         {
             get
             {
-                var extraWidth = Player.Instance.BoundingRadius / 2f;
-                var width = this.Data.Width + extraWidth;
+                var width = this.Data.Width;
                 if (this.Data.type == Type.LineMissile)
                 {
                     return new Geometry.Polygon.Rectangle(this.CurrentPosition, this.EndPosition, width);

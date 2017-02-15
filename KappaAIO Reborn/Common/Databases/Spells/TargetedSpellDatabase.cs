@@ -56,7 +56,8 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      hero = Champion.Caitlyn,
                      slot = SpellSlot.R,
                      DangerLevel = 5,
-                     CastDelay = 1000
+                     CastDelay = 1000,
+					 Speed = 3200
                  },
               new TargetedSpellData
                  {
@@ -438,6 +439,13 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      DangerLevel = 5,
                      CastDelay = 250,
                      FastEvade = true
+                 },
+              new TargetedSpellData
+                 {
+                     hero = Champion.Talon,
+                     slot = SpellSlot.Q,
+                     DangerLevel = 2,
+                     CastDelay = 250
                  },
               new TargetedSpellData
                  {

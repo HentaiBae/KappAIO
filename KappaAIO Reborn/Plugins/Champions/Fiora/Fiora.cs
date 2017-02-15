@@ -3,6 +3,7 @@ using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
+using KappAIO_Reborn.Common.SpellDetector.Detectors;
 using KappAIO_Reborn.Common.Utility;
 using SharpDX;
 using static KappAIO_Reborn.Plugins.Champions.Fiora.FioraStuff;
@@ -12,7 +13,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 {
     public class Fiora : ChampionBase
     {
-        public static AIHeroClient QTarget => TargetSelector.SelectedTarget.IsValidTarget(Q2.Range) ? TargetSelector.SelectedTarget : Q2.GetTarget();
+        private static AIHeroClient _rTarget => EntityManager.Heroes.Enemies.OrderBy(e => e.Distance(user, true)).FirstOrDefault(e => e.IsValidTarget(Q2.Range) && e.HasBuff("fiorarmark"));
+        private static AIHeroClient _qTarget => TargetSelector.SelectedTarget.IsValidTarget(Q2.Range) ? TargetSelector.SelectedTarget : Q2.GetTarget();
+        public static AIHeroClient QTarget => Config.focusRTarget ? _rTarget ?? _qTarget : _qTarget;
 
         public static Spell.Skillshot Q1, Q2, W;
         public static Spell.Active E;
@@ -169,7 +172,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             if (Q2.IsReady() && Config.useQks)
             {
                 var qtarget = Q2.GetKillStealTarget(SpellManager.QDamage(null), DamageType.Physical);
-                if (qtarget != null)
+                if (qtarget != null && !qtarget.HasBuff("PoppyWZone") && !SkillshotDetector.SkillshotsDetected.Any(s => s.WillHit(Q2.GetPrediction(qtarget).CastPosition.To2D())))
                 {
                     Q2.Cast(qtarget);
                     return;
@@ -192,7 +195,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
             if (!target.IsKillable())
                 return;
-
+            
             if(target.HasBuff("PoppyWZone"))
                 return;
 
@@ -203,8 +206,19 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                 if (vitalResult.HasValue)
                 {
+                    if (SkillshotDetector.SkillshotsDetected.Any(s => s.WillHit(vitalResult.Value.To2D())))
+                    {
+                        return;
+                    }
+
                     Q2.Cast(vitalResult.Value);
+                    return;
                 }
+            }
+
+            if (gapCloser)
+            {
+                
             }
         }
 

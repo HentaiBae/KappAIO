@@ -364,5 +364,75 @@ namespace KappAIO_Reborn.Common.Utility
                 }
             }
         }
+
+        public static bool IsSummonerSpell(this SpellSlot slot)
+        {
+            return slot == SpellSlot.Summoner1 || slot == SpellSlot.Summoner2;
+        }
+
+        public static List<SpellSlot> KnownSpellSlots = new List<SpellSlot> { SpellSlot.Q, SpellSlot.W, SpellSlot.E, SpellSlot.R, SpellSlot.Summoner1, SpellSlot.Summoner2 };
+
+        public static float XPToCurrentLevel(this AIHeroClient hero)
+        {
+            var Totalxp = new[] { 280, 660, 1140, 1720, 2400, 3180, 4060, 5040, 6120, 7300, 8580, 9960, 11440, 13020, 14700, 16480, 18360 };
+            var aram = 0;
+            if (Game.MapId == GameMapId.HowlingAbyss)
+            {
+                if (hero.Level <= 3)
+                    return 0;
+
+                aram = -2;
+            }
+            if (Game.MapId == GameMapId.CrystalScar)
+            {
+                var csTotalXPSum = new[] { 790, 1245, 1785, 2410, 3110, 3900, 4770, 5645, 6575, 7560, 8590, 9660, 10935, 12290, 13715 };
+                return hero.Level <= 3 ? 0 : csTotalXPSum[hero.Level - 4];
+            }
+            return hero.Level == 1 ? 0 : Totalxp[hero.Level - 2] + aram;
+        }
+
+        // custom XP api
+        public static float XPNeededToNextLevel(this AIHeroClient hero)
+        {
+            if (hero.Level >= 18)
+            {
+                return 0;
+            }
+            if (Game.MapId == GameMapId.CrystalScar)
+            {
+                var csTotalXP = new[] { 790, 455, 540, 625, 700, 790, 870, 875, 930, 985, 1030, 1070, 1275, 1355, 1425 };
+                return csTotalXP[hero.Level <= 3 ? 0 : hero.Level - 3];
+            }
+            var aramstart = Game.MapId == GameMapId.HowlingAbyss && hero.Level <= 3;
+            var baseexpneeded = 180 + hero.Level * 100;
+
+            return aramstart ? 1138 : baseexpneeded;
+        }
+
+        public static float CurrentXP(this AIHeroClient hero)
+        {
+            if (hero.Level >= 18)
+            {
+                return 0;
+            }
+            var TotalXp = TotalXP(hero);
+            if (Game.MapId == GameMapId.HowlingAbyss)
+            {
+                if (hero.Level <= 3)
+                    return TotalXp;
+            }
+            var currnet = TotalXp - XPToCurrentLevel(hero);
+            return hero.Level == 1 ? TotalXp : currnet;
+        }
+
+        public static float CurrentXPPercent(this AIHeroClient hero)
+        {
+            return Math.Max(0, CurrentXP(hero) / XPNeededToNextLevel(hero) * 100);
+        }
+
+        public static float TotalXP(this AIHeroClient hero)
+        {
+            return hero.Experience.XP;
+        }
     }
 }
