@@ -18,9 +18,13 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             {
                 Game.OnTick += Game_OnTick;
                 Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
+                GameObject.OnCreate += GameObject_OnCreate;
+                GameObject.OnDelete += GameObject_OnDelete;
                 Loaded = true;
             }
         }
+
+        public static List<DetectedTargetedSpellData> DetectedTargetedSpells = new List<DetectedTargetedSpellData>();
 
         private static void Game_OnTick(EventArgs args)
         {
@@ -30,8 +34,47 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 OnTargetedSpellDetected.Invoke(spell);
         }
 
-        public static List<DetectedTargetedSpellData> DetectedTargetedSpells = new List<DetectedTargetedSpellData>();
+        private static void GameObject_OnDelete(GameObject sender, EventArgs args)
+        {
+            var missile = sender as MissileClient;
+            var caster = missile?.SpellCaster as AIHeroClient;
+            if (caster == null)
+                return;
 
+            DetectedTargetedSpells.RemoveAll(a => a.Caster != null && a.Caster.IdEquals(caster) && a.Missile != null && a.Missile.IdEquals(missile));
+        }
+
+        private static void GameObject_OnCreate(GameObject sender, EventArgs args)
+        {
+            var missile = sender as MissileClient;
+            var caster = missile?.SpellCaster as AIHeroClient;
+            if(caster == null)
+                return;
+
+            var target = missile.Target as Obj_AI_Base;
+            if(target == null)
+                return;
+
+            var data =
+                TargetedSpellDatabase.List.FirstOrDefault(
+                    s => s.MissileNames != null && s.MissileNames.Any(m => m.Equals(missile.SData.Name, StringComparison.CurrentCultureIgnoreCase)) && s.hero.Equals(caster.Hero));
+
+            if(data == null)
+                return;
+
+            var detected = new DetectedTargetedSpellData
+                {
+                    Caster = caster,
+                    Target = target,
+                    Data = data,
+                    Start = missile.StartPosition,
+                    StartTick = Core.GameTickCount,
+                    Missile = missile
+                };
+
+            Add(detected);
+        }
+        
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             var caster = sender as AIHeroClient;

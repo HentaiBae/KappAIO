@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -53,7 +54,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             }
         }
 
-        private float delay => Data.CastDelay > TicksPassed && DetectedMissile && this.Data.type != Type.CircleMissile ? 0 : this.Data.CastDelay;
+        public float extraDelay;
+        private float delay => Data.CastDelay > TicksPassed && DetectedMissile && this.Data.type != Type.CircleMissile ? 0 : this.Data.CastDelay + extraDelay;
 
         public float MaxTravelTime(Vector2 target)
         {
@@ -89,6 +91,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public bool Ended => (IsGlobal && DetectedMissile ? (this.Missile == null || this.Missile.IsDead) : (Core.GameTickCount - this.EndTick > 0)
             || (this.DetectedMissile && this.Missile.IsDead) || this.Target != null && this.Target.IsDead) || this.TicksPassed > 20000;
 
+
         public bool IsInside(Obj_AI_Base target)
         {
             var hitbox = new EloBuddy.SDK.Geometry.Polygon.Circle(target.ServerPosition, target.BoundingRadius);
@@ -117,6 +120,14 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         {
             get
             {
+                if (this.Data.type == Type.Cone)
+                {
+                    if (this.Data.SpellName.Equals("CamilleW") && this.Caster != null)
+                    {
+                        return Caster.ServerPosition.To2D();
+                    }
+                    return this.Start;
+                }
                 if (this.DetectedMissile)
                 {
                     if (this.Data.SticksToMissile)
@@ -138,7 +149,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                         return this.Target.ServerPosition.To2D();
                     }
                 }
-                
+
                 return this.Start;
             }
         }
@@ -148,15 +159,6 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             get
             {
                 var endpos = Vector2.Zero;
-
-                if (this.Data.DodgeFrom != null && this.Data.DodgeFrom.Any())
-                {
-                    var obj = ObjectManager.Get<Obj_GeneralParticleEmitter>().FirstOrDefault(o => o.IsValid && this.Data.DodgeFrom.Contains(o.Name));
-                    if (obj != null)
-                    {
-                        endpos = obj.Position.To2D();
-                    }
-                }
 
                 if (this.Caster != null)
                 {
@@ -176,7 +178,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     }
                     if (this.Data.SticksToCaster)
                     {
-                        if (this.Data.SpellName == "TaricE")
+                        if (this.Data.SpellName == "TaricE" || this.Data.SpellName == "CamilleW")
                         {
                             return this.Caster.ServerPosition.To2D() + this.Direction * this.Data.Range;
                         }
@@ -240,29 +242,42 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         {
             get
             {
-                var extraWidth = Player.Instance.BoundingRadius / 2f;
-                var width = this.Data.Width + extraWidth;
-                if (this.Data.type == Type.LineMissile)
+                var xpoly = new Geometry.Polygon();
+                switch (this.SkillshotType)
                 {
-                    return new Geometry.Polygon.Rectangle(this.CurrentPosition, this.CollideEndPosition, width);
+                    case Type.LineMissile:
+                        xpoly = new Geometry.Polygon.Rectangle(CurrentPosition, CollideEndPosition, this.Data.Width + 15 + Player.Instance.BoundingRadius);
+                        break;
+                    case Type.CircleMissile:
+                        xpoly = new Geometry.Polygon.Circle(CollideEndPosition, this.Data.Width + 15 + Player.Instance.BoundingRadius);
+                        break;
+                    case Type.Cone:
+                        xpoly = new Geometry.Polygon.Sector(CurrentPosition, this.CollideEndPosition, (float)((this.Data.Angle + 5) * Math.PI / 180), this.Data.Range + 15);
+                        break;
+                    case Type.Ring:
+                        xpoly = new CustomGeometry.Ring(this.CollideEndPosition, this.Data.Width + 15 + Player.Instance.BoundingRadius, this.Data.RingRadius).ToSDKPolygon();
+                        break;
+                    case Type.Arc:
+                        xpoly = new CustomGeometry.Arc(this.Start, this.CollideEndPosition, 30 + (int)ObjectManager.Player.BoundingRadius).ToSDKPolygon();
+                        break;
                 }
-                if (this.Data.type == Type.CircleMissile)
+
+                if (this.Data.HasExplodingEnd)
                 {
-                    return new Geometry.Polygon.Circle(this.CollideEndPosition, width);
+                    var newpolygon = xpoly;
+                    var explodePolygon = new Geometry.Polygon.Circle(CollideEndPosition, this.Data.ExplodeWidth);
+                    var poly = Geometry.ClipPolygons(new[] { newpolygon, explodePolygon });
+                    var vectors = new List<Vector2>();
+                    foreach (var p in poly)
+                    {
+                        vectors.AddRange(p.ToPolygon().Points);
+                    }
+
+                    xpoly.Points.Clear();
+                    xpoly.Points.AddRange(vectors);
                 }
-                if (this.Data.type == Type.Cone)
-                {
-                    return new Geometry.Polygon.Sector(this.CurrentPosition, this.CollideEndPosition, (float)((this.Data.Angle + 5) * Math.PI / 180), this.Data.Range + 10);
-                }
-                if (this.Data.type == Type.Ring)
-                {
-                    return new CustomGeometry.Ring(CollideEndPosition, width, this.Data.RingRadius).ToSDKPolygon();
-                }
-                if (this.Data.type == Type.Arc)
-                {
-                    return new CustomGeometry.Arc(CurrentPosition, CollideEndPosition, 25 + (int)ObjectManager.Player.BoundingRadius).ToSDKPolygon();
-                }
-                return null;
+
+                return xpoly;
             }
         }
 

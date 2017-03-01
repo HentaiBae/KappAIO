@@ -183,7 +183,7 @@ namespace KappAIO_Reborn.Common.Utility
         {
             if (dmg > 0)
             {
-                return EntityManager.Heroes.Enemies.OrderBy(TargetSelector.GetPriority).FirstOrDefault(t => t.IsKillable(spell.Range) && Player.Instance.CalculateDamageOnUnit(t, damageType, dmg) > spell.GetHealthPrediction(t));
+                return EntityManager.Heroes.Enemies.OrderBy(TargetSelector.GetPriority).FirstOrDefault(t => t.IsKillable(spell.Range, false, true, true) && Player.Instance.CalculateDamageOnUnit(t, damageType, dmg) > spell.GetHealthPrediction(t));
             }
             return spell.GetKillStealTargets().FirstOrDefault(o => o.IsKillable(spell.Range));
         }

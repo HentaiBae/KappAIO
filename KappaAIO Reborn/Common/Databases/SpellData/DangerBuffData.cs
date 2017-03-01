@@ -7,7 +7,10 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public Champion Hero;
         public SpellSlot Slot;
         public string BuffName;
+        public int Delay;
         public int DangerLevel;
-        public string MenuItemName => $"{this.Hero} {this.Slot} ({this.BuffName})";
+        public int Range = int.MaxValue;
+        public bool IsRanged => this.Range < int.MaxValue;
+        public string MenuItemName => $"{this.Hero} {(this.Slot == SpellSlot.Unknown ? "Passive" : this.Slot.ToString())} ({this.BuffName})";
     }
 }

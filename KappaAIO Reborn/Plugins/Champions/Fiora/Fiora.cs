@@ -136,7 +136,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 var comboDamage = SpellManager.ComboDamage(target);
                 var validR = (comboDamage >= target.TotalShieldHealth() && target.TotalShieldHealth() >= SpellManager.ComboDamage(target, false)
                     || target.Health > user.Health && comboDamage >= target.Health) && !target.WillDie(500) && target.Health > user.GetAutoAttackDamage(target, true);
-                if (validR && target.IsKillable(R.Range))
+                if (validR)
                 {
                     if (!target.IsUnderHisturret() && (Q1.IsInRange(target) && Q1.IsReady() || target.IsValidTarget(user.GetAutoAttackRange(target))))
                         RCast(target);

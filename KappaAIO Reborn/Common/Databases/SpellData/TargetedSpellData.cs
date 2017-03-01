@@ -6,10 +6,12 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
     {
         public Champion hero;
         public SpellSlot slot;
+        public string[] MissileNames;
         public int DangerLevel;
-        public int CastDelay;
-        public int Speed = int.MaxValue;
+        public float CastDelay;
+        public float Speed = float.MaxValue;
         public bool FastEvade;
+        public bool WindWall;
         public string MenuItemName => $"{this.hero} {this.slot}";
     }
 }

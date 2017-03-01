@@ -55,7 +55,7 @@ namespace KappAIO_Reborn
             {
                 if(!loadedEvade && !loadedEvade)
                     GlobalMenu.DisplayName = "KappAIO: HUD";
-                HUDManager.Init();
+                //HUDManager.Init();
             }
 
             Game.OnTick += Game_OnTick;

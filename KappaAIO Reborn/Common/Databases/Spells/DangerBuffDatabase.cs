@@ -10,6 +10,21 @@ namespace KappAIO_Reborn.Common.Databases.Spells
             {
                 new DangerBuffData
                     {
+                        Hero = Champion.Brand,
+                        Slot = SpellSlot.Unknown,
+                        BuffName = "BrandAblazeDetonateMarker",
+                        DangerLevel = 2
+                    },
+                new DangerBuffData
+                    {
+                        Hero = Champion.Jax,
+                        Slot = SpellSlot.E,
+                        BuffName = "JaxEvasion",
+                        Range = 300,
+                        DangerLevel = 4
+                    },
+                new DangerBuffData
+                    {
                         Hero = Champion.Kled,
                         Slot = SpellSlot.Q,
                         BuffName = "KledQMark",
@@ -31,23 +46,38 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     },
                 new DangerBuffData
                     {
-                        Hero = Champion.Leblanc,
+                        Hero = Champion.Tristana,
                         Slot = SpellSlot.E,
-                        BuffName = "leblancsoulshackle",
-                        DangerLevel = 3
+                        BuffName = "tristanaechargesound",
+                        DangerLevel = 2
                     },
                 new DangerBuffData
                     {
                         Hero = Champion.Leblanc,
-                        Slot = SpellSlot.R,
-                        BuffName = "leblancsoulshacklem",
+                        Slot = SpellSlot.E,
+                        BuffName = "LeblancE",
                         DangerLevel = 4
+                    },
+                new DangerBuffData
+                    {
+                        Hero = Champion.Nocturne,
+                        Slot = SpellSlot.E,
+                        BuffName = "NocturneUnspeakableHorror",
+                        DangerLevel = 5,
+                        Delay = 2000
                     },
                 new DangerBuffData
                     {
                         Hero = Champion.Morgana,
                         Slot = SpellSlot.R,
                         BuffName = "soulshackles",
+                        DangerLevel = 5
+                    },
+                new DangerBuffData
+                    {
+                        Hero = Champion.Fizz,
+                        Slot = SpellSlot.R,
+                        BuffName = "fizzrcling",
                         DangerLevel = 5
                     },
                 new DangerBuffData
@@ -66,9 +96,9 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     },
                 new DangerBuffData
                     {
-                        Hero = Champion.Fizz,
+                        Hero = Champion.Varus,
                         Slot = SpellSlot.R,
-                        BuffName = "fizzmarinerdoombomb",
+                        BuffName = "VarusRShackles",
                         DangerLevel = 5
                     },
                 new DangerBuffData
@@ -80,9 +110,6 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     },
                 /*TODO
                  * Add/Find more buffs
-                 * RE-Check on LB 
-                 * add Tristana E
-                 * Add kled Q
                  */
             };
     }

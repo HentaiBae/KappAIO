@@ -4,10 +4,28 @@ using KappAIO_Reborn.Common.Databases.SpellData;
 
 namespace KappAIO_Reborn.Common.Databases.Spells
 {
-    public static class EmpowerdAttackDataDatabase
+    public static class EmpowerdAttackDatabase
     {
         public static List<EmpoweredAttackData> List = new List<EmpoweredAttackData>
             {
+                new EmpoweredAttackData
+                    {
+                        Hero = Champion.Unknown,
+                        Slot = SpellSlot.Unknown,
+                        DisplayName = "Braum Stun",
+                        TargetRequiredBuff = "BraumMark",
+                        TargetRequiredBuffCount = 3,
+                        CrowdControl = true,
+                        DangerLevel = 4
+                    },
+                new EmpoweredAttackData
+                    {
+                        Hero = Champion.Unknown,
+                        Slot = SpellSlot.Unknown,
+                        DisplayName = "Nami E",
+                        RequireBuff = "NamiE",
+                        DangerLevel = 2
+                    },
                 new EmpoweredAttackData
                     {
                         Hero = Champion.Ashe,
@@ -25,20 +43,27 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     },
                 new EmpoweredAttackData
                     {
-                        Hero = Champion.Braum,
-                        Slot = SpellSlot.Unknown,
-                        AttackName = "BraumBasicAttackPassiveOverride",
-                        DisplayName = "Stun",
-                        CrowdControl = true,
-                        DangerLevel = 4
-                    },
-                new EmpoweredAttackData
-                    {
                         Hero = Champion.Caitlyn,
                         Slot = SpellSlot.Unknown,
                         AttackName = "CaitlynHeadshotMissile",
                         DisplayName = "Headshot",
                         DangerLevel = 2
+                    },
+                new EmpoweredAttackData
+                    {
+                        Hero = Champion.Camille,
+                        Slot = SpellSlot.Q,
+                        AttackName = "CamilleQAttack",
+                        DisplayName = "Normal",
+                        DangerLevel = 2
+                    },
+                new EmpoweredAttackData
+                    {
+                        Hero = Champion.Camille,
+                        Slot = SpellSlot.Q,
+                        AttackName = "CamilleQAttackEmpowered",
+                        DisplayName = "Empowered",
+                        DangerLevel = 3
                     },
                 new EmpoweredAttackData
                     {
@@ -55,6 +80,14 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                         AttackName = "DianaBasicAttack3",
                         DisplayName = "Moonsilver Blade",
                         DangerLevel = 1
+                    },
+                new EmpoweredAttackData
+                    {
+                        Hero = Champion.Draven,
+                        Slot = SpellSlot.Q,
+                        AttackName = "DravenSpinningAttack",
+						DisplayName = "Axe",
+                        DangerLevel = 2
                     },
                 new EmpoweredAttackData
                     {
@@ -85,6 +118,14 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                         AttackName = "FioraEAttack",
                         DisplayName = "First E",
                         DangerLevel = 3
+                    },
+                new EmpoweredAttackData
+                    {
+                        Hero = Champion.Fizz,
+                        Slot = SpellSlot.W,
+                        AttackName = "FizzWBasicAttack",
+                        DisplayName = "Attack",
+                        DangerLevel = 1
                     },
                 new EmpoweredAttackData
                     {
@@ -143,9 +184,32 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     },
                 new EmpoweredAttackData
                     {
+                        Hero = Champion.Jayce,
+                        Slot = SpellSlot.Unknown,
+                        AttackName = "JaycePassiveMeleeAttack",
+                        DisplayName = "Melee Passive",
+                        DangerLevel = 1
+                    },
+                new EmpoweredAttackData
+                    {
+                        Hero = Champion.Jayce,
+                        Slot = SpellSlot.Unknown,
+                        AttackName = "JaycePassiveRangedAttack",
+                        DisplayName = "Ranged Passive",
+                        DangerLevel = 1
+                    },
+                new EmpoweredAttackData
+                    {
+                        Hero = Champion.Jayce,
+                        Slot = SpellSlot.W,
+                        AttackName = "JayceHyperChargeRangedAttack",
+                        DisplayName = "Attack",
+                        DangerLevel = 1
+                    },
+                new EmpoweredAttackData
+                    {
                         Hero = Champion.Jax,
                         Slot = SpellSlot.Unknown,
-                        AttackName = "JaxBasicAttack",
                         RequireBuff = "JaxEmpowerTwo",
                         DisplayName = "Passive",
                         DangerLevel = 1
@@ -172,6 +236,13 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                         AttackName = "KennenMegaProc",
                         CrowdControl = true,
                         DangerLevel = 3
+                    },
+                new EmpoweredAttackData
+                    {
+                        Hero = Champion.Kindred,
+                        Slot = SpellSlot.E,
+                        AttackName = "KindredBasicAttackOverrideLightbombFinal",
+                        DangerLevel = 2
                     },
                 new EmpoweredAttackData
                     {
@@ -278,6 +349,14 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     },
                 new EmpoweredAttackData
                     {
+                        Hero = Champion.Skarner,
+                        Slot = SpellSlot.E,
+                        TargetRequiredBuff = "SkarnerPassiveBuff",
+                        TargetRequiredBuffCount = 1,
+                        DangerLevel = 1
+                    },
+                new EmpoweredAttackData
+                    {
                         Hero = Champion.Sona,
                         Slot = SpellSlot.Q,
                         RequireBuff = "sonaqprocattacker",
@@ -330,6 +409,15 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     },
                 new EmpoweredAttackData
                     {
+                        Hero = Champion.Tristana,
+                        Slot = SpellSlot.E,
+                        DisplayName = "Explode",
+                        TargetRequiredBuff = "tristanaecharge",
+                        TargetRequiredBuffCount = 3,
+                        DangerLevel = 2
+                    },
+                new EmpoweredAttackData
+                    {
                         Hero = Champion.Trundle,
                         Slot = SpellSlot.Q,
                         AttackName = "TrundleQ",
@@ -365,7 +453,9 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     {
                         Hero = Champion.Udyr,
                         Slot = SpellSlot.E,
-                        AttackName = "UdyrBearAttack",
+						DisplayName = "Stun",
+						RequireBuff = "UdyrBearStance",
+						DontHaveBuff = "UdyrBearStunCheck",
                         CrowdControl = true,
                         DangerLevel = 3
                     },
@@ -382,7 +472,6 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     {
                         Hero = Champion.Vi,
                         Slot = SpellSlot.W,
-                        AttackName = "ViBasicAttack",
                         TargetRequiredBuff = "viwproc",
                         TargetRequiredBuffCount = 2,
                         DangerLevel = 2

@@ -15,6 +15,10 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         {
             get
             {
+                if (this.Data.Delay > 0 && this.Data.Delay < int.MaxValue)
+                {
+                    return this.StartTick + this.Data.Delay;
+                }
                 if (this.Buff != null)
                 {
                     return this.Buff.EndTime * 1000f;
@@ -23,6 +27,19 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             }
         }
         public float TicksLeft => this.EndTick - Core.GameTickCount;
-        public bool Ended => this.TicksLeft <= 0 || this.Caster.IsDead || this.Target.IsDead;
+        public bool Ended => this.TicksLeft <= 0 || (this.Caster != null && this.Caster.IsDead) || (this.Target != null && this.Target.IsDead);
+
+        public bool WillHit(Obj_AI_Base target)
+        {
+            if (target == null)
+                return false;
+
+            if (this.Data.IsRanged)
+            {
+                return this.Caster != null && target.IsInRange(this.Caster, this.Data.Range);
+            }
+
+            return this.Target != null && this.Target.IdEquals(target);
+        }
     }
 }
