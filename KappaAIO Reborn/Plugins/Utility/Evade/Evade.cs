@@ -8,7 +8,7 @@ using KappAIO_Reborn.Common.Databases.Spells;
 using KappAIO_Reborn.Common.SpellDetector.Detectors;
 using KappAIO_Reborn.Common.Utility;
 
-namespace KappAIO_Reborn.Plugins.Evade
+namespace KappAIO_Reborn.Plugins.Utility.Evade
 {
     public static class Evade
     {
@@ -22,7 +22,7 @@ namespace KappAIO_Reborn.Plugins.Evade
 
             DrawMenu.AddSeparator(0);
 
-            var skillshots = SkillshotDatabase.List.FindAll(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type)) && (s.hero.Equals(Champion.Unknown) || EntityManager.Heroes.Enemies.Any(h => s.hero.Equals(h.Hero))));
+            var skillshots = SkillshotDatabase.Current.FindAll(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type)) && (s.hero.Equals(Champion.Unknown) || EntityManager.Heroes.Enemies.Any(h => s.hero.Equals(h.Hero))));
 
             foreach (var skill in skillshots.OrderBy(s => s.hero))
             {

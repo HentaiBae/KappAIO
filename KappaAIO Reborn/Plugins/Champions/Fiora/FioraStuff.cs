@@ -23,6 +23,16 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             {
                 GameObject.OnCreate += GameObject_OnCreate;
                 GameObject.OnDelete += GameObject_OnDelete;
+
+                foreach (var emitter in ObjectManager.Get<Obj_GeneralParticleEmitter>().Where(FioraPassive))
+                {
+                    if (emitter.IsEnemy)
+                    {
+                        var passive = new FioraVital(emitter) { startTick = Core.GameTickCount };
+                        if (!StoredPassives.Contains(passive))
+                            StoredPassives.Add(passive);
+                    }
+                }
             }
 
             private static void GameObject_OnCreate(GameObject sender, EventArgs args)
@@ -65,7 +75,20 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 public float startTick;
                 public AIHeroClient Caster { get { return EntityManager.Heroes.AllHeroes.OrderBy(e => e.Distance(this.Vital)).FirstOrDefault(h => HasFioraPassiveBuff(h) && h.Distance(this.Vital) <= 300); } }
                 public Obj_GeneralParticleEmitter Vital;
-                public bool ValidVital { get { return !this.Vitalsector.Center.IsWall() && this.Vital.IsValid && !this.Vital.IsDead && !this.OrbWalkVitalPos.IsBuilding() && (this.Vital.Name.Contains("Timeout") || !this.Vital.Name.Contains("Warning")); } }
+                public bool ValidVital
+                {
+                    get
+                    {
+                        return !this.Vitalsector.Center.IsWall() && this.Vital.IsValid && !this.Vital.IsDead && !this.OrbWalkVitalPos.IsBuilding() 
+                            && (this.Vital.Name.Contains("Timeout") || (!this.Vital.Name.Contains("Warning") || Core.GameTickCount - this.startTick > 2000));
+                    }
+                }
+
+                public bool WillBeValid(float time)
+                {
+                    return (this.Vital.Name.Contains("Timeout") || (!this.Vital.Name.Contains("Warning") || Core.GameTickCount - this.startTick > time))
+                        && !this.Vitalsector.Center.IsWall() && this.Vital.IsValid && !this.Vital.IsDead && !this.OrbWalkVitalPos.IsBuilding();
+                }
                 public bool IsRVital => this.Vital != null && this.Vital.Name.Contains("_R_Mark");
                 public Vector3 OrbWalkVitalPos
                 {
@@ -128,7 +151,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
             public static FioraVital vital(AIHeroClient hero, bool Valid = false)
             {
-                return Vitals(hero).OrderBy(v => v.OrbWalkVitalPos.Distance(Player.Instance)).FirstOrDefault(v => Valid ? v.ValidVital : !Valid);
+                return Vitals(hero).OrderBy(v => v.OrbWalkVitalPos.Distance(Player.Instance)).FirstOrDefault(v => !Valid || v.ValidVital || v.WillBeValid(Q2.GetTravelTime(v.QPredVitalPos)));
             }
 
             public static Geometry.Polygon.Sector VitalSector(AIHeroClient start, Vector3 end)
@@ -739,7 +762,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 }
 
                 var validskillshots =
-                    SkillshotDatabase.List.Where(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type))
+                    SkillshotDatabase.Current.Where(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type))
                     && EntityManager.Heroes.Enemies.Any(h => s.hero.Equals(Champion.Unknown) || s.hero.Equals(h.Hero))).OrderBy(s => s.hero);
                 if (validskillshots.Any())
                 {

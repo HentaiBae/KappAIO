@@ -1,7 +1,7 @@
 ﻿using EloBuddy.SDK.Menu;
 using KappAIO_Reborn.Common.Utility;
 
-namespace KappAIO_Reborn.Plugins.HUD
+namespace KappAIO_Reborn.Plugins.Utility.HUD
 {
     public static class HUDConfig
     {
@@ -34,11 +34,12 @@ namespace KappAIO_Reborn.Plugins.HUD
             menu.CreateCheckBox("mp", "Draw MP Bar");
             menu.AddSeparator(0);
 
+            /*
             menu.AddGroupLabel("Texture Updater:");
-            menu.AddLabel("If you disable this option it will download...");
+            menu.AddLabel("If you disable this option it will download");
             menu.AddLabel("only the texture in your game if it doesnt exist.");
             menu.CreateCheckBox("downloadall", "Download All Texture each patch", false);
-            menu.AddSeparator(0);
+            menu.AddSeparator(0);*/
 
             menu.AddGroupLabel("Position");
             menu.CreateSlider("space", "Spacing {0}", 20);
@@ -55,8 +56,8 @@ namespace KappAIO_Reborn.Plugins.HUD
             menu.AddSeparator(0);
 
             menu.AddGroupLabel("Image Settings: (Require Reload F5)");
-            menu.CreateSlider("iconsize", "Icons size {0}%", 75, 15, 125);
-            menu.CreateSlider("barsize", "Bars(XP/HP/MP) size {0}%", 55, 15);
+            menu.CreateSlider("iconsize", "Icon Size {0}%", 75, 15, 125);
+            menu.CreateSlider("barsize", "(XP/HP/MP) Bar Size {0}%", 55, 15);
         }
     }
 }

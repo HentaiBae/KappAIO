@@ -188,6 +188,19 @@ namespace KappAIO_Reborn.Common.Utility
             return spell.GetKillStealTargets().FirstOrDefault(o => o.IsKillable(spell.Range));
         }
 
+        public static float GetTravelTime(this Spell.Skillshot spell, Vector3 end)
+        {
+            return Player.Instance.ServerPosition.Distance(end) / spell.Speed * 1000 + spell.CastDelay;
+        }
+
+        public static string GetSpellName(this SpellDataInst instance)
+        {
+            if (instance.Name.Contains("SummonerSmite"))
+                return "SummonerSmite";
+
+            return instance.Name;
+        }
+
         /// <summary>
         ///     Returns a recreated name of the target.
         /// </summary>
@@ -368,6 +381,44 @@ namespace KappAIO_Reborn.Common.Utility
         public static bool IsSummonerSpell(this SpellSlot slot)
         {
             return slot == SpellSlot.Summoner1 || slot == SpellSlot.Summoner2;
+        }
+
+        public static string GetChampionName(this AIHeroClient target)
+        {
+            if (target.ChampionName == "FiddleSticks")
+                return "Fiddlesticks";
+
+            return target.ChampionName;
+        }
+
+        public static SpellDataInst SlotToSpell(this AIHeroClient hero, SpellSlot slot)
+        {
+            return hero.Spellbook.GetSpell(slot);
+        }
+
+        public static string CoolDown(this SpellDataInst spell)
+        {
+            var t = (spell.CooldownExpires - Game.Time) + 1;
+            var ts = TimeSpan.FromSeconds(t);
+            var s = t > 60 ? string.Format("{0}:{1:D2}", ts.Minutes, ts.Seconds) : string.Format("{0:0}", t);
+            return s;
+        }
+
+        public static float CurrentCD(this SpellDataInst spell)
+        {
+            var t = spell.CooldownExpires - Game.Time;
+            return t;
+        }
+
+        public static float CurrentCD(this AIHeroClient hero, SpellSlot slot)
+        {
+            var spell = SlotToSpell(hero, slot);
+            return spell.CurrentCD();
+        }
+
+        public static bool IsOnCoolDown(this AIHeroClient hero, SpellSlot slot)
+        {
+            return CurrentCD(hero, slot) > 0;
         }
 
         public static List<SpellSlot> KnownSpellSlots = new List<SpellSlot> { SpellSlot.Q, SpellSlot.W, SpellSlot.E, SpellSlot.R, SpellSlot.Summoner1, SpellSlot.Summoner2 };

@@ -82,6 +82,14 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     },
                 new DangerBuffData
                     {
+                        Hero = Champion.Warwick,
+                        Slot = SpellSlot.E,
+                        BuffName = "WarwickE",
+                        DangerLevel = 4,
+                        Range = 300,
+                    },
+                new DangerBuffData
+                    {
                         Hero = Champion.Zed,
                         Slot = SpellSlot.R,
                         BuffName = "zedultexecute",

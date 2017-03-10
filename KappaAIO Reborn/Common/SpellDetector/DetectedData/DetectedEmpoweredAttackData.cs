@@ -9,6 +9,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
     {
         public AIHeroClient Caster;
         public Obj_AI_Base Target;
+        public MissileClient Missile;
         public EmpoweredAttackData Data;
         public Vector3 Start;
         public float AttackCastDelay;
@@ -18,14 +19,19 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public float EndTick => this.StartTick + this.MaxTravelTime;
         public float TicksLeft => this.EndTick - Core.GameTickCount;
         public float TicksPassed => this.StartTick - Core.GameTickCount;
-        public bool Ended => this.TicksLeft <= 0 || this.TicksPassed > 1000 && this.Caster.IsMelee;
+        public bool Ended => this.TicksLeft <= 0 || this.TicksPassed > this.AttackCastDelay + Game.Ping && this.Caster.IsMelee;
 
         public bool WillHit(Obj_AI_Base target)
         {
             if (target == null)
                 return false;
 
-            return this.Target != null && this.Target.IdEquals(target);
+            if (this.Caster.IsRanged && Prediction.Position.Collision.GetYasuoWallCollision(this.Caster.ServerPosition, target.ServerPosition).IsValid())
+            {
+                return false;
+            }
+
+            return this.Target.IdEquals(target);
         }
     }
 }

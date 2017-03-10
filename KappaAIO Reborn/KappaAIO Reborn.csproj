@@ -57,6 +57,8 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\CustomEvents\Teleports.cs" />
+    <Compile Include="Common\CustomEvents\Unit.cs" />
     <Compile Include="Common\Databases\Items\ItemData.cs" />
     <Compile Include="Common\Databases\Items\ItemsDatabase.cs" />
     <Compile Include="Common\Databases\SpellData\DangerBuffData.cs" />
@@ -88,19 +90,20 @@
     <Compile Include="Common\Utility\Extensions.cs" />
     <Compile Include="Common\Utility\GameVersion.cs" />
     <Compile Include="Common\Utility\TextureManager\ChampionSprite.cs" />
-    <Compile Include="Common\Utility\TextureManager\FileManager.cs" />
-    <Compile Include="Common\Utility\TextureManager\InGameSpells.cs" />
+    <Compile Include="Common\Utility\TextureManager\DownloadTexture.cs" />
     <Compile Include="Common\Utility\TextureManager\LoadTexture.cs" />
-    <Compile Include="Common\Utility\TextureManager\TextureDownload.cs" />
     <Compile Include="Common\Utility\TextureManager\TextureManager.cs" />
+    <Compile Include="Common\Utility\TextureManager\FileManager.cs" />
     <Compile Include="Plugins\Champions\ChampionBase.cs" />
     <Compile Include="Plugins\Champions\Darius\DariusStuff.cs" />
     <Compile Include="Plugins\Champions\Darius\Darius.cs" />
     <Compile Include="Plugins\Champions\Fiora\Fiora.cs" />
     <Compile Include="Plugins\Champions\Fiora\FioraStuff.cs" />
-    <Compile Include="Plugins\Evade\Evade.cs" />
-    <Compile Include="Plugins\HUD\HUDConfig.cs" />
-    <Compile Include="Plugins\HUD\HUDManager.cs" />
+    <Compile Include="Plugins\Utility\Evade\Evade.cs" />
+    <Compile Include="Plugins\Utility\HUD\HUDConfig.cs" />
+    <Compile Include="Plugins\Utility\HUD\HUDManager.cs" />
+    <Compile Include="Plugins\Utility\Tracker\FoW.cs" />
+    <Compile Include="Plugins\Utility\Tracker\TeleportsTracker.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

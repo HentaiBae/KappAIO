@@ -46,35 +46,65 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 
         private static void GameObject_OnCreate(GameObject sender, EventArgs args)
         {
+            var particle = sender as Obj_GeneralParticleEmitter;
+            if (particle != null)
+            {
+                var xdata = TargetedSpellDatabase.List.FirstOrDefault(s => s.MissileNames != null && s.MissileNames.Any(m => m.Equals(particle.Name)));
+                if (xdata != null)
+                {
+                    var xcaster = EntityManager.Heroes.AllHeroes.OrderBy(o => o.Distance(particle)).FirstOrDefault(h => h.Hero.Equals(xdata.hero) && h.IsInRange(particle, 1000));
+                    if (xcaster != null)
+                    {
+                        var xtarget = EntityManager.Heroes.AllHeroes.OrderBy(o => o.Distance(particle)).FirstOrDefault(h => h.Team != xcaster.Team && h.IsInRange(particle, 1000) && !h.IsDead && h.IsValid);
+                        if (xtarget != null)
+                        {
+                            if (xdata.hero == Champion.Kled)
+                            {
+                                xdata.Speed = xcaster.MoveSpeed;
+                            }
+
+                            Add(new DetectedTargetedSpellData
+                            {
+                                Caster = xcaster,
+                                Target = xtarget,
+                                Data = xdata,
+                                Start = xcaster.ServerPosition,
+                                StartTick = Core.GameTickCount
+                            });
+                        }
+                    }
+                }
+            }
+
             var missile = sender as MissileClient;
             var caster = missile?.SpellCaster as AIHeroClient;
-            if(caster == null)
+            if (caster == null)
                 return;
 
             var target = missile.Target as Obj_AI_Base;
-            if(target == null)
+            if (target == null)
                 return;
 
             var data =
                 TargetedSpellDatabase.List.FirstOrDefault(
                     s => s.MissileNames != null && s.MissileNames.Any(m => m.Equals(missile.SData.Name, StringComparison.CurrentCultureIgnoreCase)) && s.hero.Equals(caster.Hero));
 
-            if(data == null)
+            if (data == null)
                 return;
 
             var detected = new DetectedTargetedSpellData
-                {
-                    Caster = caster,
-                    Target = target,
-                    Data = data,
-                    Start = missile.StartPosition,
-                    StartTick = Core.GameTickCount,
-                    Missile = missile
-                };
+            {
+                Caster = caster,
+                Target = target,
+                Data = data,
+                Start = missile.StartPosition,
+                StartTick = Core.GameTickCount,
+                Missile = missile
+            };
 
             Add(detected);
         }
-        
+
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             var caster = sender as AIHeroClient;

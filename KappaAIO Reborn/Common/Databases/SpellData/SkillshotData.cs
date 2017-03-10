@@ -5,6 +5,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
     public class SkillshotData
     {
         public Type type;
+        public Type Explodetype;
         public Champion hero;
         public SpellSlot slot;
         public SpellSlot ExtraSlot;
@@ -26,6 +27,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public float Speed;
         public float CastDelay;
         public string DisplayName;
+        public string RemoveOnBuffLose;
         public string CasterName;
         public string TargetName;
         public string MissileName;
@@ -41,6 +43,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public string[] ExtraSpellName;
         public string[] ExtraMissileName;
         public string[] DodgeFrom;
+        public bool DetectAsOne;
         public bool AddEndExplode;
         public bool DontRemoveWithMissile;
         public bool AllowDuplicates;

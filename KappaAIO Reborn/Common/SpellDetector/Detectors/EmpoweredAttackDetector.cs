@@ -25,6 +25,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             }
         }
 
+        public static List<DetectedEmpoweredAttackData> DetectedEmpoweredAttacks = new List<DetectedEmpoweredAttackData>();
+
         private static void OnEmpoweredAttackDetected_OnDetect(DetectedEmpoweredAttackData args)
         {
             Console.WriteLine($"{args.Data.MenuItemName} {args.TicksLeft} {Core.GameTickCount} / {args.AttackCastDelay} {args.Speed}");
@@ -34,13 +36,13 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
         {
             var missile = sender as MissileClient;
             var caster = missile?.SpellCaster as AIHeroClient;
-            if(caster == null || !missile.IsAutoAttack())
+            if (caster == null || !missile.IsAutoAttack())
                 return;
 
             var target = missile.Target as Obj_AI_Base;
             if (target != null)
             {
-                var data = getData(caster, target, missile.StartPosition, missile.SData.Name);
+                var data = getData(caster, target, missile.Position, missile.SData.Name, missile);
                 foreach (var d in data)
                 {
                     Add(d);
@@ -55,8 +57,6 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             foreach (var attack in DetectedEmpoweredAttacks)
                 OnEmpoweredAttackDetected.Invoke(attack);
         }
-
-        public static List<DetectedEmpoweredAttackData> DetectedEmpoweredAttacks = new List<DetectedEmpoweredAttackData>();
 
         private static void Obj_AI_Base_OnBasicAttack(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
@@ -73,7 +73,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             }
         }
 
-        private static DetectedEmpoweredAttackData[] getData(AIHeroClient caster, Obj_AI_Base target, Vector3 start, string AttackName)
+        private static DetectedEmpoweredAttackData[] getData(AIHeroClient caster, Obj_AI_Base target, Vector3 start, string AttackName, MissileClient missile = null)
         {
             var result = new List<DetectedEmpoweredAttackData>();
             var infos = EmpowerdAttackDatabase.List.FindAll(s => s.Hero.Equals(caster.Hero) || s.Hero == Champion.Unknown);
@@ -91,8 +91,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                         Caster = caster,
                         Target = target,
                         Data = info,
-                        AttackCastDelay = caster.AttackCastDelay * 1000f,
-                        Speed = Math.Max(250, caster.IsMelee ? int.MaxValue : caster.BasicAttack.MissileSpeed),
+                        AttackCastDelay = missile != null ? 0 : caster.AttackCastDelay * 1000f,
+                        Speed = caster.IsMelee ? int.MaxValue : missile?.SData.MissileSpeed ?? caster.BasicAttack.MissileSpeed,
                         StartTick = Core.GameTickCount
                     };
 

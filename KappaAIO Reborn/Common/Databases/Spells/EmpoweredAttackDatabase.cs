@@ -86,7 +86,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                         Hero = Champion.Draven,
                         Slot = SpellSlot.Q,
                         AttackName = "DravenSpinningAttack",
-						DisplayName = "Axe",
+                        DisplayName = "Axe",
                         DangerLevel = 2
                     },
                 new EmpoweredAttackData
@@ -453,9 +453,9 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     {
                         Hero = Champion.Udyr,
                         Slot = SpellSlot.E,
-						DisplayName = "Stun",
-						RequireBuff = "UdyrBearStance",
-						DontHaveBuff = "UdyrBearStunCheck",
+                        DisplayName = "Stun",
+                        RequireBuff = "UdyrBearStance",
+                        DontHaveBuff = "UdyrBearStunCheck",
                         CrowdControl = true,
                         DangerLevel = 3
                     },
@@ -463,7 +463,6 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     {
                         Hero = Champion.Vayne,
                         Slot = SpellSlot.W,
-                        AttackName = "VayneBasicAttack",
                         TargetRequiredBuff = "vaynesilvereddebuff",
                         TargetRequiredBuffCount = 2,
                         DangerLevel = 2

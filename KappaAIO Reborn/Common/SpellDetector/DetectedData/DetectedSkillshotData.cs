@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ClipperLib;
 using EloBuddy;
 using EloBuddy.SDK;
 using KappAIO_Reborn.Common.Databases.SpellData;
@@ -13,17 +14,24 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
     public class DetectedSkillshotData
     {
         public Obj_AI_Base Caster;
-        public Obj_AI_Base Target;
-        public Obj_GeneralParticleEmitter Particle;
+        public AIHeroClient Target;
         public MissileClient Missile;
+        public Obj_GeneralParticleEmitter Particle;
         public SkillshotData Data;
         public Vector2 Start;
         public Vector2 End;
-        public Vector2 Direction => (this.End - this.Start).Normalized();
         public Vector2? CollidePoint;
+        public Vector2 Direction => (this.End - this.Start).Normalized();
         public Obj_AI_Base CollideTarget;
         public Obj_AI_Base[] CollideTargets;
-        public bool DetectedMissile => this.Missile != null;
+        public bool DetectedMissile;
+        public bool IsGlobal
+        {
+            get
+            {
+                return this.Data.Range >= 4000 && this.Data.Range < 15000;
+            }
+        }
 
         public Type? _type;
         public Type SkillshotType
@@ -38,24 +46,41 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             }
         }
 
-        public bool IsGlobal
+        public float extraDelay;
+        public float CastDelay
         {
             get
             {
-                return this.Data.Range >= 4000 && this.Data.Range < 15000;
+                var result = 0f;
+                if (!this.DetectedMissile || this.Data.type == Type.CircleMissile || this.Data.type == Type.Cone || this.Data.type == Type.Arc || this.Data.type == Type.Ring)
+                {
+                    result += this.Data.CastDelay;
+                }
+
+                if (result.Equals(0f) && (this.Data.Speed <= 0 || this.Data.Speed >= int.MaxValue))
+                    result += this.Data.CastDelay;
+
+                if (!Data.DontAddExtraDuration)
+                {
+                    result += Data.ExtraDuration;
+                }
+
+                return result + extraDelay;
             }
         }
+
+        public float delay => CastDelay;
 
         public bool IsVisible
         {
             get
             {
-                return (this.CurrentPosition.IsOnScreen() || this.CurrentPosition.IsInRange(Player.Instance, 3000) || this.CollideEndPosition.IsOnScreen() || this.CollideEndPosition.IsInRange(Player.Instance, 3000)) || DetectedMissile && this.Missile.Position.IsOnScreen();
+                //return true;
+                return (this.CurrentPosition.IsOnScreen() || this.CurrentPosition.IsInRange(Player.Instance, 3000)
+                    || this.CollideEndPosition.IsOnScreen() || this.CollideEndPosition.IsInRange(Player.Instance, 3000))
+                    || Missile != null && this.Missile.Position.IsOnScreen() || Polygon.Points.Any(p => p.IsOnScreen());
             }
         }
-
-        public float extraDelay;
-        private float delay => Data.CastDelay > TicksPassed && DetectedMissile && this.Data.type != Type.CircleMissile ? 0 : this.Data.CastDelay + extraDelay;
 
         public float MaxTravelTime(Vector2 target)
         {
@@ -88,14 +113,34 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public float EndTick => this.StartTick + this.MaxTravelTime(this.CollideEndPosition);
         public float TicksLeft => this.EndTick - Core.GameTickCount;
         public float TicksPassed => Core.GameTickCount - this.StartTick;
-        public bool Ended => (IsGlobal && DetectedMissile ? (this.Missile == null || this.Missile.IsDead) : (Core.GameTickCount - this.EndTick > 0)
-            || (this.DetectedMissile && this.Missile.IsDead) || this.Target != null && this.Target.IsDead) || this.TicksPassed > 20000;
+        public bool Ended
+        {
+            get
+            {
+                if (this.Data.SticksToCaster && this.Caster.IsDead)
+                {
+                    return true;
+                }
 
+                if ((this.IsGlobal || this.Data.SticksToMissile) && this.Missile != null && this.Missile.IsDead)
+                {
+                    return true;
+                }
+
+                if (this.Target != null && this.Target.IsDead)
+                {
+                    return true;
+                }
+
+                return Core.GameTickCount - this.EndTick > 0 || this.TicksPassed > 20000;
+            }
+        }
 
         public bool IsInside(Obj_AI_Base target)
         {
-            var hitbox = new EloBuddy.SDK.Geometry.Polygon.Circle(target.ServerPosition, target.BoundingRadius);
-            var predhitbox = new EloBuddy.SDK.Geometry.Polygon.Circle(target.PrediectPosition(TravelTime(target)), target.BoundingRadius);
+            var radius = target.BaseSkinName == "JarvanIVStandard" ? 150 : target.BoundingRadius;
+            var hitbox = new EloBuddy.SDK.Geometry.Polygon.Circle(target.ServerPosition, radius);
+            var predhitbox = new EloBuddy.SDK.Geometry.Polygon.Circle(target.PrediectPosition(TravelTime(target)), radius);
             return hitbox.Points.Any(OriginalPolygon.IsInside) && predhitbox.Points.Any(OriginalPolygon.IsInside);
         }
 
@@ -113,7 +158,11 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             if (!target.IsValid())
                 return false;
 
-            return this.Polygon != null && this.Polygon.IsInside(target);
+            if (this.Data.type == Type.Cone)
+                return this.Polygon != null && this.Polygon.IsInside(target);
+
+            var hitbox = new Geometry.Polygon.Circle(target, Player.Instance.BoundingRadius);
+            return this.Polygon != null && hitbox.Points.Any(this.Polygon.IsInside);
         }
 
         public Vector2 CurrentPosition
@@ -128,18 +177,18 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     }
                     return this.Start;
                 }
-                if (this.DetectedMissile)
+                if (this.Missile != null)
                 {
                     if (this.Data.SticksToMissile)
                     {
-                        return this.Missile.Position.Extend(this.Start, -this.Data.Width / 2f);
+                        return this.Missile.GetMissileFixedYPosition().Extend(this.Start, -this.Data.Width / 2f);
                     }
                 }
                 if (this.Caster != null)
                 {
-                    if (this.Data.SticksToCaster)
+                    if (this.Data.SticksToCaster && Caster.IsHPBarRendered)
                     {
-                        return this.Caster.PrediectPosition(TicksLeft).To2D();
+                        return this.Caster.ServerPosition.To2D();
                     }
                 }
                 if (this.Target != null)
@@ -148,6 +197,11 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     {
                         return this.Target.ServerPosition.To2D();
                     }
+                }
+
+                if (this.Data.StaticStart)
+                {
+                    return this.Start;
                 }
 
                 return this.Start;
@@ -185,7 +239,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     }
                 }
 
-                if (this.DetectedMissile)
+                if (this.Missile != null)
                 {
                     if (this.Data.EndSticksToMissile)
                     {
@@ -264,17 +318,36 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
                 if (this.Data.HasExplodingEnd)
                 {
+                    var explodePolygon = new Geometry.Polygon();
                     var newpolygon = xpoly;
-                    var explodePolygon = new Geometry.Polygon.Circle(CollideEndPosition, this.Data.ExplodeWidth);
-                    var poly = Geometry.ClipPolygons(new[] { newpolygon, explodePolygon });
-                    var vectors = new List<Vector2>();
-                    foreach (var p in poly)
+
+                    if (this.Data.Explodetype == Type.CircleMissile)
                     {
-                        vectors.AddRange(p.ToPolygon().Points);
+                        explodePolygon = new Geometry.Polygon.Circle(CollideEndPosition, this.Data.ExplodeWidth + 25 + Player.Instance.BoundingRadius);
                     }
 
-                    xpoly.Points.Clear();
-                    xpoly.Points.AddRange(vectors);
+                    if (this.Data.Explodetype == Type.LineMissile)
+                    {
+                        var st = CollideEndPosition - (CollideEndPosition - CurrentPosition).Normalized().Perpendicular() * (this.Data.ExplodeWidth + 25 + Player.Instance.BoundingRadius);
+                        var en = CollideEndPosition + (CollideEndPosition - CurrentPosition).Normalized().Perpendicular() * (this.Data.ExplodeWidth + 25 + Player.Instance.BoundingRadius);
+                        explodePolygon = new Geometry.Polygon.Rectangle(st, en, (this.Data.ExplodeWidth + 25 + Player.Instance.BoundingRadius) / 2);
+                    }
+
+                    if (this.Data.Explodetype == Type.Cone)
+                    {
+                        var st = CollideEndPosition - Direction * (this.Data.ExplodeWidth * 0.25f);
+                        var en = CollideEndPosition + Direction * (this.Data.ExplodeWidth * 3);
+                        explodePolygon = new Geometry.Polygon.Sector(st, en, (float)((this.Data.Angle + 5) * Math.PI / 180), this.Data.ExplodeWidth + 20 + ObjectManager.Player.BoundingRadius);
+                    }
+
+                    var poly = Geometry.ClipPolygons(new[] { newpolygon, explodePolygon });
+                    var vectors = new List<IntPoint>();
+                    foreach (var p in poly)
+                    {
+                        vectors.AddRange(p.ToPolygon().ToClipperPath());
+                    }
+
+                    xpoly = vectors.ToPolygon();
                 }
 
                 return xpoly;

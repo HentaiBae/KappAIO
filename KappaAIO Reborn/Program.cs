@@ -4,10 +4,13 @@ using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
+using KappAIO_Reborn.Common.CustomEvents;
 using KappAIO_Reborn.Common.Utility;
+using KappAIO_Reborn.Common.Utility.TextureManager;
 using KappAIO_Reborn.Plugins.Champions;
-using KappAIO_Reborn.Plugins.Evade;
-using KappAIO_Reborn.Plugins.HUD;
+using KappAIO_Reborn.Plugins.Utility.Evade;
+using KappAIO_Reborn.Plugins.Utility.HUD;
+using KappAIO_Reborn.Plugins.Utility.Tracker;
 
 namespace KappAIO_Reborn
 {
@@ -51,12 +54,17 @@ namespace KappAIO_Reborn
                 Evade.Init();
             }
 
+            /*
             if (hud.CurrentValue)
             {
-                if(!loadedEvade && !loadedEvade)
+                if(!loadedEvade && !loadedChampion)
                     GlobalMenu.DisplayName = "KappAIO: HUD";
-                //HUDManager.Init();
-            }
+                HUDManager.Init();
+            }*/
+
+            //FoW.Init();
+            //TeleportsTracker.Init();
+            //TextureManager.StartLoading();
 
             Game.OnTick += Game_OnTick;
         }

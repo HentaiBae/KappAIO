@@ -174,7 +174,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 var qtarget = Q2.GetKillStealTarget(SpellManager.QDamage(null), DamageType.Physical);
                 if (qtarget != null && !qtarget.HasBuff("PoppyWZone") && !SkillshotDetector.SkillshotsDetected.Any(s => s.WillHit(Q2.GetPrediction(qtarget).CastPosition.To2D())))
                 {
-                    Q2.Cast(qtarget);
+                    if (!useQ(false, Config.useQShortVital, Config.useQLongvital, false, qtarget))
+                        Q2.Cast(qtarget);
                     return;
                 }
             }
@@ -186,18 +187,20 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             }
         }
 
-        private static void useQ(bool gapCloser, bool shortQ, bool longQ, bool validVitals)
+        private static bool useQ(bool gapCloser, bool shortQ, bool longQ, bool validVitals, AIHeroClient qtarget = null)
         {
             if(!Q1.IsReady())
-                return;
+                return false;
 
             var target = QTarget;
+            if (qtarget != null)
+                target = qtarget;
 
             if (!target.IsKillable())
-                return;
+                return false;
             
             if(target.HasBuff("PoppyWZone"))
-                return;
+                return false;
 
             if (shortQ || longQ)
             {
@@ -208,11 +211,10 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 {
                     if (SkillshotDetector.SkillshotsDetected.Any(s => s.WillHit(vitalResult.Value.To2D())))
                     {
-                        return;
+                        return false;
                     }
 
-                    Q2.Cast(vitalResult.Value);
-                    return;
+                    return Q2.Cast(vitalResult.Value);
                 }
             }
 
@@ -220,6 +222,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             {
                 
             }
+
+            return false;
         }
 
         internal static void RCast(AIHeroClient target)
