@@ -5,6 +5,7 @@ using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Events;
+using KappAIO_Reborn.Common.Utility;
 using SharpDX;
 
 namespace KappAIO_Reborn.Common.CustomEvents
@@ -28,6 +29,12 @@ namespace KappAIO_Reborn.Common.CustomEvents
             get
             {
                 Vector3? endResult = _endPosition;
+
+                if (this.Args.Type == TeleportType.Recall)
+                {
+                    return this.Caster.GetSpawnPoint().Position;
+                }
+
                 var unitBase = ObjectManager.Get<Obj_HQ>().FirstOrDefault(o => o.Team == this.Caster.Team);
                 if (this._endPosition.HasValue && this.Args.Type == TeleportType.Teleport && unitBase != null)
                 {
@@ -37,7 +44,7 @@ namespace KappAIO_Reborn.Common.CustomEvents
 
                     var fixedRange = Math.Min(275, range < 0 || range > 1000 ? 225
                         : range);
-                    Chat.Print(this.TeleportTarget != null ? this.TeleportTarget.Name : "xd");
+
                     endResult = this._endPosition.Value.Extend(unitBase.Position, fixedRange).To3DWorld();
                 }
 
@@ -67,6 +74,17 @@ namespace KappAIO_Reborn.Common.CustomEvents
                 foreach (var m in invocationList)
                     m?.DynamicInvoke(args);
         }
+        public delegate void TeleportFinish(TrackedTeleport args);
+        public static event TeleportFinish OnFinish;
+        internal static bool InvokeFinish(TrackedTeleport args)
+        {
+            var invocationList = OnFinish?.GetInvocationList();
+            if (invocationList != null)
+                foreach (var m in invocationList)
+                    m?.DynamicInvoke(args);
+
+            return true;
+        }
 
         public static List<TrackedTeleport> TrackedTeleports = new List<TrackedTeleport>();
 
@@ -89,7 +107,8 @@ namespace KappAIO_Reborn.Common.CustomEvents
 
         private static void Game_OnTick(EventArgs args)
         {
-            TrackedTeleports.RemoveAll(t => t.Ended);
+            TrackedTeleports.RemoveAll(t => t.Ended && InvokeFinish(t));
+
             foreach (var teleport in TrackedTeleports.Where(t => t.TeleportTarget == null))
             {
                 var findBuffTarget = ObjectManager.Get<Obj_AI_Base>().FirstOrDefault(o => _teleportTargetBuffs.Any(o.HasBuff));

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EloBuddy;
 using EloBuddy.SDK;
 using KappAIO_Reborn.Common.CustomEvents;
@@ -12,24 +10,39 @@ namespace KappAIO_Reborn.Plugins.Utility.Tracker
 {
     public static class TeleportsTracker
     {
-        public static void Init()
+        public static List<TrackedTeleport> TrackedTeleports = new List<TrackedTeleport>();
+
+        private static bool loaded;
+        static TeleportsTracker()
         {
+            if(loaded)
+                return;
+
+            Chat.Print("called");
+            loaded = true;
             Teleports.OnTrack += Teleports_OnTrack;
-            Drawing.OnEndScene += Drawing_OnEndScene;
+            Teleports.OnFinish += Teleports_OnFinish;
         }
 
-        private static void Drawing_OnEndScene(EventArgs args)
+        private static void Teleports_OnFinish(TrackedTeleport args)
         {
-            end.DrawCircle(100, Color.AliceBlue);
+            if (TrackedTeleports.Contains(args))
+            {
+                TrackedTeleports.Remove(args);
+            }
         }
 
-        private static Vector3 end;
         private static void Teleports_OnTrack(TrackedTeleport args)
         {
-            if (args.EndPosition != null)
+            if (args.EndPosition != null && !TrackedTeleports.Contains(args))
             {
-                end = args.EndPosition.Value;
+                TrackedTeleports.Add(args);
             }
+        }
+
+        public static TrackedTeleport GetTeleportInfo(this AIHeroClient target)
+        {
+            return TrackedTeleports.FirstOrDefault(t => t.Caster.IdEquals(target));
         }
     }
 }

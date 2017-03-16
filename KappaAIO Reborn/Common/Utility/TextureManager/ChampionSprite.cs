@@ -1,14 +1,13 @@
-﻿using System.Linq;
-using EloBuddy;
-using EloBuddy.SDK.Rendering;
+﻿using EloBuddy;
 using KappAIO_Reborn.Plugins.Utility.HUD;
 using SharpDX;
+using Sprite = EloBuddy.SDK.Rendering.Sprite;
 
 namespace KappAIO_Reborn.Common.Utility.TextureManager
 {
     public class ChampionSprite
     {
-        public ChampionSprite(AIHeroClient champion, Sprite icon, Sprite grayIcon, Sprite hp, Sprite mp, Sprite xp, Sprite empty, params SpellSprite[] spells)
+        public ChampionSprite(AIHeroClient champion, CustomSprite icon, CustomSprite grayIcon, CustomSprite hp, CustomSprite mp, CustomSprite xp, CustomSprite empty, params SpellSprite[] spells)
         {
             this.Champion = champion;
             this.Icon = icon;
@@ -19,39 +18,39 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             this.EmptyBar = empty;
             this.SpellSprites = spells;
 
-            var barWidth = this.Icon.Rectangle.Value.Width + spells[0].Icon.Rectangle.Value.Width;
-            var barHeight = (int)(spells[0].Icon.Rectangle.Value.Height * (HUDConfig.BarSize * 0.01f));
+            var barWidth = this.Icon.Sprite.Rectangle.Value.Width + spells[0].Icon.Sprite.Rectangle.Value.Width;
+            var barHeight = (int)(spells[0].Icon.Sprite.Rectangle.Value.Height * (HUDConfig.BarSize * 0.01f));
             var rectangle = new Rectangle(0, 0, barWidth, barHeight / 3);
 
-            hp.Rectangle = rectangle;
-            mp.Rectangle = rectangle;
-            xp.Rectangle = rectangle;
-            empty.Rectangle = rectangle;
+            hp.Sprite.Rectangle = rectangle;
+            mp.Sprite.Rectangle = rectangle;
+            xp.Sprite.Rectangle = rectangle;
+            empty.Sprite.Rectangle = rectangle;
 
             this.Offset += barHeight;
-            this.Offset += this.Icon.Rectangle.Value.Height;
+            this.Offset += this.Icon.Sprite.Rectangle.Value.Height;
         }
-
+        
         public AIHeroClient Champion;
-        public Sprite Icon;
-        public Sprite GrayIcon;
-        public Sprite CurrentIcon => !this.Champion.IsHPBarRendered || this.Champion.IsDead ? this.GrayIcon : this.Icon;
-        public Sprite HPBar;
-        public Sprite MPBar;
-        public Sprite XPBar;
-        public Sprite EmptyBar;
+        public CustomSprite Icon;
+        public CustomSprite GrayIcon;
+        public CustomSprite CurrentIcon => !this.Champion.IsHPBarRendered || this.Champion.IsDead ? this.GrayIcon : this.Icon;
+        public CustomSprite HPBar;
+        public CustomSprite MPBar;
+        public CustomSprite XPBar;
+        public CustomSprite EmptyBar;
         public SpellSprite[] SpellSprites;
 
         public int Offset;
 
         public void Dispose()
         {
-            this.Icon.Texture.Dispose();
-            this.GrayIcon.Texture.Dispose();
-            this.HPBar.Texture.Dispose();
-            this.MPBar.Texture.Dispose();
-            this.XPBar.Texture.Dispose();
-            this.EmptyBar.Texture.Dispose();
+            this.Icon.Texture.Texture.Dispose();
+            this.GrayIcon.Texture.Texture.Dispose();
+            this.HPBar.Texture.Texture.Dispose();
+            this.MPBar.Texture.Texture.Dispose();
+            this.XPBar.Texture.Texture.Dispose();
+            this.EmptyBar.Texture.Texture.Dispose();
 
             foreach (var sprite in this.SpellSprites)
                 sprite.Dispose();
@@ -60,7 +59,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
 
     public class SpellSprite
     {
-        public SpellSprite(string name, SpellSlot slot, Sprite icon, Sprite grayicon)
+        public SpellSprite(string name, SpellSlot slot, CustomSprite icon, CustomSprite grayicon)
         {
             this.SpellName = name;
             this.Slot = slot;
@@ -70,14 +69,14 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
 
         public string SpellName;
         public SpellSlot Slot;
-        public Sprite Icon;
-        public Sprite GrayIcon;
+        public CustomSprite Icon;
+        public CustomSprite GrayIcon;
 
         public Sprite CurrentSprite(AIHeroClient hero)
         {
             var spell = hero.Spellbook.GetSpell(this.Slot);
             var notReady = hero.IsOnCoolDown(this.Slot) || !spell.IsLearned;
-            return notReady ? this.GrayIcon : this.Icon;
+            return notReady ? this.GrayIcon.Sprite : this.Icon.Sprite;
         }
 
         public bool IsOnCoolDown(AIHeroClient target)
@@ -92,8 +91,19 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
 
         public void Dispose()
         {
-            this.Icon.Texture.Dispose();
-            this.GrayIcon.Texture.Dispose();
+            this.Icon.Texture.Texture.Dispose();
+            this.GrayIcon.Texture.Texture.Dispose();
         }
+    }
+
+    public class CustomSprite
+    {
+        public CustomSprite(Sprite sprite, CachedTexture texture)
+        {
+            this.Sprite = sprite;
+            this.Texture = texture;
+        }
+        public Sprite Sprite;
+        public CachedTexture Texture;
     }
 }

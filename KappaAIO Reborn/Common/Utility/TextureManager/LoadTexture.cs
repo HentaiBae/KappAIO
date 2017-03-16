@@ -15,15 +15,17 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
 {
     public class CachedTexture
     {
-        public CachedTexture(string name, Texture texture, Bitmap bitmap)
+        public CachedTexture(string name, Texture texture, Bitmap bitmap, Image image)
         {
             this.TextureName = name;
             this.Texture = texture;
             this.Bitmap = bitmap;
+            this.Image = image;
         }
         public string TextureName;
         public Texture Texture;
         public Bitmap Bitmap;
+        public Image Image;
     }
 
     public static class LoadTexture
@@ -67,10 +69,14 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
         private static List<ChampionSprite> loadChampionSprite()
         {
             var result = new List<ChampionSprite>();
-            var hp = new Sprite(_textureLoader.Load("HP", Properties.Resources.hp));
-            var empty = new Sprite(_textureLoader.Load("Empty", Properties.Resources.empty));
-            var xp = new Sprite(_textureLoader.Load("XP", Properties.Resources.xp));
-            var mp = new Sprite(_textureLoader.Load("MP", Properties.Resources.mp));
+            var hpTexture = _textureLoader.Load("HP", Properties.Resources.hp);
+            var hp = new Sprite(hpTexture);
+            var mpTexture = _textureLoader.Load("MP", Properties.Resources.mp);
+            var mp = new Sprite(mpTexture);
+            var xpTexture = _textureLoader.Load("XP", Properties.Resources.xp);
+            var xp = new Sprite(xpTexture);
+            var emptyTexture = _textureLoader.Load("Empty", Properties.Resources.empty);
+            var empty = new Sprite(emptyTexture);
 
             foreach (var hero in EntityManager.Heroes.AllHeroes.Where(h => h.ChampionName != "PracticeTool_TargetDummy"))
             {
@@ -82,11 +88,20 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                     var spell = hero.Spellbook.GetSpell(slot);
                     var sprite = loadSprite(hero.GetChampionName(), slot, spell.GetSpellName());
                     var spriteGray = loadSprite(hero.GetChampionName(), slot, spell.GetSpellName(), true);
-                    var spellSprite = new SpellSprite(spell.GetSpellName(), spell.Slot, sprite, spriteGray);
+                    var spellSprite = new SpellSprite(spell.GetSpellName(), spell.Slot,
+                        new CustomSprite(sprite, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}{slot}"))),
+                        new CustomSprite(spriteGray, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}{slot}gray"))));
                     spells.Add(spellSprite);
                 }
 
-                var championSprite = new ChampionSprite(hero, heroIcon, heroIconGray, hp, mp, xp, empty, spells.ToArray());
+                var championSprite = new ChampionSprite(hero,
+                    new CustomSprite(heroIcon, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}"))),
+                    new CustomSprite(heroIconGray, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}gray"))),
+                    new CustomSprite(hp, new CachedTexture("hp", hpTexture, new Bitmap(Properties.Resources.hp), Properties.Resources.hp)),
+                    new CustomSprite(mp, new CachedTexture("mp", mpTexture, new Bitmap(Properties.Resources.mp), Properties.Resources.mp)),
+                    new CustomSprite(xp, new CachedTexture("xp", xpTexture, new Bitmap(Properties.Resources.xp), Properties.Resources.xp)),
+                    new CustomSprite(empty, new CachedTexture("empty", emptyTexture, new Bitmap(Properties.Resources.empty), Properties.Resources.empty)), spells.ToArray());
+
                 result.Add(championSprite);
             }
 
@@ -99,7 +114,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             {
                 var folder = slot.IsSummonerSpell() ? FileManager.SummonerSpellsFolder : FileManager.ChampionFolder(champ);
                 var filePath = $"{folder}/{(slot.IsSummonerSpell() ? name : slot.ToString())}.png";
-                var cacheName = $"{filePath}{(gray ? "gray" : "")}";
+                var cacheName = $"{champ}{slot}{(gray ? "gray" : "")}";
                 Texture texture = null;
                 Image image = null;
                 Bitmap bitmap = null;
@@ -119,7 +134,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                         bitmap = ReColor(bitmap);
 
                     texture = _textureLoader.Load(bitmap, out _textureName);
-                    _cacheTexture.Add(new CachedTexture(cacheName, texture, bitmap));
+                    _cacheTexture.Add(new CachedTexture(cacheName, texture, bitmap, image));
                 }
 
                 var sprite = new Sprite(texture);
@@ -141,7 +156,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             {
                 var folder = FileManager.ChampionFolder(champ);
                 var filePath = $"{folder}/{champ}.png";
-                var cacheName = $"{filePath}{(gray ? "gray" : "")}";
+                var cacheName = $"{champ}{(gray ? "gray" : "")}";
                 Texture texture = null;
                 Image image = null;
                 Bitmap bitmap = null;
@@ -161,7 +176,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                         bitmap = ReColor(bitmap);
 
                     texture = _textureLoader.Load(bitmap, out _textureName);
-                    _cacheTexture.Add(new CachedTexture(cacheName, texture, bitmap));
+                    _cacheTexture.Add(new CachedTexture(cacheName, texture, bitmap, image));
                 }
 
                 var sprite = new Sprite(texture);

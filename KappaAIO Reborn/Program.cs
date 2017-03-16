@@ -53,18 +53,15 @@ namespace KappAIO_Reborn
 
                 Evade.Init();
             }
-
-            /*
+            
             if (hud.CurrentValue)
             {
                 if(!loadedEvade && !loadedChampion)
                     GlobalMenu.DisplayName = "KappAIO: HUD";
-                HUDManager.Init();
-            }*/
+                //HUDManager.Init();
+            }
 
             //FoW.Init();
-            //TeleportsTracker.Init();
-            //TextureManager.StartLoading();
 
             Game.OnTick += Game_OnTick;
         }

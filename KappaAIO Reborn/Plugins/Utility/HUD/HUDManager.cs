@@ -17,6 +17,7 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
 
         public static void Init()
         {
+            TextureManager.StartLoading();
             HUDConfig.Init();
             Drawing.OnEndScene += Drawing_OnEndScene;
         }
@@ -31,7 +32,7 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                 foreach (var hero in EntityManager.Heroes.Allies.OrderBy(h => h.Hero))
                 {
                     var sprite = hero.GetSprite();
-                    if (sprite?.Icon.Rectangle != null)
+                    if (sprite?.Icon.Sprite.Rectangle != null)
                     {
                         var xmod = HUDConfig.AllyX * 0.01f;
                         var ymod = HUDConfig.AllyY * 0.01f;
@@ -48,7 +49,7 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                 foreach (var hero in EntityManager.Heroes.Enemies.OrderBy(h => h.Hero))
                 {
                     var sprite = hero.GetSprite();
-                    if (sprite?.Icon.Rectangle != null)
+                    if (sprite?.Icon.Sprite.Rectangle != null)
                     {
                         var xmod = HUDConfig.EnemyX * 0.01f;
                         var ymod = HUDConfig.EnemyY * 0.01f;
@@ -70,24 +71,24 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                 sprite.Offset = 0;
 
                 var vector2 = new Vector2(x, y + Yoffset);
-                sprite.CurrentIcon.Draw(vector2);
+                sprite.CurrentIcon.Sprite.Draw(vector2);
 
                 var heroIconHeight = 0;
-                if(sprite.Icon.Rectangle.HasValue)
-                    heroIconHeight = sprite.Icon.Rectangle.Value.Height;
+                if(sprite.Icon.Sprite.Rectangle.HasValue)
+                    heroIconHeight = sprite.Icon.Sprite.Rectangle.Value.Height;
 
                 var heroIconWidth = 0;
-                if (sprite.Icon.Rectangle.HasValue)
-                    heroIconWidth = sprite.Icon.Rectangle.Value.Width;
+                if (sprite.Icon.Sprite.Rectangle.HasValue)
+                    heroIconWidth = sprite.Icon.Sprite.Rectangle.Value.Width;
 
                 var spellIconHeight = 0;
                 var rndspell = sprite.SpellSprites.FirstOrDefault();
-                if (rndspell?.Icon.Rectangle != null)
-                    spellIconHeight = rndspell.Icon.Rectangle.Value.Height;
+                if (rndspell?.Icon.Sprite.Rectangle != null)
+                    spellIconHeight = rndspell.Icon.Sprite.Rectangle.Value.Height;
 
                 var barIconHeight = 0;
-                if (sprite.XPBar.Rectangle.HasValue)
-                    barIconHeight = sprite.XPBar.Rectangle.Value.Height;
+                if (sprite.XPBar.Sprite.Rectangle.HasValue)
+                    barIconHeight = sprite.XPBar.Sprite.Rectangle.Value.Height;
 
                 var barVector = vector2;
                 barVector.Y += heroIconHeight;
@@ -97,9 +98,9 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                 {
                     sprite.Offset += barIconHeight;
                     var xp = Math.Min(Math.Max(0, sprite.Champion.CurrentXPPercent()), 100);
-                    sprite.XPBar.Scale = new Vector2(1 * (xp / 100), 1);
-                    sprite.EmptyBar.Draw(barVector);
-                    sprite.XPBar.Draw(barVector);
+                    sprite.XPBar.Sprite.Scale = new Vector2(1 * (xp / 100), 1);
+                    sprite.EmptyBar.Sprite.Draw(barVector);
+                    sprite.XPBar.Sprite.Draw(barVector);
                 }
                 else
                 {
@@ -111,9 +112,9 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                     sprite.Offset += barIconHeight;
                     barVector.Y += barIconHeight;
                     var hp = Math.Min(Math.Max(0, sprite.Champion.HealthPercent), 100);
-                    sprite.HPBar.Scale = new Vector2(1 * (hp / 100), 1);
-                    sprite.EmptyBar.Draw(barVector);
-                    sprite.HPBar.Draw(barVector);
+                    sprite.HPBar.Sprite.Scale = new Vector2(1 * (hp / 100), 1);
+                    sprite.EmptyBar.Sprite.Draw(barVector);
+                    sprite.HPBar.Sprite.Draw(barVector);
                 }
 
                 if (HUDConfig.DrawMP)
@@ -121,9 +122,9 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                     sprite.Offset += barIconHeight;
                     barVector.Y += barIconHeight;
                     var mp = Math.Min(Math.Max(0, sprite.Champion.ManaPercent), 100);
-                    sprite.HPBar.Scale = new Vector2(1 * (mp / 100), 1);
-                    sprite.EmptyBar.Draw(barVector);
-                    sprite.MPBar.Draw(barVector);
+                    sprite.HPBar.Sprite.Scale = new Vector2(1 * (mp / 100), 1);
+                    sprite.EmptyBar.Sprite.Draw(barVector);
+                    sprite.MPBar.Sprite.Draw(barVector);
                 }
 
                 vector2.X += heroIconWidth;
@@ -131,12 +132,12 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                 {
                     if (spell.IsOnCoolDown(sprite.Champion))
                     {
-                        var cdtextsize = spell.Icon.Rectangle.Value.Height + spell.Icon.Rectangle.Value.Width;
+                        var cdtextsize = spell.Icon.Sprite.Rectangle.Value.Height + spell.Icon.Sprite.Rectangle.Value.Width;
 
                         if (CDText == null)
-                            CDText = new Text("", new Font(FontFamily.GenericSerif, cdtextsize * 0.23f, FontStyle.Regular)) { Color = System.Drawing.Color.AliceBlue };
+                            CDText = new Text("", new Font(FontFamily.GenericSerif, cdtextsize * 0.22f, FontStyle.Regular)) { Color = System.Drawing.Color.AliceBlue };
 
-                        var cdPos = new Vector2(vector2.X + spell.Icon.Rectangle.Value.Width * 1.3f, vector2.Y);
+                        var cdPos = new Vector2(vector2.X + spell.Icon.Sprite.Rectangle.Value.Width * 1.3f, vector2.Y);
                         CDText.Draw(spell.CurrentCD(sprite.Champion), System.Drawing.Color.AliceBlue, cdPos);
                     }
 

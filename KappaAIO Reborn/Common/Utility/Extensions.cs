@@ -485,5 +485,10 @@ namespace KappAIO_Reborn.Common.Utility
         {
             return hero.Experience.XP;
         }
+
+        public static Obj_SpawnPoint GetSpawnPoint(this AIHeroClient target)
+        {
+            return ObjectManager.Get<Obj_SpawnPoint>().FirstOrDefault(s => s.Team == target.Team);
+        }
     }
 }
