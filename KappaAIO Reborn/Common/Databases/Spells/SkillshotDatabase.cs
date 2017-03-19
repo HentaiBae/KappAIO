@@ -3230,7 +3230,8 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      SpellName = "OriannasE",
                      MissileName = "orianaredact",
                      Collisions = new []{ Collision.YasuoWall },
-                     SticksToMissile = true
+                     SticksToMissile = true,
+					 EndSticksToTarget = true
                    },
                new SkillshotData
                    {

@@ -569,7 +569,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             var end = args.End.To2D();
             foreach (var d in data)
             {
-                if (target != null && !target.IsMe)
+                if (target != null && (!target.IsMe || caster.IsAlly))
                 {
                     if (d.StartsFromTarget)
                     {
@@ -802,7 +802,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                         {
                             var casterHero = caster as AIHeroClient;
                             var target = args.Target as Obj_AI_Base;
-                            if (((d.StartsFromTarget || d.EndSticksToTarget) && target != null && !args.Target.IsMe
+                            if (((d.StartsFromTarget || d.EndSticksToTarget) && target != null && (!args.Target.IsMe || caster.IsAlly)
                                 && (casterHero != null && target.Health >= casterHero.GetSpellDamage(target, args.Slot) || casterHero == null)
                                  || (!d.StartsFromTarget && !d.EndSticksToTarget)))
                             {
