@@ -43,6 +43,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public string[] ExtraSpellName;
         public string[] ExtraMissileName;
         public string[] DodgeFrom;
+        public bool EndSticksToTarget;
         public bool DetectAsOne;
         public bool AddEndExplode;
         public bool DontRemoveWithMissile;

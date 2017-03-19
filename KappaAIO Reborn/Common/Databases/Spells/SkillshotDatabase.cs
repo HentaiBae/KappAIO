@@ -608,9 +608,24 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      SpellName = "CaitlynPiltoverPeacemaker",
                      ExtraSpellName = new[] { "CaitlynQBehind" },
                      MissileName = "CaitlynPiltoverPeacemaker",
-                     ExtraMissileName = new[] { "CaitlynPiltoverPeacemaker2" },
                      Collisions = new []{ Collision.YasuoWall },
                      IsFixedRange = true,
+                     SticksToMissile = true
+                   },
+               new SkillshotData
+                   {
+                     type = Type.LineMissile,
+                     hero = Champion.Caitlyn,
+                     slot = SpellSlot.Q,
+                     DangerLevel = 2,
+                     CastDelay = 0,
+                     Range = 1300,
+                     Speed = 2200,
+                     Width = 100,
+					 DisplayName = "Q Expand",
+                     SpellName = "",
+                     MissileName = "CaitlynPiltoverPeacemaker2",
+                     Collisions = new []{ Collision.YasuoWall },
                      SticksToMissile = true
                    },
                new SkillshotData
@@ -626,6 +641,22 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      SpellName = "CaitlynEntrapment",
                      MissileName = "CaitlynEntrapmentMissile",
                      Collisions = new []{ Collision.YasuoWall, Collision.Heros, Collision.Minions },
+                     IsFixedRange = true,
+                     SticksToMissile = true
+                   },
+               new SkillshotData
+                   {
+                     type = Type.LineMissile,
+                     hero = Champion.Caitlyn,
+                     slot = SpellSlot.R,
+                     DangerLevel = 4,
+                     CastDelay = 2000,
+                     Range = int.MaxValue,
+                     Speed = 3200,
+                     Width = 70,
+                     SpellName = "CaitlynAceintheHole",
+                     MissileName = "CaitlynAceintheHoleMissile",
+                     Collisions = new []{ Collision.YasuoWall, Collision.Heros },
                      IsFixedRange = true,
                      SticksToMissile = true
                    },
@@ -870,13 +901,29 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CastDelay = 250,
                      Range = 850,
                      Speed = 1400,
-                     Width = 198,
+                     Width = 50,
                      SpellName = "DianaArc",
                      MissileName = "",
                      Collisions = new []{ Collision.YasuoWall },
                      TakeClosestPath = true,
-                     /*HasExplodingEnd = true,
-                     ExplodeWidth = 250*/
+					 AllowDuplicates = true
+                   },
+               new SkillshotData
+                   {
+                     type = Type.CircleMissile,
+                     hero = Champion.Diana,
+                     slot = SpellSlot.Q,
+                     DangerLevel = 3,
+                     CastDelay = 250,
+                     Range = 850,
+                     Speed = 1400,
+                     Width = 250,
+					 DisplayName = "Explode End",
+                     SpellName = "DianaArc",
+                     MissileName = "",
+                     Collisions = new []{ Collision.YasuoWall },
+                     TakeClosestPath = true,
+					 AllowDuplicates = true
                    },
                new SkillshotData
                    {
@@ -1319,7 +1366,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      MissileMinSpeed = 1400,
                      SpellName = "GnarQ",
                      MissileName = "GnarQMissile",
-                     Collisions = new []{ Collision.YasuoWall, Collision.Minions, Collision.Heros },
+                     Collisions = new []{ Collision.YasuoWall },
                      IsFixedRange = true,
                      SticksToMissile = true
                    },
@@ -1678,7 +1725,25 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      MissileMaxSpeed = 3000,
                      SpellName = "Heimerdingerwm",
                      MissileName = "HeimerdingerWAttack2",
-                     ExtraMissileName = new[] { "HeimerdingerWAttack2Ult" },
+                     Collisions = new []{ Collision.YasuoWall, Collision.Heros, Collision.Minions },
+                     IsFixedRange = true,
+                     DetectByMissile = true
+                   },
+               new SkillshotData
+                   {
+                     type = Type.LineMissile,
+                     hero = Champion.Heimerdinger,
+                     slot = SpellSlot.W,
+                     DangerLevel = 3,
+                     CastDelay = 0,
+                     Range = 1350,
+                     Speed = 750,
+                     Width = 40,
+                     MissileAccel = 4000,
+                     MissileMinSpeed = 750,
+                     MissileMaxSpeed = 3000,
+                     SpellName = "Heimerdingerwm",
+                     MissileName = "HeimerdingerWAttack2Ult",
                      Collisions = new []{ Collision.YasuoWall, Collision.Heros, Collision.Minions },
                      IsFixedRange = true,
                      DetectByMissile = true
@@ -1821,7 +1886,22 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      MissileName = "IvernQ",
                      Collisions = new []{ Collision.YasuoWall, Collision.Heros, Collision.Minions },
                      SticksToMissile = true,
-                     DetectByMissile = true
+                   },
+               new SkillshotData
+                   {
+                     type = Type.LineMissile,
+                     hero = Champion.Ivern,
+                     slot = SpellSlot.R,
+                     DangerLevel = 4,
+                     CastDelay = 0,
+                     Range = 800,
+                     Speed = 1400,
+                     Width = 80,
+                     SpellName = "Daisy R",
+                     MissileName = "IvernRMissile",
+                     SticksToMissile = true,
+                     DetectByMissile = true,
+					 IsFixedRange = true
                    },
 				   
 				#endregion Ivern
@@ -2217,7 +2297,8 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      MissileName = "KhazixWMissile",
                      Collisions = new []{ Collision.YasuoWall, Collision.Heros, Collision.Minions },
                      IsFixedRange = true,
-                     SticksToMissile = true
+                     SticksToMissile = true,
+					 AllowDuplicates = true
                    },
                new SkillshotData
                    {
@@ -2543,7 +2624,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CastDelay = 250,
                      Range = 475,
                      Speed = int.MaxValue,
-                     Width = 375,
+                     Width = 500,
                      SpellName = "LissandraR",
                      MissileName = "",
 					 StartsFromTarget = true
@@ -2559,7 +2640,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      hero = Champion.Lucian,
                      slot = SpellSlot.Q,
                      DangerLevel = 2,
-                     CastDelay = 350,
+                     CastDelay = 300,
                      Range = 900,
                      Speed = int.MaxValue,
                      Width = 65,
@@ -2574,7 +2655,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      hero = Champion.Lucian,
                      slot = SpellSlot.W,
                      DangerLevel = 1,
-                     CastDelay = 325,
+                     CastDelay = 250,
                      Range = 900,
                      Speed = 1600,
                      Width = 55,
@@ -2656,10 +2737,9 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CastDelay = 250,
                      Range = 1300,
                      Speed = 1200,
-                     Width = 75,
+                     Width = 70,
                      SpellName = "LuxLightBinding",
                      MissileName = "LuxLightBindingMis",
-					 ExtraMissileName = new[] { "LuxLightBindingDummy" },
                      Collisions = new []{ Collision.YasuoWall, Collision.Heros, Collision.Minions },
                      IsFixedRange = true,
                      SticksToMissile = true
@@ -2673,7 +2753,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CastDelay = 250,
                      Range = 1100,
                      Speed = 1300,
-                     Width = 300,
+                     Width = 315,
                      SpellName = "LuxLightStrikeKugel",
                      MissileName = "LuxLightStrikeKugel",
                      Collisions = new []{ Collision.YasuoWall },
@@ -2688,7 +2768,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CastDelay = 0,
                      Range = 1100,
                      Speed = int.MaxValue,
-                     Width = 300,
+                     Width = 315,
 					 ExtraDuration = 5000,
                      SpellName = "Lux E Placement",
                      ParticalName = "Lux_Base_E_tar_aoe_",
@@ -2736,6 +2816,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      RangeScaleWithMoveSpeed = true,
                      IsFixedRange = true,
                      Collisions = new []{ Collision.Heros },
+					 RemoveOnBuffLose = "InfiniteDuress"
                    },
 				   
 				#endregion Warwick
@@ -2966,6 +3047,20 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      IsFixedRange = true,
                      SticksToMissile = true,
                    },
+               new SkillshotData
+                   {
+                     type = Type.LineMissile,
+                     hero = Champion.Nautilus,
+                     slot = SpellSlot.R,
+                     DangerLevel = 5,
+                     CastDelay = 500,
+                     Range = int.MaxValue,
+                     Speed = 600,
+                     Width = 140,
+                     SpellName = "NautilusGrandLine",
+                     MissileName = "",
+					 EndSticksToTarget = true
+                   },
 				   
 				#endregion Nautilus
 				
@@ -3105,7 +3200,8 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      SticksToMissile = true,
 					 HasExplodingEnd = true,
 					 ExplodeWidth = 175,
-					 Explodetype = Type.CircleMissile
+					 Explodetype = Type.CircleMissile,
+					 DetectByMissile = true
                    },
                new SkillshotData
                    {
@@ -3119,8 +3215,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      Width = 255,
                      SpellName = "Orianna W",
                      MissileName = "",
-					 ExtraMissileName = new[] { "Orianna_Base_W_Dissonance_ball_" },
-                     ParticalName = "Orianna_Base_W_Dissonance_cas_"
+                     ParticalName = "Orianna_Base_W_Dissonance_"
                    },
                new SkillshotData
                    {
@@ -3392,7 +3487,6 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      RequireBuffCount = 2,
                      SpellName = "RivenTriCleave",
                      MissileName = "",
-                     IsFixedRange = true,
                      EndIsCasterDirection = true
                    },
                new SkillshotData
@@ -3813,7 +3907,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      Speed = int.MaxValue,
                      Width = 225,
                      SpellName = "SwainShadowGrasp",
-                     MissileName = "SwainShadowGrasp",
+                     MissileName = "",
 					 ParticalName = "Swain_shadowGrasp_warning_"
                    },
 				   
@@ -3857,7 +3951,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      Range = 800,
                      Speed = 2500,
                      Width = 0,
-					 Angle = 80,
+					 Angle = 45,
                      SpellName = "SyndraE",
 					 ExtraSpellName = new[] { "SyndraE5" },
                      MissileName = "SyndraEMissile",
@@ -4430,9 +4524,9 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      DangerLevel = 3,
                      CastDelay = 250,
                      Range = 750,
-                     ExtraRange = 100,
+                     ExtraRange = 110,
                      Speed = 1500,
-                     Width = 90,
+                     Width = 95,
                      SpellName = "ViQ",
                      MissileName = "ViQMissile",
                      Collisions = new []{ Collision.Heros },
@@ -4562,7 +4656,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      Speed = int.MaxValue,
                      Width = 260,
                      SpellName = "XerathArcaneBarrage2",
-                     MissileName = "XerathArcaneBarrage2",
+                     MissileName = "",
                      ParticalName = "Xerath_Base_W_aoe_"
                    },
                new SkillshotData
@@ -4701,6 +4795,20 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      MissileName = "YorickEMissile",
                      Collisions = new []{ Collision.YasuoWall },
                    },
+               new SkillshotData
+                   {
+                     type = Type.Ring,
+                     hero = Champion.Yorick,
+                     slot = SpellSlot.W,
+                     DangerLevel = 3,
+                     CastDelay = 750,
+                     Range = 700,
+                     Speed = int.MaxValue,
+                     Width = 40,
+					 RingRadius = 210,
+                     SpellName = "YorickW",
+                     MissileName = "",
+                   },
 				   
 				#endregion Yorick
 				
@@ -4767,7 +4875,8 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      MissileName = "ZedQMissile",
                      Collisions = new []{ Collision.YasuoWall },
                      IsFixedRange = true,
-                     SticksToMissile = true
+                     SticksToMissile = true,
+					 AllowDuplicates = true
                    },
                new SkillshotData
                    {
@@ -4970,5 +5079,5 @@ namespace KappAIO_Reborn.Common.Databases.Spells
 				   
 				#endregion Zyra
             };
-		}
+    }
 }

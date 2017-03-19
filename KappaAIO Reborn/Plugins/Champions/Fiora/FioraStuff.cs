@@ -63,11 +63,11 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 }
             }
 
-            internal static string[] PassiveBuffNames = new[] { "fiorapassivemanager", "fiorarmark" };
+            internal static string[] PassiveBuffNames = { "fiorapassivemanager", "fiorarmark" };
 
             internal static bool HasFioraPassiveBuff(AIHeroClient hero)
             {
-                return hero.Buffs.Any(b => PassiveBuffNames.Any(b.Name.Contains));
+                return PassiveBuffNames.Any(hero.HasBuff);
             }
 
             public class FioraVital
@@ -80,13 +80,13 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     get
                     {
                         return !this.Vitalsector.Center.IsWall() && this.Vital.IsValid && !this.Vital.IsDead && !this.OrbWalkVitalPos.IsBuilding() 
-                            && (this.Vital.Name.Contains("Timeout") || (!this.Vital.Name.Contains("Warning") || Core.GameTickCount - this.startTick > 2000));
+                            && (this.Vital.Name.ToLower().Contains("timeout") || (!this.Vital.Name.ToLower().Contains("warning") || Core.GameTickCount - this.startTick > 1500 - Game.Ping));
                     }
                 }
 
                 public bool WillBeValid(float time)
                 {
-                    return (this.Vital.Name.Contains("Timeout") || (!this.Vital.Name.Contains("Warning") || Core.GameTickCount - this.startTick > time))
+                    return (this.Vital.Name.ToLower().Contains("timeout") || (!this.Vital.Name.ToLower().Contains("warning") || Core.GameTickCount - this.startTick > 1500 - Game.Ping - time))
                         && !this.Vitalsector.Center.IsWall() && this.Vital.IsValid && !this.Vital.IsDead && !this.OrbWalkVitalPos.IsBuilding();
                 }
                 public bool IsRVital => this.Vital != null && this.Vital.Name.Contains("_R_Mark");
@@ -264,15 +264,6 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public static class SpellBlocker
         {
-            public static EnabledSpell HighestDangerLevel
-            {
-                get
-                {
-                    var high = EnabledSpells.OrderByDescending(s => s.DangerLevel).FirstOrDefault(s => s.Enabled);
-                    return null;
-                }
-            }
-
             public static void Init()
             {
                 Game.OnTick += Game_OnTick;

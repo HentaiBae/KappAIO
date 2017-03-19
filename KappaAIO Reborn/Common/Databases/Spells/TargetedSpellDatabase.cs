@@ -77,7 +77,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      hero = Champion.Caitlyn,
                      slot = SpellSlot.R,
                      DangerLevel = 5,
-                     CastDelay = 1000,
+                     CastDelay = 2000,
                      Speed = 3200,
                      WindWall = true
                  },

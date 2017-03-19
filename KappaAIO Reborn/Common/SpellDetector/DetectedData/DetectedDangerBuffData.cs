@@ -1,6 +1,7 @@
 ﻿using EloBuddy;
 using EloBuddy.SDK;
 using KappAIO_Reborn.Common.Databases.SpellData;
+using KappAIO_Reborn.Common.Utility;
 
 namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 {
@@ -36,7 +37,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
             if (this.Data.IsRanged)
             {
-                return this.Caster != null && target.IsInRange(this.Caster, this.Data.Range);
+                return this.Caster != null && target.IsInRange(this.Caster.PrediectPosition(TicksLeft), this.Data.Range);
             }
 
             return this.Target != null && this.Target.IdEquals(target);

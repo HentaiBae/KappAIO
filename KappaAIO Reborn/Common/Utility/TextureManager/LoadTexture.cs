@@ -237,7 +237,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
         private static Bitmap resizeImage(Image img, bool spell = false)
         {
             var mod = HUDConfig.IconsSize * 0.01f;
-            var mod2 = spell ? 0.63f : 1;
+            var mod2 = spell ? 0.627f : 1;
             var size = new Size((int)(img.Width * mod * mod2), (int)(img.Height * mod * mod2));
             return new Bitmap(img, size);
         }

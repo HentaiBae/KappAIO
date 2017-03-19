@@ -14,6 +14,7 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
         private static Menu menu;
         public static bool DrawAlly => menu.CheckBoxValue("ally");
         public static bool DrawEnemy => menu.CheckBoxValue("enemy");
+        public static bool DrawRecall => menu.CheckBoxValue("recall");
         public static bool DrawXP => menu.CheckBoxValue("xp");
         public static bool DrawHP => menu.CheckBoxValue("hp");
         public static bool DrawMP => menu.CheckBoxValue("mp");
@@ -35,6 +36,7 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
             menu.AddSeparator(0);
 
             menu.AddGroupLabel("Stats:");
+            menu.CreateCheckBox("recall", "Draw Recall/Teleport Info");
             menu.CreateCheckBox("xp", "Draw XP Bar");
             menu.CreateCheckBox("hp", "Draw HP Bar");
             menu.CreateCheckBox("mp", "Draw MP Bar");

@@ -1,19 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
+using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Rendering;
 using KappAIO_Reborn.Common.Utility;
 using KappAIO_Reborn.Common.Utility.TextureManager;
+using KappAIO_Reborn.Plugins.Utility.Tracker;
 using SharpDX;
-using Color = SharpDX.Color;
+using Color = System.Drawing.Color;
 
 namespace KappAIO_Reborn.Plugins.Utility.HUD
 {
     public static class HUDManager
     {
         private static Text CDText;
+        private static Text RecallText;
 
         public static void Init()
         {
@@ -127,18 +131,57 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                     sprite.MPBar.Sprite.Draw(barVector);
                 }
 
+                if (HUDConfig.DrawRecall)
+                {
+                    var tpInfo = sprite.Champion.GetTeleportInfo();
+                    if (tpInfo != null)
+                    {
+                        if (RecallText == null)
+                        {
+                            var SIZE = sprite.Icon.Sprite.Rectangle.Value.Height + sprite.Icon.Sprite.Rectangle.Value.Width;
+                            RecallText = new Text("Arial", new Font(FontFamily.GenericSerif, SIZE * 0.067f, FontStyle.Bold));
+                        }
+
+                        if (tpInfo.Args.Type == TeleportType.Unknown)
+                            Console.WriteLine($"Unknown TP type {tpInfo.Args.TeleportName}");
+
+                        var c = new Color();
+                        var color = ScaleColors.FirstOrDefault(s => s.Sprite.Equals(sprite));
+                        if (color != null)
+                        {
+                            c = color.CurrentColor;
+                        }
+                        else
+                        {
+                            var scaleColor = new ScaleColor(sprite, Color.White, Color.Gold) { Duration = tpInfo.Args.Duration };
+                            ScaleColors.Add(scaleColor);
+                            c = scaleColor.CurrentColor;
+                        }
+
+                        var modx = vector2.X * 1.01f;
+                        var modY = (vector2.Y * 2 + sprite.Icon.Sprite.Rectangle.Value.Height) / 2;
+                        var recallPos = new Vector2(modx, modY);
+                        RecallText.Draw(tpInfo.Args.Type.ToString().ToUpper(), c, recallPos);
+                    }
+                    else
+                    {
+                        ScaleColors.RemoveAll(s => s.Sprite.Equals(sprite));
+                    }
+                }
+
                 vector2.X += heroIconWidth;
                 foreach (var spell in sprite.SpellSprites.OrderBy(s => s.Slot))
                 {
                     if (spell.IsOnCoolDown(sprite.Champion))
                     {
-                        var cdtextsize = spell.Icon.Sprite.Rectangle.Value.Height + spell.Icon.Sprite.Rectangle.Value.Width;
-
                         if (CDText == null)
-                            CDText = new Text("", new Font(FontFamily.GenericSerif, cdtextsize * 0.22f, FontStyle.Regular)) { Color = System.Drawing.Color.AliceBlue };
+                        {
+                            var cdtextsize = spell.Icon.Sprite.Rectangle.Value.Height + spell.Icon.Sprite.Rectangle.Value.Width;
+                            CDText = new Text("", new Font(FontFamily.GenericSerif, cdtextsize * 0.22f, FontStyle.Regular)) { Color = Color.AliceBlue };
+                        }
 
                         var cdPos = new Vector2(vector2.X + spell.Icon.Sprite.Rectangle.Value.Width * 1.3f, vector2.Y);
-                        CDText.Draw(spell.CurrentCD(sprite.Champion), System.Drawing.Color.AliceBlue, cdPos);
+                        CDText.Draw(spell.CurrentCD(sprite.Champion), Color.AliceBlue, cdPos);
                     }
 
                     spell.CurrentSprite(sprite.Champion).Draw(vector2);
@@ -152,6 +195,48 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                     TextureManager.Reload();
                 }
             }
+        }
+
+        private static List<ScaleColor> ScaleColors = new List<ScaleColor>();
+
+        public class ScaleColor
+        {
+            public ScaleColor(ChampionSprite sprite, Color start, Color end)
+            {
+                this.Sprite = sprite;
+                this.StartColor = start;
+                this.EndColor = end;
+                this.A = end.A - start.A;
+                this.R = end.R - start.R;
+                this.G = end.G - start.G;
+                this.B = end.B - start.B;
+            }
+            public ChampionSprite Sprite;
+            private Color StartColor;
+            private Color EndColor;
+            public Color CurrentColor
+            {
+                get
+                {
+                    var mod = this.TicksPassed/this.Duration;
+                    var color = new SharpDX.Color
+                    {
+                        A = (byte)(Math.Max(0, Math.Min(255, this.StartColor.A + this.A * mod))),
+                        R = (byte)(Math.Max(0, Math.Min(255, this.StartColor.R + this.R * mod))),
+                        G = (byte)(Math.Max(0, Math.Min(255, this.StartColor.G + this.G * mod))),
+                        B = (byte)(Math.Max(0, Math.Min(255, this.StartColor.B + this.B * mod))),
+                    };
+                    return color.ToSystem();
+                }
+            }
+            private int A;
+            private int R;
+            private int G;
+            private int B;
+            private float StartTick = Core.GameTickCount;
+            public float Duration;
+            private float EndTick => this.StartTick + this.Duration;
+            private float TicksPassed => Core.GameTickCount - this.StartTick;
         }
     }
 }

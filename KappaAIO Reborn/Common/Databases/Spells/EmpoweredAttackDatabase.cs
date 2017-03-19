@@ -147,7 +147,6 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     {
                         Hero = Champion.Gnar,
                         Slot = SpellSlot.W,
-                        AttackName = "GnarBasicAttack",
                         TargetRequiredBuff = "gnarwproc",
                         TargetRequiredBuffCount = 2,
                         DangerLevel = 2

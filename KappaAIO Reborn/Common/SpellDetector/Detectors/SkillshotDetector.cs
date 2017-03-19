@@ -35,6 +35,18 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             }
         }
 
+        private static void Obj_AI_Base_OnBuffLose(Obj_AI_Base sender, Obj_AI_BaseBuffLoseEventArgs args)
+        {
+            var hero = sender as AIHeroClient;
+            if (hero != null)
+            {
+                SkillshotsDetected.RemoveAll(s => s.Caster.IdEquals(hero) && !string.IsNullOrEmpty(s.Data.RemoveOnBuffLose)
+                && args.Buff.Caster.IdEquals(hero)
+                && (args.Buff.DisplayName.Equals(s.Data.RemoveOnBuffLose, StringComparison.CurrentCultureIgnoreCase)
+                || args.Buff.Name.Equals(s.Data.RemoveOnBuffLose, StringComparison.CurrentCultureIgnoreCase)));
+            }
+        }
+
         public class LuxRPartical
         {
             public SkillshotData Data;
@@ -49,7 +61,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
         {
             public AIHeroClient caster;
             public Obj_AI_Minion Tentacle;
-            public Vector2 endpos;
+            public Obj_AI_Base Target;
             public float StartTick = Core.GameTickCount;
             public bool Attacked;
         }
@@ -67,110 +79,6 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
         public static List<IllaoiTentacle> IllaoiTentacles = new List<IllaoiTentacle>();
         public static List<LuxRPartical> DetectedLuxRParticals = new List<LuxRPartical>();
         public static List<DetectedSkillshotData> SkillshotsDetected = new List<DetectedSkillshotData>();
-
-        private static string[] AlliedNames = { "GreenGround.troy", "Green.troy", "green_team.troy", "Green_Ring.troy", "Ally.troy", "blue.troy" };
-
-
-        private static void Obj_AI_Base_OnBuffLose(Obj_AI_Base sender, Obj_AI_BaseBuffLoseEventArgs args)
-        {
-            var hero = sender as AIHeroClient;
-            if (hero != null)
-            {
-                SkillshotsDetected.RemoveAll(s => s.Caster.IdEquals(hero) && !string.IsNullOrEmpty(s.Data.RemoveOnBuffLose)
-                && args.Buff.Caster.IdEquals(hero)
-                && (args.Buff.DisplayName.Equals(s.Data.RemoveOnBuffLose, StringComparison.CurrentCultureIgnoreCase)
-                || args.Buff.Name.Equals(s.Data.RemoveOnBuffLose, StringComparison.CurrentCultureIgnoreCase)));
-            }
-        }
-
-        private static void Obj_AI_Base_OnPlayAnimation(Obj_AI_Base sender, GameObjectPlayAnimationEventArgs args)
-        {
-            if (sender == null)
-                return;
-
-            if (!sender.BaseSkinName.Equals("IllaoiMinion") || !args.Animation.Contains("Attack"))
-                return;
-
-            var tentacles = IllaoiTentacles.FindAll(x => x.Tentacle.IdEquals(sender));
-            if (tentacles.Any())
-            {
-                foreach (var t in IllaoiTentacles.Where(x => x.Tentacle.IdEquals(sender)))
-                {
-                    var detected = new DetectedSkillshotData
-                    {
-                        Caster = t.caster,
-                        Data = SkillshotDatabase.Current.FirstOrDefault(s => s.hero == Champion.Illaoi && s.slot.Equals(SpellSlot.W)),
-                        Start = sender.ServerPosition.To2D(),
-                        End = t.endpos,
-                        StartTick = Core.GameTickCount
-                    };
-
-                    Add(detected);
-                    t.Attacked = true;
-                }
-            }
-            else
-            {
-                var buff = sender.Buffs.FirstOrDefault(b => b.DisplayName.Equals("illaoitentacleactive"));
-                var caster = buff?.Caster as AIHeroClient;
-                if (caster != null)
-                {
-                    var illaoiESpirit = ObjectManager.Get<Obj_AI_Base>().FirstOrDefault(o => o.Buffs.Any(b => b.Caster.IdEquals(caster) && b.DisplayName.Equals("IllaoiESpirit")));
-                    var target = EntityManager.Heroes.AllHeroes.FindAll(h => h.Buffs.Any(b => b.Caster.IdEquals(caster))).OrderBy(h => h.Distance(sender)).FirstOrDefault();
-                    var correct = illaoiESpirit ?? target;
-                    if (correct != null)
-                    {
-                        var detected = new DetectedSkillshotData
-                        {
-                            Caster = caster,
-                            Data = SkillshotDatabase.Current.FirstOrDefault(s => s.hero == Champion.Illaoi && s.slot.Equals(SpellSlot.W)),
-                            Start = sender.ServerPosition.To2D(),
-                            End = correct.ServerPosition.To2D(),
-                            StartTick = Core.GameTickCount
-                        };
-
-                        Add(detected);
-                    }
-                }
-            }
-        }
-
-        private static void Obj_AI_Base_OnBasicAttack(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
-        {
-            var caster = sender as AIHeroClient;
-            var target = args.Target as Obj_AI_Base;
-            if (caster == null || target == null)
-                return;
-
-            if (!caster.Hero.Equals(Champion.Illaoi))
-                return;
-
-            var IllaoiWAttack = args.SData.Name.Equals("IllaoiWAttack");
-            if (!IllaoiWAttack)
-                return;
-
-            var illaoiMinions = ObjectManager.Get<Obj_AI_Minion>().Where(o => o.IsValid && !o.IsDead && o.BaseSkinName.Equals("IllaoiMinion") && o.Buffs.Any(b => b.Caster.IdEquals(caster))).ToList();
-            if (!illaoiMinions.Any())
-                return;
-
-            var illaoiw = SkillshotDatabase.Current.FirstOrDefault(s => s.hero.Equals(Champion.Illaoi) && s.slot.Equals(SpellSlot.W));
-            if (illaoiw == null)
-                return;
-
-            foreach (var tentacle in illaoiMinions.Where(m => m.IsInRange(target.PrediectPosition(), illaoiw.Range * 1.1f)))
-            {
-                IllaoiTentacles.Add(new IllaoiTentacle { caster = caster, endpos = target.PrediectPosition().To2D(), Tentacle = tentacle });
-            }
-        }
-
-        private static void Spellbook_OnStopCast(Obj_AI_Base sender, SpellbookStopCastEventArgs args)
-        {
-            var caster = sender as AIHeroClient;
-            if (caster == null || !caster.ChampionName.Equals("Sion"))
-                return;
-
-            SkillshotsDetected.RemoveAll(s => s.Caster.IdEquals(caster) && OnSkillShotDelete.Invoke(s)); // Clear all sion Skills when he stops casting
-        }
 
         private static void Game_OnTick(EventArgs args)
         {
@@ -275,12 +183,104 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     }
                 }
             }
-            
+
             SkillshotMinions.RemoveAll(s => Core.GameTickCount - s.StartTick > s.Data.CastDelay || s.Remove);
             IllaoiTentacles.RemoveAll(s => Core.GameTickCount - s.StartTick > 1250 || s.Attacked);
             DetectedLuxRParticals.RemoveAll(s => Core.GameTickCount - s.StartTick > s.Data.CastDelay || SkillshotsDetected.Any(x => s.caster.IdEquals(x.Caster) && s.Data.Equals(x.Data)));
 
             SkillshotsDetected.RemoveAll(s => s.Ended && OnSkillShotDelete.Invoke(s));
+        }
+
+        private static string[] AlliedNames = { "GreenGround.troy", "Green.troy", "green_team.troy", "Green_Ring.troy", "Ally.troy", "blue.troy", "_ally_green.troy" };
+        private static string[] ExcludeEnds = { "_explosion.troy" };
+
+        private static void Obj_AI_Base_OnPlayAnimation(Obj_AI_Base sender, GameObjectPlayAnimationEventArgs args)
+        {
+            if (sender == null)
+                return;
+
+            if (!sender.BaseSkinName.Equals("IllaoiMinion") || !args.Animation.Contains("Attack"))
+                return;
+
+            var tentacles = IllaoiTentacles.FindAll(x => x.Tentacle.IdEquals(sender));
+            if (tentacles.Any())
+            {
+                foreach (var t in IllaoiTentacles.Where(x => x.Tentacle.IdEquals(sender) && x.Target != null))
+                {
+                    var detected = new DetectedSkillshotData
+                    {
+                        Caster = t.caster,
+                        Data = SkillshotDatabase.Current.FirstOrDefault(s => s.hero == Champion.Illaoi && s.slot.Equals(SpellSlot.W)),
+                        Start = sender.ServerPosition.To2D(),
+                        End = t.Target.ServerPosition.To2D(),
+                        StartTick = Core.GameTickCount
+                    };
+
+                    Add(detected);
+                    t.Attacked = true;
+                }
+            }
+            else
+            {
+                var buff = sender.Buffs.FirstOrDefault(b => b.DisplayName.Equals("illaoitentacleactive"));
+                var caster = buff?.Caster as AIHeroClient;
+                if (caster != null)
+                {
+                    var illaoiESpirit = ObjectManager.Get<Obj_AI_Base>().FirstOrDefault(o => o.Buffs.Any(b => b.Caster.IdEquals(caster) && b.DisplayName.Equals("IllaoiESpirit")));
+                    var target = EntityManager.Heroes.AllHeroes.FindAll(h => h.Buffs.Any(b => b.Caster.IdEquals(caster))).OrderBy(h => h.Distance(sender)).FirstOrDefault(t => !t.IdEquals(caster));
+                    var correct = illaoiESpirit ?? target;
+                    if (correct != null)
+                    {
+                        var detected = new DetectedSkillshotData
+                        {
+                            Caster = caster,
+                            Data = SkillshotDatabase.Current.FirstOrDefault(s => s.hero == Champion.Illaoi && s.slot.Equals(SpellSlot.W)),
+                            Start = sender.ServerPosition.To2D(),
+                            End = correct.ServerPosition.To2D(),
+                            StartTick = Core.GameTickCount
+                        };
+
+                        Add(detected);
+                    }
+                }
+            }
+        }
+
+        private static void Obj_AI_Base_OnBasicAttack(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            var caster = sender as AIHeroClient;
+            var target = args.Target as Obj_AI_Base;
+            if (caster == null || target == null)
+                return;
+
+            if (!caster.Hero.Equals(Champion.Illaoi))
+                return;
+
+            var IllaoiWAttack = args.SData.Name.Equals("IllaoiWAttack");
+            if (!IllaoiWAttack)
+                return;
+
+            var illaoiMinions = ObjectManager.Get<Obj_AI_Minion>().Where(o => o.IsValid && !o.IsDead && o.BaseSkinName.Equals("IllaoiMinion") && o.Buffs.Any(b => b.Caster.IdEquals(caster))).ToList();
+            if (!illaoiMinions.Any())
+                return;
+
+            var illaoiw = SkillshotDatabase.Current.FirstOrDefault(s => s.hero.Equals(Champion.Illaoi) && s.slot.Equals(SpellSlot.W));
+            if (illaoiw == null)
+                return;
+
+            foreach (var tentacle in illaoiMinions.Where(m => m.IsInRange(target.PrediectPosition(), illaoiw.Range * 1.1f)))
+            {
+                IllaoiTentacles.Add(new IllaoiTentacle { caster = caster, Target = target, Tentacle = tentacle });
+            }
+        }
+
+        private static void Spellbook_OnStopCast(Obj_AI_Base sender, SpellbookStopCastEventArgs args)
+        {
+            var caster = sender as AIHeroClient;
+            if (caster == null || !caster.ChampionName.Equals("Sion"))
+                return;
+
+            SkillshotsDetected.RemoveAll(s => s.Caster.IdEquals(caster) && OnSkillShotDelete.Invoke(s)); // Clear all sion Skills when he stops casting
         }
 
         private static void GameObject_OnDelete(GameObject sender, EventArgs args)
@@ -340,7 +340,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             var partical = sender as Obj_GeneralParticleEmitter;
             if (partical != null)
             {
-                var pdata = SkillshotDatabase.Current.FirstOrDefault(s => partical.Name.EndsWith(".troy")
+                var pdata = SkillshotDatabase.Current.FirstOrDefault(s => partical.Name.EndsWith(".troy") && !ExcludeEnds.Any(partical.Name.EndsWith)
                 && ((!string.IsNullOrEmpty(s.ParticalName) && partical.Name.StartsWith(s.ParticalName)) || (!string.IsNullOrEmpty(s.MissileName) && partical.Name.StartsWith(s.MissileName))
                 || (s.ExtraMissileName != null && s.ExtraMissileName.Any(x => partical.Name.StartsWith(x)))));
 
@@ -524,24 +524,27 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             var Misstart = missile.StartPosition.To2D();
             var Misend = missile.EndPosition.To2D();
 
-            if (data.hero.Equals(Champion.Shen) && data.slot.Equals(SpellSlot.Q))
+            foreach (var d in data)
             {
-                Misstart = missile.Position.To2D();
-                Misend = caster.ServerPosition.To2D();
-                data.Range = Misstart.Distance(Misend);
+                if (d.hero.Equals(Champion.Shen) && d.slot.Equals(SpellSlot.Q))
+                {
+                    Misstart = missile.Position.To2D();
+                    Misend = caster.ServerPosition.To2D();
+                    d.Range = Misstart.Distance(Misend);
+                }
+
+                var detected = new DetectedSkillshotData
+                {
+                    Caster = caster,
+                    Missile = missile,
+                    Start = Misstart,
+                    End = Misend,
+                    Data = d,
+                    StartTick = Core.GameTickCount
+                };
+
+                Add(detected);
             }
-
-            var detected = new DetectedSkillshotData
-            {
-                Caster = caster,
-                Missile = missile,
-                Start = Misstart,
-                End = Misend,
-                Data = data,
-                StartTick = Core.GameTickCount
-            };
-
-            Add(detected);
         }
 
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -564,75 +567,92 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 
             var start = args.Start.To2D();
             var end = args.End.To2D();
-            if (data.StartsFromTarget && target != null)
+            foreach (var d in data)
             {
-                if (data.hero == Champion.LeeSin && data.slot == SpellSlot.R)
+                if (target != null && !target.IsMe)
                 {
-                    start = target.ServerPosition.To2D();
-                    end = start.Extend(caster, -data.Range);
-                }
-
-                if (data.hero == Champion.Lissandra && data.slot == SpellSlot.R)
-                {
-                    start = target.ServerPosition.To2D();
-                    end = target.ServerPosition.To2D();
-                }
-            }
-
-            if (data.RangeScaleWithMoveSpeed)
-            {
-                data.Range = caster.MoveSpeed * data.MoveSpeedScaleMod;
-
-                if (data.hero == Champion.Warwick && data.slot == SpellSlot.R)
-                {
-                    data.Range = Math.Max(275, caster.MoveSpeed * data.MoveSpeedScaleMod);
-                }
-
-                end = start.Extend(end, data.Range);
-            }
-
-            if (data.hero.Equals(Champion.Taric) && data.slot.Equals(SpellSlot.E))
-            {
-                var taricAllies = EntityManager.Heroes.AllHeroes.Where(h => h.IsValidTarget() && h.Team.Equals(caster.Team) && !h.IdEquals(caster) && h.HasBuff("taricwleashactive"));
-                foreach (var ally in taricAllies)
-                {
-                    var taricAllyE = new DetectedSkillshotData
+                    if (d.StartsFromTarget)
                     {
-                        Caster = ally,
-                        Target = target,
-                        Start = ally.ServerPosition.To2D(),
-                        End = ally.ServerPosition.To2D().Extend(end, data.Range),
-                        Data = data,
-                        StartTick = Core.GameTickCount
-                    };
+                        if (d.hero == Champion.LeeSin && d.slot == SpellSlot.R)
+                        {
+                            start = target.ServerPosition.To2D();
+                            end = start.Extend(caster, -d.Range);
+                        }
 
-                    Add(taricAllyE);
+                        if (d.hero == Champion.Lissandra && d.slot == SpellSlot.R)
+                        {
+                            start = target.ServerPosition.To2D();
+                            end = target.ServerPosition.To2D();
+                        }
+                    }
+
+                    if (d.EndSticksToTarget)
+                    {
+                        end = target.ServerPosition.To2D();
+                        start = caster.ServerPosition.To2D();
+
+                        if (d.hero == Champion.Nautilus)
+                        {
+                            start = caster.ServerPosition.To2D().Extend(end, caster.GetAutoAttackRange());
+                        }
+                    }
                 }
-            }
 
-            if (data.SpellName.Equals("SiegeLaserAffixShot"))
-            {
-                var turret = EntityManager.Turrets.AllTurrets.FirstOrDefault(t => t.Team.Equals(caster.Team) && t.Buffs.Any(b => b.Caster.IdEquals(caster)));
-                if (turret == null)
+                if (d.RangeScaleWithMoveSpeed)
                 {
-                    return;
+                    d.Range = caster.MoveSpeed * d.MoveSpeedScaleMod;
+
+                    if (d.hero == Champion.Warwick && d.slot == SpellSlot.R)
+                    {
+                        d.Range = Math.Max(275, caster.MoveSpeed * d.MoveSpeedScaleMod);
+                    }
+
+                    end = start.Extend(end, d.Range);
                 }
 
-                start = turret.ServerPosition.To2D();
-                end = start.Extend(args.End.To2D(), data.Range);
+                if (d.hero.Equals(Champion.Taric) && d.slot.Equals(SpellSlot.E))
+                {
+                    var taricAllies = EntityManager.Heroes.AllHeroes.Where(h => h.IsValidTarget() && h.Team.Equals(caster.Team) && !h.IdEquals(caster) && h.HasBuff("taricwleashactive"));
+                    foreach (var ally in taricAllies)
+                    {
+                        var taricAllyE = new DetectedSkillshotData
+                        {
+                            Caster = ally,
+                            Target = target,
+                            Start = ally.ServerPosition.To2D(),
+                            End = ally.ServerPosition.To2D().Extend(end, d.Range),
+                            Data = d,
+                            StartTick = Core.GameTickCount
+                        };
+
+                        Add(taricAllyE);
+                    }
+                }
+
+                if (d.SpellName.Equals("SiegeLaserAffixShot"))
+                {
+                    var turret = EntityManager.Turrets.AllTurrets.FirstOrDefault(t => t.Team.Equals(caster.Team) && t.Buffs.Any(b => b.Caster.IdEquals(caster)));
+                    if (turret == null)
+                    {
+                        return;
+                    }
+
+                    start = turret.ServerPosition.To2D();
+                    end = start.Extend(args.End.To2D(), d.Range);
+                }
+
+                var detected = new DetectedSkillshotData
+                {
+                    Caster = caster,
+                    Target = target,
+                    Start = start,
+                    End = end,
+                    Data = d,
+                    StartTick = Core.GameTickCount
+                };
+
+                Add(detected);
             }
-
-            var detected = new DetectedSkillshotData
-            {
-                Caster = caster,
-                Target = target,
-                Start = start,
-                End = end,
-                Data = data,
-                StartTick = Core.GameTickCount
-            };
-
-            Add(detected);
         }
 
         internal static void Add(DetectedSkillshotData data)
@@ -756,9 +776,9 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             }
         }
 
-        internal static SkillshotData GetData(Obj_AI_Base caster, GameObjectProcessSpellCastEventArgs args, MissileClient missile)
+        internal static List<SkillshotData> GetData(Obj_AI_Base caster, GameObjectProcessSpellCastEventArgs args, MissileClient missile)
         {
-            SkillshotData result = null;
+            var result = new List<SkillshotData>();
             var hero = caster as AIHeroClient;
 
             List<SkillshotData> AllData = SkillshotDatabase.Current.FindAll(s => hero != null ? s.hero.Equals(Champion.Unknown) || s.hero.Equals(hero.Hero) : !string.IsNullOrEmpty(s.CasterName) && caster.BaseSkinName.StartsWith(s.CasterName));
@@ -772,20 +792,22 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 {
                     var spellname = args.SData.Name;
                     var data =
-                        slotData.FirstOrDefault(
+                        slotData.FindAll(
                             s =>
                             !string.IsNullOrEmpty(s.SpellName) && s.SpellName.Equals(spellname, StringComparison.CurrentCultureIgnoreCase)
                             || s.ExtraSpellName != null && s.ExtraSpellName.Any(x => x.Equals(spellname, StringComparison.CurrentCultureIgnoreCase)));
-
-                    if (data != null && !data.DetectByMissile && (string.IsNullOrEmpty(data.RequireBuff) || caster.GetBuffCount(data.RequireBuff) >= data.RequireBuffCount))
+                    foreach (var d in data)
                     {
-                        var casterHero = caster as AIHeroClient;
-                        var target = args.Target as Obj_AI_Base;
-                        if ((data.StartsFromTarget && target != null && !args.Target.IsMe
-                            && (casterHero != null && target.Health >= casterHero.GetSpellDamage(target, args.Slot) || casterHero == null)
-                             || !data.StartsFromTarget))
+                        if (!d.DetectByMissile && (string.IsNullOrEmpty(d.RequireBuff) || caster.GetBuffCount(d.RequireBuff) >= d.RequireBuffCount))
                         {
-                            result = data;
+                            var casterHero = caster as AIHeroClient;
+                            var target = args.Target as Obj_AI_Base;
+                            if (((d.StartsFromTarget || d.EndSticksToTarget) && target != null && !args.Target.IsMe
+                                && (casterHero != null && target.Health >= casterHero.GetSpellDamage(target, args.Slot) || casterHero == null)
+                                 || (!d.StartsFromTarget && !d.EndSticksToTarget)))
+                            {
+                                result.Add(d);
+                            }
                         }
                     }
                 }
@@ -794,14 +816,16 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             {
                 var missilename = missile.SData.Name;
                 var data =
-                    AllData.FirstOrDefault(
+                    AllData.FindAll(
                         s =>
                         !string.IsNullOrEmpty(s.MissileName) && s.MissileName.Equals(missilename, StringComparison.CurrentCultureIgnoreCase)
                         || s.ExtraMissileName != null && s.ExtraMissileName.Any(x => x.Equals(missilename, StringComparison.CurrentCultureIgnoreCase)));
-
-                if (data != null && !data.AddEndExplode && (string.IsNullOrEmpty(data.RequireBuff) || caster.GetBuffCount(data.RequireBuff) >= data.RequireBuffCount) && !data.StartsFromTarget)
+                foreach (var d in data)
                 {
-                    result = data;
+                    if (data != null && !d.AddEndExplode && (string.IsNullOrEmpty(d.RequireBuff) || caster.GetBuffCount(d.RequireBuff) >= d.RequireBuffCount) && !d.StartsFromTarget)
+                    {
+                        result.Add(d);
+                    }
                 }
             }
             return result;

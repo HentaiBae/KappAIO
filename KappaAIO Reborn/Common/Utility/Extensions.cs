@@ -8,6 +8,7 @@ using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Rendering;
+using EloBuddy.SDK.Utils;
 using KappAIO_Reborn.Common.SpellDetector.Detectors;
 using SharpDX;
 
@@ -15,6 +16,8 @@ namespace KappAIO_Reborn.Common.Utility
 {
     static class Extensions
     {
+        #region vectors
+        
         /// <summary>
         ///     Returns true if you can deal damage to the target.
         /// </summary>
@@ -39,10 +42,346 @@ namespace KappAIO_Reborn.Common.Utility
             return vectors.Aggregate(Vector3.Zero, (current, vector) => current + vector) / vectors.Length;
         }
 
-        public static bool IsChampion(this GameObject obj)
+        /// <summary>
+        ///     Prediects the target Position on the given time
+        /// </summary>
+        public static Vector3 PrediectPosition(this Obj_AI_Base target, float Time = 250)
         {
-            return obj != null && obj.IsValid && obj is AIHeroClient;
+            if (Time == 250)
+                Time += Game.Ping;
+            return Prediction.Position.PredictUnitPosition(target, (int)Time).To3D();
         }
+
+        public static Vector2 HpBarPos(this Obj_AI_Base target) => new Vector2(target.HPBarPosition.X, target.HPBarPosition.Y - 5);
+
+        #endregion
+
+        #region Spell Extensions
+        
+        public static bool IsSummonerSpell(this SpellSlot slot)
+        {
+            return slot == SpellSlot.Summoner1 || slot == SpellSlot.Summoner2;
+        }
+
+        public static float GetCurrentDamage(this float[] damages, float[] mods, SpellSlot slot, float scale, int index = -1)
+        {
+            index = index == -1 ? Player.Instance.Spellbook.GetSpell(slot).Level - 1 : index;
+
+            if (index < 0)
+                return 0;
+
+            var dmg = damages[index];
+            var mod = mods[index];
+            var currentdmg = dmg + (scale * mod);
+
+            return currentdmg;
+        }
+
+        private static Text text;
+
+        public static void DrawDamage(this Obj_AI_Base target, float dmg)
+        {
+            if (text == null)
+                text = new Text(string.Empty, new Font("Tahoma", 9, FontStyle.Bold)) { Color = System.Drawing.Color.White };
+
+            if (!target.IsHPBarRendered || !target.HpBarPos().IsOnScreen())
+                return;
+
+            var y2 = target.BaseSkinName.Equals("Annie") ? 12 : target.BaseSkinName.Equals("Jhin") ? 14 : 0;
+
+            var twoThirdhealth = (target.TotalShieldHealth() / 3) * 2;
+            float x = target.HpBarPos().X;
+            float y = target.HpBarPos().Y - y2 - 12;
+
+            text.Color = System.Drawing.Color.White;
+
+            if (dmg >= target.Health)
+            {
+                text.Color = System.Drawing.Color.Red;
+            }
+            else
+            {
+                if (dmg > twoThirdhealth)
+                {
+                    text.Color = System.Drawing.Color.Yellow;
+                }
+            }
+
+            text.TextValue = (int)dmg + " / " + (int)target.Health;
+            text.Position = new Vector2(x, y);
+            text.Draw();
+        }
+
+        public static IEnumerable<AIHeroClient> GetKillStealTargets(this Spell.SpellBase spell)
+        {
+            return EntityManager.Heroes.Enemies.OrderByDescending(TargetSelector.GetPriority).Where(o => spell.WillKill(o) && o.IsKillable());
+        }
+
+        public static AIHeroClient GetKillStealTarget(this Spell.SpellBase spell, float dmg = 0, DamageType damageType = DamageType.Mixed)
+        {
+            if (dmg > 0)
+            {
+                return EntityManager.Heroes.Enemies.OrderBy(TargetSelector.GetPriority).FirstOrDefault(t => t.IsKillable(spell.Range, false, true, true) && Player.Instance.CalculateDamageOnUnit(t, damageType, dmg) > spell.GetHealthPrediction(t));
+            }
+            return spell.GetKillStealTargets().FirstOrDefault(o => o.IsKillable(spell.Range));
+        }
+
+        public static float GetTravelTime(this Spell.Skillshot spell, Vector3 end)
+        {
+            return Player.Instance.ServerPosition.Distance(end) / spell.Speed * 1000 + spell.CastDelay;
+        }
+
+        public static string GetSpellName(this SpellDataInst instance)
+        {
+            if (instance.Name.Contains("SummonerSmite"))
+                return "SummonerSmite";
+
+            if (instance.Name.Equals("TeleportCancel"))
+                return "SummonerTeleport";
+
+            return instance.Name;
+        }
+
+        /// <summary>
+        ///     Casts spell with selected hitchancepercent.
+        /// </summary>
+        public static void Cast(this Spell.Skillshot spell, Obj_AI_Base target, float hitchancepercent)
+        {
+            if (target != null && spell.IsReady() && target.IsKillable(spell.Range))
+            {
+                var pred = spell.GetPrediction(target);
+                if (pred.HitChancePercent >= hitchancepercent)
+                {
+                    spell.Cast(pred.CastPosition);
+                }
+            }
+        }
+
+        public static SpellDataInst SlotToSpell(this AIHeroClient hero, SpellSlot slot)
+        {
+            return hero.Spellbook.GetSpell(slot);
+        }
+
+        public static string CoolDown(this SpellDataInst spell)
+        {
+            var t = (spell.CooldownExpires - Game.Time) + 1;
+            var ts = TimeSpan.FromSeconds(t);
+            var s = t > 60 ? string.Format("{0}:{1:D2}", ts.Minutes, ts.Seconds) : string.Format("{0:0}", t);
+            return s;
+        }
+
+        public static float CurrentCD(this SpellDataInst spell)
+        {
+            var t = spell.CooldownExpires - Game.Time;
+            return t;
+        }
+
+        public static float CurrentCD(this AIHeroClient hero, SpellSlot slot)
+        {
+            var spell = SlotToSpell(hero, slot);
+            return spell.CurrentCD();
+        }
+
+        public static bool IsOnCoolDown(this AIHeroClient hero, SpellSlot slot)
+        {
+            return CurrentCD(hero, slot) > 0;
+        }
+
+        public static List<SpellSlot> KnownSpellSlots = new List<SpellSlot> { SpellSlot.Q, SpellSlot.W, SpellSlot.E, SpellSlot.R, SpellSlot.Summoner1, SpellSlot.Summoner2 };
+
+        #endregion
+        
+        #region custom XP api
+
+        public static float XPToCurrentLevel(this AIHeroClient hero)
+        {
+            var Totalxp = new[] { 280, 660, 1140, 1720, 2400, 3180, 4060, 5040, 6120, 7300, 8580, 9960, 11440, 13020, 14700, 16480, 18360 };
+            var aram = 0;
+            if (Game.MapId == GameMapId.HowlingAbyss)
+            {
+                if (hero.Level <= 3)
+                    return 0;
+
+                aram = -2;
+            }
+            if (Game.MapId == GameMapId.CrystalScar)
+            {
+                var csTotalXPSum = new[] { 790, 1245, 1785, 2410, 3110, 3900, 4770, 5645, 6575, 7560, 8590, 9660, 10935, 12290, 13715 };
+                return hero.Level <= 3 ? 0 : csTotalXPSum[hero.Level - 4];
+            }
+            return hero.Level == 1 ? 0 : Totalxp[hero.Level - 2] + aram;
+        }
+
+        public static float XPNeededToNextLevel(this AIHeroClient hero)
+        {
+            if (hero.Level >= 18)
+            {
+                return 0;
+            }
+            if (Game.MapId == GameMapId.CrystalScar)
+            {
+                var csTotalXP = new[] { 790, 455, 540, 625, 700, 790, 870, 875, 930, 985, 1030, 1070, 1275, 1355, 1425 };
+                return csTotalXP[hero.Level <= 3 ? 0 : hero.Level - 3];
+            }
+            var aramstart = Game.MapId == GameMapId.HowlingAbyss && hero.Level <= 3;
+            var baseexpneeded = 180 + hero.Level * 100;
+
+            return aramstart ? 1138 : baseexpneeded;
+        }
+
+        public static float CurrentXP(this AIHeroClient hero)
+        {
+            if (hero.Level >= 18)
+            {
+                return 0;
+            }
+            var TotalXp = TotalXP(hero);
+            if (Game.MapId == GameMapId.HowlingAbyss)
+            {
+                if (hero.Level <= 3)
+                    return TotalXp;
+            }
+            var currnet = TotalXp - XPToCurrentLevel(hero);
+            return hero.Level == 1 ? TotalXp : currnet;
+        }
+
+        public static float CurrentXPPercent(this AIHeroClient hero)
+        {
+            return Math.Max(0, CurrentXP(hero) / XPNeededToNextLevel(hero) * 100);
+        }
+
+        public static float TotalXP(this AIHeroClient hero)
+        {
+            return hero.Experience.XP;
+        }
+
+        #endregion
+
+        #region Menu Extensions
+
+        /// <summary>
+        ///     Returns KeyBind Value.
+        /// </summary>
+        public static bool KeyBindValue(this Menu m, string id)
+        {
+            try
+            {
+                return m[id].Cast<KeyBind>().CurrentValue;
+            }
+            catch (Exception)
+            {
+                Logger.Error("KappAIO: Failed to get keybind value Name: {0} | MenuID: {1}", id, m.DisplayName);
+                return false;
+            }
+        }
+
+        /// <summary>
+        ///     Returns CheckBox Value.
+        /// </summary>
+        public static bool CheckBoxValue(this Menu m, string id)
+        {
+            try
+            {
+                return m[id].Cast<CheckBox>().CurrentValue;
+            }
+            catch (Exception)
+            {
+                Logger.Error("KappAIO: Failed to get checkbox value Name: {0} | MenuID: {1}", id, m.DisplayName);
+                return false;
+            }
+        }
+
+        /// <summary>
+        ///     Creates a checkbox.
+        /// </summary>
+        public static CheckBox CreateCheckBox(this Menu m, string id, string name, bool defaultvalue = true)
+        {
+            try
+            {
+                return m.Add(id, new CheckBox(name, defaultvalue));
+            }
+            catch (Exception)
+            {
+                Logger.Error("KappAIO: Failed to create checkbox Name: {0} | MenuID: {1}", id, m.DisplayName);
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///     Creates a slider.
+        /// </summary>
+        public static Slider CreateSlider(this Menu m, string id, string name, int defaultvalue = 0, int MinValue = 0, int MaxValue = 100)
+        {
+            try
+            {
+                return m.Add(id, new Slider(name, defaultvalue, MinValue, MaxValue));
+            }
+            catch (Exception)
+            {
+                Logger.Error("KappAIO: Failed to create slider Name: {0} | MenuID: {1}", id, m.DisplayName);
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///     Creates a KeyBind.
+        /// </summary>
+        public static KeyBind CreateKeyBind(this Menu m, string id, string name, bool defaultvalue, KeyBind.BindTypes BindType, uint key1 = 27U, uint key2 = 27U)
+        {
+            try
+            {
+                return m.Add(id, new KeyBind(name, defaultvalue, BindType, key1, key2));
+            }
+            catch (Exception)
+            {
+                Logger.Error("KappAIO: Failed to create keybind Name: {0} | MenuID: {1}", id, m.DisplayName);
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///     Returns ComboBox Value.
+        /// </summary>
+        public static int ComboBoxValue(this Menu m, string id)
+        {
+            try
+            {
+                return m[id].Cast<ComboBox>().CurrentValue;
+            }
+            catch (Exception)
+            {
+                Logger.Error("KappAIO: Failed to get combobox value Name: {0} | MenuID: {1}", id, m.DisplayName);
+                return 0;
+            }
+        }
+
+        /// <summary>
+        ///     Returns Slider Value.
+        /// </summary>
+        public static int SliderValue(this Menu m, string id)
+        {
+            try
+            {
+                return m[id].Cast<Slider>().CurrentValue;
+            }
+            catch (Exception)
+            {
+                Logger.Error("KappAIO: Failed to get slider value Name: {0} | MenuID: {1}", id, m.DisplayName);
+                return 0;
+            }
+        }
+
+        #endregion
+
+        #region Gameobjects Extensions
+
+        private static Dictionary<string, string> reviveBuffs = new Dictionary<string, string>
+            {
+            {"all", "willrevive" },
+            {"Aatrox", "aatroxpassiveready" },
+            {"Zac", "zacrebirthready" },
+            {"Anivia", "rebirthready" }
+            };
 
         /// <summary>
         ///     Returns true if you can deal damage to the target.
@@ -76,17 +415,14 @@ namespace KappAIO_Reborn.Common.Utility
             var client = target as AIHeroClient;
             if (client != null && UndyingBuffs && client.HasUndyingBuff(true))
                 return false;
-            
+
             return true;
         }
 
-        private static Dictionary<string, string> reviveBuffs = new Dictionary<string, string>
-            {
-            {"all", "willrevive" },
-            {"Aatrox", "aatroxpassiveready" },
-            {"Zac", "zacrebirthready" },
-            {"Anivia", "rebirthready" }
-            };
+        public static bool IsChampion(this GameObject obj)
+        {
+            return obj != null && obj.IsValid && obj is AIHeroClient;
+        }
 
         public static bool HasReviveBuff(this Obj_AI_Base target)
         {
@@ -174,31 +510,12 @@ namespace KappAIO_Reborn.Common.Utility
             return hero.GetAutoAttackDamage(target, true) >= target.TotalShieldHealth() && target.IsKillable(hero.GetAutoAttackRange(target));
         }
 
-        public static IEnumerable<AIHeroClient> GetKillStealTargets(this Spell.SpellBase spell)
+        /// <summary>
+        ///     Returns true if the target is big minion (Siege / Super Minion).
+        /// </summary>
+        public static bool IsBigMinion(this Obj_AI_Base target)
         {
-            return EntityManager.Heroes.Enemies.OrderByDescending(TargetSelector.GetPriority).Where(o => spell.WillKill(o) && o.IsKillable());
-        }
-
-        public static AIHeroClient GetKillStealTarget(this Spell.SpellBase spell, float dmg = 0, DamageType damageType = DamageType.Mixed)
-        {
-            if (dmg > 0)
-            {
-                return EntityManager.Heroes.Enemies.OrderBy(TargetSelector.GetPriority).FirstOrDefault(t => t.IsKillable(spell.Range, false, true, true) && Player.Instance.CalculateDamageOnUnit(t, damageType, dmg) > spell.GetHealthPrediction(t));
-            }
-            return spell.GetKillStealTargets().FirstOrDefault(o => o.IsKillable(spell.Range));
-        }
-
-        public static float GetTravelTime(this Spell.Skillshot spell, Vector3 end)
-        {
-            return Player.Instance.ServerPosition.Distance(end) / spell.Speed * 1000 + spell.CastDelay;
-        }
-
-        public static string GetSpellName(this SpellDataInst instance)
-        {
-            if (instance.Name.Contains("SummonerSmite"))
-                return "SummonerSmite";
-
-            return instance.Name;
+            return target.BaseSkinName.ToLower().Contains("siege") || target.BaseSkinName.ToLower().Contains("super");
         }
 
         /// <summary>
@@ -213,174 +530,11 @@ namespace KappAIO_Reborn.Common.Utility
             return target.BaseSkinName;
         }
 
-        /// <summary>
-        ///     Creates a checkbox.
-        /// </summary>
-        public static CheckBox CreateCheckBox(this Menu m, string id, string name, bool defaultvalue = true)
-        {
-            return m.Add(id, new CheckBox(name, defaultvalue));
-        }
-
-        /// <summary>
-        ///     Creates a slider.
-        /// </summary>
-        public static Slider CreateSlider(this Menu m, string id, string name, int defaultvalue = 0, int MinValue = 0, int MaxValue = 100)
-        {
-            return m.Add(id, new Slider(name, defaultvalue, MinValue, MaxValue));
-        }
-
-        /// <summary>
-        ///     Creates a KeyBind.
-        /// </summary>
-        public static KeyBind CreateKeyBind(this Menu m, string id, string name, bool defaultvalue, KeyBind.BindTypes BindType, uint key1 = 27U, uint key2 = 27U)
-        {
-            return m.Add(id, new KeyBind(name, defaultvalue, BindType, key1, key2));
-        }
-
-        /// <summary>
-        ///     Returns KeyBind Value.
-        /// </summary>
-        public static bool KeyBindValue(this Menu m, string id)
-        {
-            return m[id].Cast<KeyBind>().CurrentValue;
-        }
-
-        /// <summary>
-        ///     Returns ComboBox Value.
-        /// </summary>
-        public static int ComboBoxValue(this Menu m, string id)
-        {
-            return m[id].Cast<ComboBox>().CurrentValue;
-        }
-
-        /// <summary>
-        ///     Returns CheckBox Value.
-        /// </summary>
-        public static bool CheckBoxValue(this Menu m, string id)
-        {
-            try
-            {
-                return m[id].Cast<CheckBox>().CurrentValue;
-            }
-            catch (Exception)
-            {
-                Console.WriteLine($"Wrong ID:- Menu: {m.DisplayName} - ID: {id}");
-                return false;
-            }
-        }
-
-        /// <summary>
-        ///     Returns Slider Value.
-        /// </summary>
-        public static int SliderValue(this Menu m, string id)
-        {
-            try
-            {
-                return m[id].Cast<Slider>().CurrentValue;
-            }
-            catch (Exception)
-            {
-                Console.WriteLine($"Wrong ID:- Menu: {m.DisplayName} - ID: {id}");
-                return 0;
-            }
-        }
-
-        /// <summary>
-        ///     Returns true if the target is big minion (Siege / Super Minion).
-        /// </summary>
-        public static bool IsBigMinion(this Obj_AI_Base target)
-        {
-            return target.BaseSkinName.ToLower().Contains("siege") || target.BaseSkinName.ToLower().Contains("super");
-        }
-
-        /// <summary>
-        ///     Prediects the target Position on the given time
-        /// </summary>
-        public static Vector3 PrediectPosition(this Obj_AI_Base target, float Time = 250)
-        {
-            if (Time == 250)
-                Time += Game.Ping;
-            return Prediction.Position.PredictUnitPosition(target, (int)Time).To3D();
-        }
-
         public static float PredictHealth(this Obj_AI_Base target, int Time = 250)
         {
             if (Time == 250)
                 Time += Game.Ping;
             return Prediction.Health.GetPrediction(target, Time);
-        }
-
-        public static float GetCurrentDamage(this float[] damages, float[] mods, SpellSlot slot, float scale, int index = -1)
-        {
-            index = index == -1 ? Player.Instance.Spellbook.GetSpell(slot).Level - 1 : index;
-
-            if (index < 0)
-                return 0;
-
-            var dmg = damages[index];
-            var mod = mods[index];
-            var currentdmg = dmg + (scale * mod);
-
-            return currentdmg;
-        }
-
-        private static Text text;
-
-        public static Vector2 HpBarPos(this Obj_AI_Base target) => new Vector2(target.HPBarPosition.X, target.HPBarPosition.Y - 5);
-
-        public static void DrawDamage(this Obj_AI_Base target, float dmg)
-        {
-            if (text == null)
-                text = new Text(string.Empty, new Font("Tahoma", 9, FontStyle.Bold)) { Color = System.Drawing.Color.White };
-
-            if (!target.IsHPBarRendered || !target.HpBarPos().IsOnScreen())
-                return;
-            
-            var y2 = target.BaseSkinName.Equals("Annie") ? 12 : target.BaseSkinName.Equals("Jhin") ? 14 : 0;
-
-            var twoThirdhealth = (target.TotalShieldHealth() / 3) * 2;
-            float x = target.HpBarPos().X;
-            float y = target.HpBarPos().Y - y2 - 12;
-
-            text.Color = System.Drawing.Color.White;
-
-            if (dmg >= target.Health)
-            {
-                text.Color = System.Drawing.Color.Red;
-            }
-            else
-            {
-                if (dmg > twoThirdhealth)
-                {
-                    text.Color = System.Drawing.Color.Yellow;
-                }
-            }
-
-            text.TextValue = (int)dmg + " / " + (int)target.Health;
-            text.Position = new Vector2(x, y);
-            text.Draw();
-        }
-
-        public static DangerLevel[] DangerLevels = {DangerLevel.Low, DangerLevel.Medium, DangerLevel.High, };
-
-        /// <summary>
-        ///     Casts spell with selected hitchancepercent.
-        /// </summary>
-        public static void Cast(this Spell.Skillshot spell, Obj_AI_Base target, float hitchancepercent)
-        {
-            if (target != null && spell.IsReady() && target.IsKillable(spell.Range))
-            {
-                var pred = spell.GetPrediction(target);
-                if (pred.HitChancePercent >= hitchancepercent)
-                {
-                    spell.Cast(pred.CastPosition);
-                }
-            }
-        }
-
-        public static bool IsSummonerSpell(this SpellSlot slot)
-        {
-            return slot == SpellSlot.Summoner1 || slot == SpellSlot.Summoner2;
         }
 
         public static string GetChampionName(this AIHeroClient target)
@@ -391,104 +545,13 @@ namespace KappAIO_Reborn.Common.Utility
             return target.ChampionName;
         }
 
-        public static SpellDataInst SlotToSpell(this AIHeroClient hero, SpellSlot slot)
-        {
-            return hero.Spellbook.GetSpell(slot);
-        }
-
-        public static string CoolDown(this SpellDataInst spell)
-        {
-            var t = (spell.CooldownExpires - Game.Time) + 1;
-            var ts = TimeSpan.FromSeconds(t);
-            var s = t > 60 ? string.Format("{0}:{1:D2}", ts.Minutes, ts.Seconds) : string.Format("{0:0}", t);
-            return s;
-        }
-
-        public static float CurrentCD(this SpellDataInst spell)
-        {
-            var t = spell.CooldownExpires - Game.Time;
-            return t;
-        }
-
-        public static float CurrentCD(this AIHeroClient hero, SpellSlot slot)
-        {
-            var spell = SlotToSpell(hero, slot);
-            return spell.CurrentCD();
-        }
-
-        public static bool IsOnCoolDown(this AIHeroClient hero, SpellSlot slot)
-        {
-            return CurrentCD(hero, slot) > 0;
-        }
-
-        public static List<SpellSlot> KnownSpellSlots = new List<SpellSlot> { SpellSlot.Q, SpellSlot.W, SpellSlot.E, SpellSlot.R, SpellSlot.Summoner1, SpellSlot.Summoner2 };
-
-        public static float XPToCurrentLevel(this AIHeroClient hero)
-        {
-            var Totalxp = new[] { 280, 660, 1140, 1720, 2400, 3180, 4060, 5040, 6120, 7300, 8580, 9960, 11440, 13020, 14700, 16480, 18360 };
-            var aram = 0;
-            if (Game.MapId == GameMapId.HowlingAbyss)
-            {
-                if (hero.Level <= 3)
-                    return 0;
-
-                aram = -2;
-            }
-            if (Game.MapId == GameMapId.CrystalScar)
-            {
-                var csTotalXPSum = new[] { 790, 1245, 1785, 2410, 3110, 3900, 4770, 5645, 6575, 7560, 8590, 9660, 10935, 12290, 13715 };
-                return hero.Level <= 3 ? 0 : csTotalXPSum[hero.Level - 4];
-            }
-            return hero.Level == 1 ? 0 : Totalxp[hero.Level - 2] + aram;
-        }
-
-        // custom XP api
-        public static float XPNeededToNextLevel(this AIHeroClient hero)
-        {
-            if (hero.Level >= 18)
-            {
-                return 0;
-            }
-            if (Game.MapId == GameMapId.CrystalScar)
-            {
-                var csTotalXP = new[] { 790, 455, 540, 625, 700, 790, 870, 875, 930, 985, 1030, 1070, 1275, 1355, 1425 };
-                return csTotalXP[hero.Level <= 3 ? 0 : hero.Level - 3];
-            }
-            var aramstart = Game.MapId == GameMapId.HowlingAbyss && hero.Level <= 3;
-            var baseexpneeded = 180 + hero.Level * 100;
-
-            return aramstart ? 1138 : baseexpneeded;
-        }
-
-        public static float CurrentXP(this AIHeroClient hero)
-        {
-            if (hero.Level >= 18)
-            {
-                return 0;
-            }
-            var TotalXp = TotalXP(hero);
-            if (Game.MapId == GameMapId.HowlingAbyss)
-            {
-                if (hero.Level <= 3)
-                    return TotalXp;
-            }
-            var currnet = TotalXp - XPToCurrentLevel(hero);
-            return hero.Level == 1 ? TotalXp : currnet;
-        }
-
-        public static float CurrentXPPercent(this AIHeroClient hero)
-        {
-            return Math.Max(0, CurrentXP(hero) / XPNeededToNextLevel(hero) * 100);
-        }
-
-        public static float TotalXP(this AIHeroClient hero)
-        {
-            return hero.Experience.XP;
-        }
-
         public static Obj_SpawnPoint GetSpawnPoint(this AIHeroClient target)
         {
             return ObjectManager.Get<Obj_SpawnPoint>().FirstOrDefault(s => s.Team == target.Team);
         }
+
+        #endregion
+
+        public static DangerLevel[] DangerLevels = {DangerLevel.Low, DangerLevel.Medium, DangerLevel.High, };
     }
 }

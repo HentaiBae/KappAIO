@@ -214,6 +214,11 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             {
                 var endpos = Vector2.Zero;
 
+                if (this.Data.EndSticksToTarget && this.Target != null)
+                {
+                    return this.Target.ServerPosition.To2D();
+                }
+
                 if (this.Caster != null)
                 {
                     var direction = (this.Caster.Direction().Distance(this.Caster) < 100 ? this.Caster.Direction() : this.Caster.Path.LastOrDefault().To2D());

@@ -58,7 +58,7 @@ namespace KappAIO_Reborn
             {
                 if(!loadedEvade && !loadedChampion)
                     GlobalMenu.DisplayName = "KappAIO: HUD";
-                //HUDManager.Init();
+                HUDManager.Init();
             }
 
             //FoW.Init();
