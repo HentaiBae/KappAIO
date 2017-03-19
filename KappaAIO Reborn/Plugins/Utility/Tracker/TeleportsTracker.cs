@@ -17,8 +17,7 @@ namespace KappAIO_Reborn.Plugins.Utility.Tracker
         {
             if(loaded)
                 return;
-
-            Chat.Print("called");
+            
             loaded = true;
             Teleports.OnTrack += Teleports_OnTrack;
             Teleports.OnFinish += Teleports_OnFinish;
