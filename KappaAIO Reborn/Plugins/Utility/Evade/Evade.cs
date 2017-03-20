@@ -22,9 +22,9 @@ namespace KappAIO_Reborn.Plugins.Utility.Evade
 
             DrawMenu.AddSeparator(0);
 
-            var skillshots = SkillshotDatabase.Current.FindAll(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type)) && (s.hero.Equals(Champion.Unknown) || EntityManager.Heroes.Enemies.Any(h => s.hero.Equals(h.Hero))));
+            var skillshots = SkillshotDatabase.Current.FindAll(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type)) && (s.IsCasterName(Champion.Unknown) || EntityManager.Heroes.Enemies.Any(h => s.IsCasterName(h.Hero))));
 
-            foreach (var skill in skillshots.OrderBy(s => s.hero))
+            foreach (var skill in skillshots.OrderBy(s => s.CasterNames[0]))
             {
                 DrawMenu.AddLabel(skill.MenuItemName);
                 DrawMenu.CreateCheckBox($"Draw{skill.MenuItemName}", "Draw");
