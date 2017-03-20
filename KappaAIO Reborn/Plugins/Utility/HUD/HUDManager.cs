@@ -6,6 +6,7 @@ using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Rendering;
+using EloBuddy.SDK.Utils;
 using KappAIO_Reborn.Common.Utility;
 using KappAIO_Reborn.Common.Utility.TextureManager;
 using KappAIO_Reborn.Plugins.Utility.Tracker;
@@ -131,42 +132,50 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                     sprite.MPBar.Sprite.Draw(barVector);
                 }
 
-                if (HUDConfig.DrawRecall)
+                try
                 {
-                    var tpInfo = sprite.Champion.GetTeleportInfo();
-                    if (tpInfo != null)
+                    if (HUDConfig.DrawRecall)
                     {
-                        if (RecallText == null)
+                        var tpInfo = sprite.Champion.GetTeleportInfo();
+                        if (tpInfo != null && (tpInfo.Started || ((tpInfo.Aborted || tpInfo.Finished) && tpInfo.Duration > Core.GameTickCount - tpInfo.StartTick)))
                         {
-                            var SIZE = sprite.Icon.Sprite.Rectangle.Value.Height + sprite.Icon.Sprite.Rectangle.Value.Width;
-                            RecallText = new Text("Arial", new Font(FontFamily.GenericSerif, SIZE * 0.067f, FontStyle.Bold));
-                        }
+                            if (RecallText == null)
+                            {
+                                var SIZE = sprite.Icon.Sprite.Rectangle.Value.Height + sprite.Icon.Sprite.Rectangle.Value.Width;
+                                RecallText = new Text("Arial", new Font(FontFamily.GenericSerif, SIZE * 0.067f, FontStyle.Bold));
+                            }
 
-                        if (tpInfo.Args.Type == TeleportType.Unknown)
-                            Console.WriteLine($"Unknown TP type {tpInfo.Args.TeleportName}");
+                            if (tpInfo.Args.Type == TeleportType.Unknown)
+                                Console.WriteLine($"Unknown TP type {tpInfo.Args.TeleportName}");
 
-                        var c = new Color();
-                        var color = ScaleColors.FirstOrDefault(s => s.Sprite.Equals(sprite));
-                        if (color != null)
-                        {
-                            c = color.CurrentColor;
+                            var c = new Color();
+                            var color = ScaleColors.FirstOrDefault(s => s.Sprite.Equals(sprite));
+                            if (color != null)
+                            {
+                                c = color.CurrentColor;
+                            }
+                            else
+                            {
+                                var scaleColor = new ScaleColor(sprite, Color.White, Color.Gold) { Duration = tpInfo.Duration };
+                                ScaleColors.Add(scaleColor);
+                                c = scaleColor.CurrentColor;
+                            }
+
+                            var text = tpInfo.Finished || tpInfo.Aborted ? tpInfo.Args.Status.ToString() : tpInfo.Name;
+                            var modx = vector2.X * 1.01f;
+                            var modY = (vector2.Y * 2 + sprite.Icon.Sprite.Rectangle.Value.Height) / 2;
+                            var recallPos = new Vector2(modx, modY);
+                            RecallText?.Draw(text.ToUpper(), c, recallPos);
                         }
                         else
                         {
-                            var scaleColor = new ScaleColor(sprite, Color.White, Color.Gold) { Duration = tpInfo.Args.Duration };
-                            ScaleColors.Add(scaleColor);
-                            c = scaleColor.CurrentColor;
+                            ScaleColors.RemoveAll(s => s.Sprite.Equals(sprite));
                         }
-
-                        var modx = vector2.X * 1.01f;
-                        var modY = (vector2.Y * 2 + sprite.Icon.Sprite.Rectangle.Value.Height) / 2;
-                        var recallPos = new Vector2(modx, modY);
-                        RecallText.Draw(tpInfo.Args.Type.ToString().ToUpper(), c, recallPos);
                     }
-                    else
-                    {
-                        ScaleColors.RemoveAll(s => s.Sprite.Equals(sprite));
-                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex.Message);
                 }
 
                 vector2.X += heroIconWidth;
