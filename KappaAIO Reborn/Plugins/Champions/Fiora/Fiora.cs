@@ -63,7 +63,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             if(Orbwalker.IsAutoAttacking)
                 return;
             var minion = target as Obj_AI_Minion;
-            if (!Config.useEUnk || minion == null || HydraItem.Ready || !E.IsReady() || !(Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear) || Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit)))
+            if (!Config.useEUnk || minion == null || (HydraItem.Ready && Orbwalker.UseTiamat) || !E.IsReady() || !(Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear) || Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit)))
                 return;
 
             if (minion.IsKillable(user.GetAutoAttackRange(minion), false, true, true) && user.GetAutoAttackDamage(minion) >= minion.Health)
