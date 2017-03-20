@@ -549,7 +549,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 var hero = args.Caster as AIHeroClient;
                 if (hero != null)
                 {
-                    kill = hero.GetSpellDamage(Player.Instance, args.Data.slot) >= Player.Instance.Health;
+                    kill = hero.GetSpellDamage(Player.Instance, args.Data.Slots[0]) >= Player.Instance.Health;
                 }
 
                 if (spell == null)
@@ -754,13 +754,13 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                 var validskillshots =
                     SkillshotDatabase.Current.Where(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type))
-                    && EntityManager.Heroes.Enemies.Any(h => s.hero.Equals(Champion.Unknown) || s.hero.Equals(h.Hero))).OrderBy(s => s.hero);
+                    && EntityManager.Heroes.Enemies.Any(h => s.IsCasterName(Champion.Unknown) || s.IsCasterName(h.Hero))).OrderBy(s => s.CasterNames[0]);
                 if (validskillshots.Any())
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("SkillShots");
 
-                    foreach (var s in validskillshots.OrderBy(s => s.hero))
+                    foreach (var s in validskillshots)
                     {
                         var display = s.MenuItemName;
                         if (!SpellBlocker.EnabledSpells.Any(x => x.SpellName.Equals(display)))
