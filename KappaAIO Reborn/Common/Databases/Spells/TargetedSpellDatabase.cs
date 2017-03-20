@@ -421,8 +421,8 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      hero = Champion.Nautilus,
                      slot = SpellSlot.R,
                      DangerLevel = 5,
-                     CastDelay = 460,
-                     Speed = 1400
+                     CastDelay = 500,
+                     Speed = 600
                  },
               new TargetedSpellData
                  {
