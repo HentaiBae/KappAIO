@@ -1,4 +1,6 @@
-﻿using EloBuddy;
+﻿using System;
+using System.Linq;
+using EloBuddy;
 
 namespace KappAIO_Reborn.Common.Databases.SpellData
 {
@@ -6,10 +8,20 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
     {
         public Type type;
         public Type Explodetype;
-        public Champion hero;
-        public SpellSlot slot;
-        public SpellSlot ExtraSlot;
+        public SpellSlot[] Slots;
         public GameType GameType;
+        public string[] CasterNames;
+        public string[] SpellNames;
+        public string[] MissileNames;
+        public string[] ParticleNames;
+        public string DisplayName;
+        public string RemoveOnBuffLose;
+        public string TargetName;
+        public string StartParticalName;
+        public string MidParticalName;
+        public string EndParticalName;
+        public string ParticalObjectName;
+        public string RequireBuff;
         public int CollideCount;
         public int DangerLevel;
         public int RequireBuffCount;
@@ -26,23 +38,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public float Width;
         public float Speed;
         public float CastDelay;
-        public string DisplayName;
-        public string RemoveOnBuffLose;
-        public string CasterName;
-        public string TargetName;
-        public string MissileName;
-        public string MinionName;
-        public string MinionBaseSkinName;
-        public string ParticalName;
-        public string StartParticalName;
-        public string MidParticalName;
-        public string EndParticalName;
-        public string ParticalObjectName;
-        public string SpellName;
-        public string RequireBuff;
-        public string[] ExtraSpellName;
-        public string[] ExtraMissileName;
-        public string[] DodgeFrom;
+        public bool DecaySpeedWithLessRange;
         public bool EndSticksToTarget;
         public bool DetectAsOne;
         public bool AddEndExplode;
@@ -57,7 +53,6 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool DontAddExtraDuration;
         public bool TakeClosestPath;
         public bool EndIsCasterDirection;
-        public bool ForceRemove;
         public bool IsFixedRange;
         public bool DetectByMissile;
         public bool EndSticksToCaster;
@@ -67,8 +62,43 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool StartsFromTarget;
         public Collision[] Collisions;
 
-        public string MenuItemName => $"{(this.hero.Equals(Champion.Unknown) ? "All" : this.hero.ToString())} {(this.slot.Equals(SpellSlot.Unknown) ? "Special" : this.slot.ToString())} ({(!string.IsNullOrEmpty(DisplayName) ? DisplayName : !string.IsNullOrEmpty(this.SpellName) ? this.SpellName : !string.IsNullOrEmpty(this.MissileName) ? this.MissileName : this.ParticalName)})";
-        public bool HasRange => (this.Range < int.MaxValue && this.Range < float.MaxValue && this.Range > 0) && this.Range != 25000;
+        public bool IsCasterName(string name)
+        {
+            return this.CasterNames != null && this.CasterNames.Any(s => s.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        public bool IsCasterName(Champion name)
+        {
+            return this.CasterNames != null && this.CasterNames.Any(s => s.Equals(name.ToString(), StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        public bool IsSlot(SpellSlot slot)
+        {
+            return this.Slots != null && this.Slots.Any(s => s.Equals(slot));
+        }
+
+        public bool IsDisplayName(string name)
+        {
+            return !string.IsNullOrEmpty(this.DisplayName) && this.DisplayName.Equals(name, StringComparison.CurrentCultureIgnoreCase);
+        }
+
+        public bool IsSpellName(string name)
+        {
+            return this.SpellNames != null && this.SpellNames.Any(s => s.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        public bool IsMissileName(string name)
+        {
+            return this.MissileNames != null && this.MissileNames.Any(s => s.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        public bool IsParticleName(string name)
+        {
+            return this.ParticleNames != null && this.ParticleNames.Any(name.StartsWith) && name.EndsWith(".troy");
+        }
+
+        public string MenuItemName => $"{(CasterNames != null ? CasterNames[0] : "")} {(Slots != null ? Slots.All(s => s.Equals(SpellSlot.Unknown)) ? "Special" : Slots[0].ToString() : "")} ({(!string.IsNullOrEmpty(DisplayName) ? DisplayName : SpellNames != null ? SpellNames[0] : this.MissileNames != null ? MissileNames[0] : ParticleNames != null ? ParticleNames[0] : "")})";
+        public bool HasRange => (this.Range < int.MaxValue && this.Range < float.MaxValue && this.Range > 0) && this.Range != 25000f;
         public bool HasWidth => this.Width < int.MaxValue && this.Width < float.MaxValue && this.Width > 0;
         public bool HasAngle => this.Angle < int.MaxValue && this.Angle < float.MaxValue && this.Angle > 0;
         public bool HasExtraRange => this.ExtraRange < int.MaxValue && this.ExtraRange < float.MaxValue && this.ExtraRange > 0;
