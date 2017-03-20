@@ -453,7 +453,7 @@ namespace KappAIO_Reborn.Common.Utility
 
             var incSkillshots = SkillshotDetector.SkillshotsDetected.FindAll(s => s.WillHit(target));
             if (incSkillshots.Any())
-                incDmg += incSkillshots.Sum(s => (s.Caster as AIHeroClient)?.GetSpellDamage(target, s.Data.slot) ?? 0);
+                incDmg += incSkillshots.Sum(s => (s.Caster as AIHeroClient)?.GetSpellDamage(target, s.Data.Slots[0]) ?? 0);
             var incTargetedSpell = TargetedSpellDetector.DetectedTargetedSpells.FindAll(s => s.Target.IdEquals(target));
             if (incTargetedSpell.Any())
                 incDmg += incTargetedSpell.Sum(s => s.Caster.GetSpellDamage(target, s.Data.slot));
@@ -476,7 +476,7 @@ namespace KappAIO_Reborn.Common.Utility
 
             var incSkillshots = SkillshotDetector.SkillshotsDetected.FindAll(s => s.WillHit(target));
             if (incSkillshots.Any())
-                incDmg += incSkillshots.Sum(s => (s.Caster as AIHeroClient)?.GetSpellDamage(target, s.Data.slot) ?? 0);
+                incDmg += incSkillshots.Sum(s => (s.Caster as AIHeroClient)?.GetSpellDamage(target, s.Data.Slots[0]) ?? 0);
             var incTargetedSpell = TargetedSpellDetector.DetectedTargetedSpells.FindAll(s => s.Target.IdEquals(target));
             if (incTargetedSpell.Any())
                 incDmg += incTargetedSpell.Sum(s => s.Caster.GetSpellDamage(target, s.Data.slot));
