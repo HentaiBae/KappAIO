@@ -57,10 +57,10 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     result += this.Data.CastDelay;
                 }
 
-                if (result.Equals(0f) && (this.Data.Speed <= 0 || this.Data.Speed >= int.MaxValue))
+                if (result.Equals(0f) && (this.Speed <= 0 || this.Speed >= int.MaxValue))
                     result += this.Data.CastDelay;
 
-                if (!Data.DontAddExtraDuration)
+                if (!Data.DontAddExtraDuration && Data.ExtraDuration > 0 && Data.ExtraDuration < int.MaxValue)
                 {
                     result += Data.ExtraDuration;
                 }
@@ -68,8 +68,20 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 return result + extraDelay;
             }
         }
-
         public float delay => CastDelay;
+
+        private float? _speed;
+        public float Speed
+        {
+            get
+            {
+                return _speed ?? this.Data.Speed;
+            }
+            set
+            {
+                this._speed = value;
+            }
+        }
 
         public bool IsVisible
         {
@@ -84,7 +96,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
         public float MaxTravelTime(Vector2 target)
         {
-            return (this.Start.Distance(target) / this.Data.Speed * 1000f) + delay + this.Data.ExtraDuration;
+            return (this.Start.Distance(target) / this.Speed * 1000f) + delay + this.Data.ExtraDuration;
         }
         public float MaxTravelTime(Obj_AI_Base target)
         {
@@ -93,11 +105,11 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
         public float TravelTime(Vector2 target)
         {
-            var correct = (this.Start.Distance(target) / this.Data.Speed * 1000f) + this.delay;
+            var correct = (this.Start.Distance(target) / this.Speed * 1000f) + this.delay;
 
             if (this.Data.type == Type.CircleMissile)
             {
-                correct = CollideEndPosition.Distance(target) / this.Data.Speed * 1000f + this.delay;
+                correct = CollideEndPosition.Distance(target) / this.Speed * 1000f + this.delay;
             }
 
             return correct - this.TicksPassed;
@@ -171,7 +183,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             {
                 if (this.Data.type == Type.Cone)
                 {
-                    if (this.Data.SpellName.Equals("CamilleW") && this.Caster != null)
+                    if (this.Data.IsSpellName("CamilleW") && this.Caster != null)
                     {
                         return Caster.ServerPosition.To2D();
                     }
@@ -230,14 +242,14 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     {
                         return this.Caster.ServerPosition.To2D();
                     }
-                    if (this.Data.SpellName.Equals("SionR"))
+                    if (this.Data.IsSpellName("SionR"))
                     {
-                        this.Data.Speed = this.Caster.MoveSpeed;
+                        this.Speed = this.Caster.MoveSpeed;
                         endpos = this.Caster.ServerPosition.Extend(this.Start, -this.Data.Range);
                     }
                     if (this.Data.SticksToCaster)
                     {
-                        if (this.Data.SpellName == "TaricE" || this.Data.SpellName == "CamilleW")
+                        if (this.Data.IsSpellName("TaricE") || this.Data.IsSpellName("CamilleW"))
                         {
                             return this.Caster.ServerPosition.To2D() + this.Direction * this.Data.Range;
                         }
