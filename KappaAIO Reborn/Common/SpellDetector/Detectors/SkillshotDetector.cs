@@ -767,7 +767,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                             var casterHero = caster as AIHeroClient;
                             var target = args.Target as Obj_AI_Base;
                             if (((d.StartsFromTarget || d.EndSticksToTarget) && target != null && (!args.Target.IsMe || caster.IsAlly)
-                                && (casterHero != null && target.Health >= casterHero.GetSpellDamage(target, args.Slot) || casterHero == null)
+                                && (casterHero != null && casterHero.Hero.Equals(Champion.LeeSin) && target.Health >= casterHero.GetSpellDamage(target, args.Slot) || casterHero == null || !casterHero.Hero.Equals(Champion.LeeSin))
                                  || (!d.StartsFromTarget && !d.EndSticksToTarget)))
                             {
                                 result.Add(d);

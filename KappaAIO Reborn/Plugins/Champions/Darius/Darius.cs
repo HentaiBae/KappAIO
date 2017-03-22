@@ -402,6 +402,13 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 Q.Cast();
             }
         }
+        
+        private class dariusEHits
+        {
+            public Vector3 castPos;
+            public int hits;
+            public Geometry.Polygon poly;
+        }
 
         private static void ComboE()
         {
@@ -425,19 +432,16 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
                 if (targets.Count >= Config.Ehits)
                 {
-                    var results = new Dictionary<int, Geometry.Polygon.Sector>();
+                    var results = new List<dariusEHits>();
                     foreach (var t in targets)
                     {
                         var sector = new Geometry.Polygon.Sector(user.ServerPosition, E.GetPrediction(t).CastPosition, (float)(E.ConeAngleDegrees * Math.PI / 180), E.Range);
-                        results.Add(targets.Count(sector.IsInside), sector);
+                        results.Add(new dariusEHits { castPos = sector.CenterOfPolygon().To3D(), poly = sector, hits = targets.Count(sector.IsInside) });
                     }
-                    
-                    if (results.Any(r => r.Key >= Config.Ehits))
-                    {
-                        var bestHits = results.OrderByDescending(e => e.Key).FirstOrDefault(r => r.Key >= Config.Ehits);
-                        var castpos = bestHits.Value.CenterOfPolygon().To3D();
-                        E.Cast(castpos);
-                    }
+
+                    var bestHits = results.OrderByDescending(e => e.hits).FirstOrDefault(r => r.hits >= Config.Ehits);
+                    if (bestHits != null)
+                        E.Cast(bestHits.castPos);
                 }
             }
         }

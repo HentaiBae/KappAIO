@@ -22,6 +22,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public Vector2 End;
         public Vector2? CollidePoint;
         public Vector2 Direction => (this.End - this.Start).Normalized();
+        public Vector2 Direction2 => (this.EndPosition - this.Start).Normalized();
         public Obj_AI_Base CollideTarget;
         public Obj_AI_Base[] CollideTargets;
         public bool DetectedMissile;
@@ -155,6 +156,17 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             var predhitbox = new EloBuddy.SDK.Geometry.Polygon.Circle(target.PrediectPosition(TravelTime(target)), radius);
             return hitbox.Points.Any(OriginalPolygon.IsInside) && predhitbox.Points.Any(OriginalPolygon.IsInside);
         }
+        
+        public Vector2 GetMissilePosition()
+        {
+            var time = Math.Max(0, Core.GameTickCount - this.StartTick - this.delay);
+
+            var x = (int)(time * this.Speed / 1000);
+            var end = CollidePoint.HasValue ? this.CollidePoint.Value : EndPosition;
+
+            time = (int)Math.Max(0, Math.Min(end.Distance(this.Start), x));
+            return (this.Start + this.Direction2 * time);
+        }
 
         public bool WillHit(Obj_AI_Base target, float time = -1f)
         {
@@ -216,7 +228,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     return this.Start;
                 }
 
-                return this.Start;
+                return this.GetMissilePosition();
             }
         }
 
