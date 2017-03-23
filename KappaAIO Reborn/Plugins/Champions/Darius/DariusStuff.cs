@@ -107,9 +107,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
                 return Player.Instance.CalculateDamageOnUnit(target, DamageType.True, currentDamage);
             }
             
-            var scalePerStack = new[] { 20f, 40f, 60f }[index];
-            var scaleMod = 0.15f;
-            var currentStacksDamage = (scalePerStack + (scale * scaleMod)) * buff.Count;
+            var currentStacksDamage = (currentDamage * 0.2f) * buff.Count;
 
             var maxRDamage = currentDamage * 2f;
             var minRDamage = currentDamage + currentStacksDamage;

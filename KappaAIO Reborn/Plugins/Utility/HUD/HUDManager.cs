@@ -142,11 +142,11 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                             if (RecallText == null)
                             {
                                 var SIZE = sprite.Icon.Sprite.Rectangle.Value.Height + sprite.Icon.Sprite.Rectangle.Value.Width;
-                                RecallText = new Text("Arial", new Font(FontFamily.GenericSerif, SIZE * 0.067f, FontStyle.Bold));
+                                RecallText = new Text("Lato", new Font(FontFamily.GenericSerif, SIZE * 0.067f, FontStyle.Bold));
                             }
 
                             if (tpInfo.Args.Type == TeleportType.Unknown)
-                                Console.WriteLine($"Unknown TP type {tpInfo.Args.TeleportName}");
+                                Logger.Warn($"KappAIO: Unknown TP type {tpInfo.Args.TeleportName} - Caster: {tpInfo.Caster.BaseSkinName} Duration: {tpInfo.Args.Duration}");
 
                             var c = new Color();
                             var color = ScaleColors.FirstOrDefault(s => s.Sprite.Equals(sprite));
