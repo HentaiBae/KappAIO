@@ -21,10 +21,9 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public string MidParticalName;
         public string EndParticalName;
         public string ParticalObjectName;
-        public string RequireBuff;
+        public RequireBuff[] RequireBuffs;
         public int CollideCount;
         public int DangerLevel;
-        public int RequireBuffCount;
         public float ExplodeWidth;
         public float MoveSpeedScaleMod;
         public float MissileAccel;
@@ -38,6 +37,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public float Width;
         public float Speed;
         public float CastDelay;
+        public bool IsMoving;
         public bool DecaySpeedWithLessRange;
         public bool EndSticksToTarget;
         public bool DetectAsOne;
@@ -97,6 +97,14 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
             return this.ParticleNames != null && this.ParticleNames.Any(name.StartsWith) && name.EndsWith(".troy");
         }
 
+        public bool HasBuff(Obj_AI_Base caster)
+        {
+            if (this.RequireBuffs == null || caster == null)
+                return true;
+
+            return this.RequireBuffs.Any(b => !string.IsNullOrEmpty(b.Name) && caster.GetBuffCount(b.Name) >= b.Count);
+        }
+
         public string MenuItemName => $"{(CasterNames != null ? CasterNames[0] : "")} {(Slots != null ? Slots.All(s => s.Equals(SpellSlot.Unknown)) ? "Special" : Slots[0].ToString() : "")} ({(!string.IsNullOrEmpty(DisplayName) ? DisplayName : SpellNames != null ? SpellNames[0] : this.MissileNames != null ? MissileNames[0] : ParticleNames != null ? ParticleNames[0] : "")})";
         public bool HasRange => (this.Range < int.MaxValue && this.Range < float.MaxValue && this.Range > 0) && this.Range != 25000f;
         public bool HasWidth => this.Width < int.MaxValue && this.Width < float.MaxValue && this.Width > 0;
@@ -104,6 +112,18 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool HasExtraRange => this.ExtraRange < int.MaxValue && this.ExtraRange < float.MaxValue && this.ExtraRange > 0;
         public bool HasRingRadius => this.RingRadius < int.MaxValue && this.RingRadius < float.MaxValue && this.RingRadius > 0;
         public bool CanCollide => this.CollideCount > 0 && this.CollideCount < int.MaxValue;
+        public bool ClickRemove => this.CastDelay > 1250 && this.CastDelay < int.MaxValue || this.ExtraDuration > 1000 && this.ExtraDuration < int.MaxValue;
+
+        public class RequireBuff
+        {
+            public RequireBuff(string name, int count)
+            {
+                this.Name = name;
+                this.Count = count;
+            }
+            public string Name;
+            public int Count;
+        }
     }
 
     public enum Type

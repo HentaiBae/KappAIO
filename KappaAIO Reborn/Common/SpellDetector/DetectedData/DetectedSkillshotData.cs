@@ -26,6 +26,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public Obj_AI_Base CollideTarget;
         public Obj_AI_Base[] CollideTargets;
         public bool DetectedMissile;
+        public bool FromFOW;
         public bool IsGlobal
         {
             get

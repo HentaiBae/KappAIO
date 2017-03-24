@@ -157,6 +157,14 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     },
                 new EmpoweredAttackData
                     {
+                        Hero = Champion.Galio,
+                        Slot = SpellSlot.Unknown,
+                        AttackName = "GalioPassiveAttack",
+                        DisplayName = "Passive",
+                        DangerLevel = 2
+                    },
+                new EmpoweredAttackData
+                    {
                         Hero = Champion.Gnar,
                         Slot = SpellSlot.W,
                         TargetRequiredBuff = "gnarwproc",

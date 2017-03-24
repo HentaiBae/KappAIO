@@ -191,7 +191,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             SkillshotsDetected.RemoveAll(s => s.Ended && OnSkillShotDelete.Invoke(s));
         }
 
-        private static string[] AlliedNames = { "GreenGround.troy", "Green.troy", "green_team.troy", "Green_Ring.troy", "Ally.troy", "blue.troy", "_ally_green.troy" };
+        private static string[] AlliedNames = { "GreenGround.troy", "Green.troy", "green_team.troy", "Green_Ring.troy", "Ally.troy", "blue.troy", "_ally_green.troy", "_Ground_Ally.troy" };
         private static string[] ExcludeEnds = { "_explosion.troy" };
 
         private static void Obj_AI_Base_OnPlayAnimation(Obj_AI_Base sender, GameObjectPlayAnimationEventArgs args)
@@ -351,7 +351,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                             .FirstOrDefault(h => (isAlly ? h.IsAlly : h.IsEnemy) && pdata.IsCasterName(h.ChampionName) && h.IsValid && !h.IsDead);
 
                     var correctObject = ObjectManager.Get<Obj_AI_Base>().OrderBy(o => o.Distance(partical)).FirstOrDefault(o => !string.IsNullOrEmpty(pdata.ParticalObjectName) && (o.Name.Equals(pdata.ParticalObjectName) || o.BaseSkinName.Equals(pdata.ParticalObjectName) || o.Model.Equals(pdata.ParticalObjectName))
-                    || !string.IsNullOrEmpty(pdata.RequireBuff) && o.Buffs.Any(b => b.Name.Contains(pdata.RequireBuff)));
+                    || pdata.HasBuff(o));
                     if (correctObject != null)
                     {
                         var buff = correctObject.Buffs.FirstOrDefault(b => b.Caster is Obj_AI_Base);
@@ -633,7 +633,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     return;
                 }
             }
-            
+
+            bool alreadyd = false;
             if (!data.Data.AllowDuplicates)
             {
                 if (SkillshotsDetected.Any(s => s.Missile != null && data.Missile == null && s.Caster != null && data.Caster != null && s.Caster.IdEquals(data.Caster) && s.Data.Equals(data.Data)))
@@ -712,6 +713,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             }
 
             data.DetectedMissile = data.Missile != null;
+            data.FromFOW = !data.Caster.IsHPBarRendered;
 
             SkillshotsDetected.Add(data);
             Collision.Check(data);
@@ -719,10 +721,10 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 
             if (data.Data.IsSpellName("SyndraE"))
             {
-                var syndraBalls = ObjectManager.Get<Obj_AI_Base>().Where(o => o.BaseSkinName.Equals("SyndraSphere") && o.Team == data.Caster.Team && data.IsInside(o) && o.IsValid && o.Mana > 17.5);
                 var qeData = SkillshotDatabase.Current.FirstOrDefault(s => s.IsSpellName("SyndraEQ"));
                 if (qeData != null)
                 {
+                    var syndraBalls = ObjectManager.Get<Obj_AI_Base>().Where(o => o.BaseSkinName.Equals("SyndraSphere") && o.Team == data.Caster.Team && data.Polygon.IsInside(o) && o.IsValid && o.Mana > 17.5);
                     foreach (var ball in syndraBalls)
                     {
                         var newDetect = new DetectedSkillshotData
@@ -761,7 +763,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     var data = slotData.FindAll(s => s.IsSpellName(spellname));
                     foreach (var d in data)
                     {
-                        if (!d.DetectByMissile && (string.IsNullOrEmpty(d.RequireBuff) || caster.GetBuffCount(d.RequireBuff) >= d.RequireBuffCount))
+                        if (!d.DetectByMissile && d.HasBuff(caster))
                         {
                             var casterHero = caster as AIHeroClient;
                             var target = args.Target as Obj_AI_Base;
@@ -781,7 +783,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 var data = AllData.FindAll(s => s.IsMissileName(missilename));
                 foreach (var d in data)
                 {
-                    if (data != null && !d.AddEndExplode && (string.IsNullOrEmpty(d.RequireBuff) || caster.GetBuffCount(d.RequireBuff) >= d.RequireBuffCount) && !d.StartsFromTarget)
+                    if (data != null && !d.AddEndExplode && d.HasBuff(caster) && !d.StartsFromTarget)
                     {
                         result.Add(d);
                     }
