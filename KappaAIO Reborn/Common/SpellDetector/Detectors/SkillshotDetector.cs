@@ -633,8 +633,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     return;
                 }
             }
-
-            bool alreadyd = false;
+            
             if (!data.Data.AllowDuplicates)
             {
                 if (SkillshotsDetected.Any(s => s.Missile != null && data.Missile == null && s.Caster != null && data.Caster != null && s.Caster.IdEquals(data.Caster) && s.Data.Equals(data.Data)))

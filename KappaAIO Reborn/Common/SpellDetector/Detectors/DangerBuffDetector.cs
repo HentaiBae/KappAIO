@@ -14,7 +14,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
     {
         static DangerBuffDetector()
         {
-            foreach (var buff in DangerBuffDataDatabase.List.Where(a => EntityManager.Heroes.AllHeroes.Any(b => a.Hero.Equals(b.Hero))))
+            foreach (var buff in DangerBuffDataDatabase.Current.Where(a => EntityManager.Heroes.AllHeroes.Any(b => a.Hero.Equals(b.Hero))))
             {
                 _currentBuffs.Add(buff);
             }

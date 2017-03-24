@@ -49,7 +49,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             var particle = sender as Obj_GeneralParticleEmitter;
             if (particle != null)
             {
-                var xdata = TargetedSpellDatabase.List.FirstOrDefault(s => s.MissileNames != null && s.MissileNames.Any(m => m.Equals(particle.Name)));
+                var xdata = TargetedSpellDatabase.Current.FirstOrDefault(s => s.MissileNames != null && s.MissileNames.Any(m => m.Equals(particle.Name)));
                 if (xdata != null)
                 {
                     var xcaster = EntityManager.Heroes.AllHeroes.OrderBy(o => o.Distance(particle)).FirstOrDefault(h => h.Hero.Equals(xdata.hero) && h.IsInRange(particle, 1000));
@@ -86,7 +86,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 return;
 
             var data =
-                TargetedSpellDatabase.List.FirstOrDefault(
+                TargetedSpellDatabase.Current.FirstOrDefault(
                     s => s.MissileNames != null && s.MissileNames.Any(m => m.Equals(missile.SData.Name, StringComparison.CurrentCultureIgnoreCase)) && s.hero.Equals(caster.Hero));
 
             if (data == null)
@@ -113,7 +113,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             if (caster == null || target == null || !caster.IsValid || !target.IsValid)
                 return;
 
-            var data = TargetedSpellDatabase.List.FirstOrDefault(s => s.hero.Equals(caster.Hero) && s.slot.Equals(args.Slot));
+            var data = TargetedSpellDatabase.Current.FirstOrDefault(s => s.hero.Equals(caster.Hero) && s.slot.Equals(args.Slot));
 
             if (data == null)
             {
@@ -139,6 +139,15 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             {
                 Console.WriteLine("Invalid DetectedTargetedSpellData");
                 return;
+            }
+
+            if (data.Missile != null)
+            {
+                var detect = DetectedTargetedSpells.FirstOrDefault(s => s.Caster.IdEquals(data.Caster) && s.Missile == null && s.Data.Equals(data.Data));
+                if (detect != null)
+                {
+                    DetectedTargetedSpells.Remove(detect);
+                }
             }
 
             OnTargetedSpellDetected.Invoke(data);

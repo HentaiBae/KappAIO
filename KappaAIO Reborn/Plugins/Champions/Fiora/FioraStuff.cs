@@ -674,7 +674,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 spellblock = Program.GlobalMenu.AddSubMenu("Fiora: SpellBlock");
                 spellblockEnable = spellblock.CreateCheckBox("enable", "Enable SpellBlock");
 
-                var validAttacks = EmpowerdAttackDatabase.List.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero)));
+                var validAttacks = EmpowerdAttackDatabase.Current.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero)));
                 if (validAttacks.Any())
                 {
                     spellblock.AddGroupLabel("Empowered Attacks");
@@ -692,7 +692,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     }
                 }
 
-                var validBuffs = DangerBuffDataDatabase.List.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero)));
+                var validBuffs = DangerBuffDataDatabase.Current.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero)));
                 if (validBuffs.Any())
                 {
                     spellblock.AddSeparator(5);
@@ -713,7 +713,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 }
 
 
-                var validTargeted = TargetedSpellDatabase.List.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.hero)));
+                var validTargeted = TargetedSpellDatabase.Current.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.hero)));
                 if (validTargeted.Any())
                 {
                     spellblock.AddSeparator(5);
@@ -733,7 +733,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     }
                 }
 
-                var specialSpells = SpecialSpellsDatabase.List.FindAll(s => EntityManager.Heroes.Enemies.Any(h => s.Hero.Equals(h.Hero)));
+                var specialSpells = SpecialSpellsDatabase.Current.FindAll(s => EntityManager.Heroes.Enemies.Any(h => s.Hero.Equals(h.Hero)));
                 if (specialSpells.Any())
                 {
                     spellblock.AddSeparator(5);

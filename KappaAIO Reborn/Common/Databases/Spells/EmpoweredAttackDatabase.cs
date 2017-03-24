@@ -1,12 +1,24 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using EloBuddy;
+using EloBuddy.SDK;
 using KappAIO_Reborn.Common.Databases.SpellData;
 
 namespace KappAIO_Reborn.Common.Databases.Spells
 {
     public static class EmpowerdAttackDatabase
     {
-        public static List<EmpoweredAttackData> List = new List<EmpoweredAttackData>
+        public static List<EmpoweredAttackData> Current;
+
+        static EmpowerdAttackDatabase()
+        {
+            if (Current != null)
+                return;
+
+            Current = List.FindAll(s => s.Hero == Champion.Unknown || EntityManager.Heroes.AllHeroes.Any(h => s.Hero.Equals(h.Hero)));
+        }
+
+        private static List<EmpoweredAttackData> List = new List<EmpoweredAttackData>
             {
                 new EmpoweredAttackData
                     {

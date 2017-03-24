@@ -40,7 +40,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             if (partical == null)
                 return;
 
-            var data = SpecialSpellsDatabase.List.FirstOrDefault(s => !string.IsNullOrEmpty(s.ParticalName) && s.ParticalName.Equals(partical.Name));
+            var data = SpecialSpellsDatabase.Current.FirstOrDefault(s => !string.IsNullOrEmpty(s.ParticalName) && s.ParticalName.Equals(partical.Name));
             if (data == null)
                 return;
 
@@ -74,7 +74,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             if (caster == null)
                 return;
 
-            var casterData = SpecialSpellsDatabase.List.FindAll(s => s.Hero.Equals(caster.Hero));
+            var casterData = SpecialSpellsDatabase.Current.FindAll(s => s.Hero.Equals(caster.Hero));
             if (casterData == null || !casterData.Any())
                 return;
 

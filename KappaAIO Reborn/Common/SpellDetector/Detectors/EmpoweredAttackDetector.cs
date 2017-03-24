@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Constants;
@@ -76,7 +77,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
         private static DetectedEmpoweredAttackData[] getData(AIHeroClient caster, Obj_AI_Base target, Vector3 start, string AttackName, MissileClient missile = null)
         {
             var result = new List<DetectedEmpoweredAttackData>();
-            var infos = EmpowerdAttackDatabase.List.FindAll(s => s.Hero.Equals(caster.Hero) || s.Hero == Champion.Unknown);
+            var infos = EmpowerdAttackDatabase.Current.FindAll(s => s.Hero.Equals(caster.Hero) || s.Hero == Champion.Unknown);
             foreach (var info in infos)
             {
                 var attackname = string.IsNullOrEmpty(info.AttackName) || info.AttackName.Equals(AttackName, StringComparison.CurrentCultureIgnoreCase);
@@ -109,6 +110,15 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             {
                 Console.WriteLine("Invalid DetectedEmpoweredAttackData");
                 return;
+            }
+
+            if (data.Missile != null)
+            {
+                var detect = DetectedEmpoweredAttacks.FirstOrDefault(a => a.Caster.IdEquals(data.Caster) && a.Missile == null && a.Data.Equals(data.Data));
+                if (detect != null)
+                {
+                    DetectedEmpoweredAttacks.Remove(detect);
+                }
             }
 
             OnEmpoweredAttackDetected.Invoke(data);
