@@ -18,7 +18,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             if (!Loaded)
             {
                 Game.OnTick += Game_OnTick;
-                Obj_AI_Base.OnSpellCast += Obj_AI_Base_OnBasicAttack;
+                Obj_AI_Base.OnBasicAttack += Obj_AI_Base_OnBasicAttack;
                 //OnEmpoweredAttackDetected.OnDetect += OnEmpoweredAttackDetected_OnDetect;
                 GameObject.OnCreate += GameObject_OnCreate;
                 Loaded = true;
