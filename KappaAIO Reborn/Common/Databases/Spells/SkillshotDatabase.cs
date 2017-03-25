@@ -652,7 +652,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CastDelay = 0,
                      Range = 800,
                      Speed = 900,
-                     Width = 90,
+                     Width = 100,
                      SpellNames = new[] { "CamilleEDash2" },
                      Collisions = new []{ Collision.Heros },
                      SticksToCaster = true,
@@ -3394,18 +3394,15 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                    {
                      type = Type.CircleMissile,
                      CasterNames = new[] { "Riven" },
-                     Slots = new[] { SpellSlot.Q },
+                     Slots = new[] { SpellSlot.Q, (SpellSlot)49 },
                      DangerLevel = 4,
                      CastDelay = 350,
-                     Range = 250,
+                     Range = 375,
                      Speed = int.MaxValue,
                      Width = 200,
                      RequireBuffs = new []
-                         {
+                         {	
                              new SkillshotData.RequireBuff("RivenTriCleave", 2),
-                             new SkillshotData.RequireBuff("RivenTriCleaveBuff", 2),
-                             new SkillshotData.RequireBuff("riventricleavesoundtwo", 1),
-                             new SkillshotData.RequireBuff("riventricleavesoundthree", 1),
                          },
                      SpellNames = new[] { "RivenTriCleave" },
                      EndIsCasterDirection = true

@@ -23,8 +23,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public override void OnLoad()
         {
-            Q1 = new Spell.Skillshot(SpellSlot.Q, 400, SkillShotType.Circular, 100, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
-            Q2 = new Spell.Skillshot(SpellSlot.Q, 700, SkillShotType.Circular, 100, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
+            Q1 = new Spell.Skillshot(SpellSlot.Q, 400, SkillShotType.Circular, 0, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
+            Q2 = new Spell.Skillshot(SpellSlot.Q, 700, SkillShotType.Circular, 0, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
             W = new Spell.Skillshot(SpellSlot.W, 750, SkillShotType.Linear, 500, 3200, 70, DamageType.Magical) { AllowedCollisionCount = int.MaxValue };
             E = new Spell.Active(SpellSlot.E, 275, DamageType.Physical);
             R = new Spell.Targeted(SpellSlot.R, 500, DamageType.True);
@@ -123,6 +123,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public override void OnTick()
         {
+            var speed = 500 + Player.Instance.MoveSpeed * 2;
+            Q1.Speed = (int)speed;
+            Q2.Speed = (int)speed;
         }
 
         public override void Combo()

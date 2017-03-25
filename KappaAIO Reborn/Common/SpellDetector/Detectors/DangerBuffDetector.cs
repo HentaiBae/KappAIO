@@ -22,8 +22,18 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             if (_currentBuffs.Any())
             {
                 Obj_AI_Base.OnBuffGain += Obj_AI_Base_OnBuffGain;
+                Obj_AI_Base.OnBuffLose += Obj_AI_Base_OnBuffLose;
                 Game.OnTick += Game_OnTick;
             }
+        }
+
+        private static void Obj_AI_Base_OnBuffLose(Obj_AI_Base sender, Obj_AI_BaseBuffLoseEventArgs args)
+        {
+            DangerBuffsDetected.RemoveAll(b => 
+            b.Buff.Caster.IdEquals(args.Buff.Caster)
+            && b.Buff.DisplayName.Equals(args.Buff.DisplayName)
+            && args.Buff.Name.Equals(b.Buff.Name)
+            && b.Target.IdEquals(sender));
         }
 
         private static void Obj_AI_Base_OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
