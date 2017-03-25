@@ -275,8 +275,12 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 Drawing.OnDraw += Drawing_OnDraw;
             }
 
+            private static float _lastBlock;
             private static void Game_OnTick(EventArgs args)
             {
+                if(delay > Core.GameTickCount - _lastBlock)
+                    return;
+
                 var BlockSpells = DetectedSpells.OrderByDescending(s => s.DangerLevel);
                 if (BlockSpells != null && BlockSpells.Any())
                 {
@@ -598,6 +602,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 var castpos = wtarget != null && W.IsInRange(wtarget) ? wtarget.ServerPosition : Game.CursorPos;
                 
                 W.Cast(castpos);
+                _lastBlock = Core.GameTickCount;
                 Console.WriteLine($"BLOCK {spellname}");
             }
 
