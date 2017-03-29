@@ -221,30 +221,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         {
             public static float QDamage(Obj_AI_Base target)
             {
-                if (!Q1.IsLearned)
-                    return 0;
-                var index = Q1.Level - 1;
-                var dmg = new[] { 65f, 75f, 85f, 95f, 105f }[index];
-                var bonus = new[] { 0.95f, 1f, 1.05f, 1.1f, 1.15f }[index] * Player.Instance.FlatPhysicalDamageMod;
-                return target == null ? dmg + bonus : Player.Instance.CalculateDamageOnUnit(target, DamageType.Physical, dmg + bonus);
+                return Q1.CalculateDamage(target);
             }
             public static float WDamage(Obj_AI_Base target)
             {
-                if (!W.IsLearned)
-                    return 0;
-                var index = W.Level - 1;
-                var dmg = new[] { 90f, 130f, 170f, 210f, 250f }[index];
-                var bonus = Player.Instance.TotalMagicalDamage;
-                return target == null ? dmg + bonus : Player.Instance.CalculateDamageOnUnit(target, DamageType.Magical, dmg + bonus);
+                return W.CalculateDamage(target);
             }
             public static float EDamage(Obj_AI_Base target)
             {
-                if (!E.IsLearned)
-                    return 0;
-                var index = E.Level - 1;
-                var mod = new[] { 1.4f, 1.55f, 1.7f, 1.85f, 2f }[index];
-                var dmg = Player.Instance.TotalAttackDamage;
-                return Player.Instance.CalculateDamageOnUnit(target, DamageType.Physical, dmg * mod);
+                return E.CalculateDamage(target);
             }
             public static float RDamage(AIHeroClient target)
             {
@@ -278,7 +263,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             private static float _lastBlock;
             private static void Game_OnTick(EventArgs args)
             {
-                if(delay > Core.GameTickCount - _lastBlock)
+                if(delay > Core.GameTickCount - _lastBlock || !W.IsReady())
                     return;
 
                 var BlockSpells = DetectedSpells.OrderByDescending(s => s.DangerLevel);

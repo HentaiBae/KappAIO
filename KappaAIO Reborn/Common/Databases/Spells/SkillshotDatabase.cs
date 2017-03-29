@@ -89,7 +89,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CasterNames = new[] { "Aatrox" },
                      Slots = new[] { SpellSlot.Q },
                      DangerLevel = 3,
-                     CastDelay = 600,
+                     CastDelay = 250,
                      Range = 650,
                      Speed = 2000,
                      Width = 250,
@@ -1299,7 +1299,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CastDelay = 2250,
                      Range = 0,
                      Speed = int.MaxValue,
-                     Width = 275,
+                     Width = 550,
 					 DisplayName = "Galio R",
                      SpellNames = new[] { "GalioR" },
 					 ParticleNames = new[] { "Galio_Base_R_Tar" },
@@ -3404,6 +3404,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                          {	
                              new SkillshotData.RequireBuff("RivenTriCleave", 2),
                          },
+                     DisplayName = "Riven Q3",
                      SpellNames = new[] { "RivenTriCleave" },
                      EndIsCasterDirection = true
                    },

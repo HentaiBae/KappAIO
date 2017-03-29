@@ -29,6 +29,70 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             E = new Spell.Active(SpellSlot.E, 275, DamageType.Physical);
             R = new Spell.Targeted(SpellSlot.R, 500, DamageType.True);
 
+            Q1.AddRawDamage(new RawDamage
+                {
+                    PreCalculatedDamage = (() =>
+                        {
+                            if (!Q1.IsLearned)
+                                return 0;
+                            var index = Q1.Level - 1;
+                            var dmg = new[] { 65f, 75f, 85f, 95f, 105f }[index];
+                            var bonus = new[] { 0.95f, 1f, 1.05f, 1.1f, 1.15f }[index] * Player.Instance.FlatPhysicalDamageMod;
+                            return dmg + bonus;
+                        }),
+                    Source = Player.Instance,
+                    Spell = Q1,
+                    Stage = 1
+                });
+
+            Q2.AddRawDamage(new RawDamage
+            {
+                PreCalculatedDamage = (() =>
+                {
+                    if (!Q1.IsLearned)
+                        return 0;
+                    var index = Q1.Level - 1;
+                    var dmg = new[] { 65f, 75f, 85f, 95f, 105f }[index];
+                    var bonus = new[] { 0.95f, 1f, 1.05f, 1.1f, 1.15f }[index] * Player.Instance.FlatPhysicalDamageMod;
+                    return dmg + bonus;
+                }),
+                Source = Player.Instance,
+                Spell = Q2,
+                Stage = 1
+            });
+
+            W.AddRawDamage(new RawDamage
+            {
+                PreCalculatedDamage = (() =>
+                {
+                    if (!W.IsLearned)
+                        return 0;
+                    var index = W.Level - 1;
+                    var dmg = new[] { 90f, 130f, 170f, 210f, 250f }[index];
+                    var bonus = Player.Instance.TotalMagicalDamage;
+                    return dmg + bonus;
+                }),
+                Source = Player.Instance,
+                Spell = W,
+                Stage = 1
+            });
+
+            E.AddRawDamage(new RawDamage
+            {
+                PreCalculatedDamage = (() =>
+                {
+                    if (!E.IsLearned)
+                        return 0;
+                    var index = E.Level - 1;
+                    var mod = new[] { 1.4f, 1.55f, 1.7f, 1.85f, 2f }[index];
+                    var dmg = Player.Instance.TotalAttackDamage;
+                    return dmg * mod;
+                }),
+                Source = Player.Instance,
+                Spell = E,
+                Stage = 1
+            });
+
             Config.Init();
             VitalManager.Init();
             SpellBlocker.Init();

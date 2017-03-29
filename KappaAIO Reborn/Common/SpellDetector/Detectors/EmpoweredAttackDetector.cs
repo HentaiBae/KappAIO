@@ -20,6 +20,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             {
                 Game.OnTick += Game_OnTick;
                 Obj_AI_Base.OnBasicAttack += Obj_AI_Base_OnBasicAttack;
+                Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnBasicAttack;
                 //OnEmpoweredAttackDetected.OnDetect += OnEmpoweredAttackDetected_OnDetect;
                 GameObject.OnCreate += GameObject_OnCreate;
                 Loaded = true;
@@ -64,7 +65,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             var caster = sender as AIHeroClient;
             var target = args.Target as Obj_AI_Base;
 
-            if (caster == null || target == null || !caster.IsValid || !target.IsValid)
+            if (caster == null || target == null || !caster.IsValid || !target.IsValid || !args.IsAutoAttack())
                 return;
 
             var data = getData(caster, target, args.Start, args.SData.Name);

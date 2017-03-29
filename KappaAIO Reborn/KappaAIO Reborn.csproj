@@ -87,6 +87,7 @@
     <Compile Include="Common\SpellDetector\Events\OnSpecialSpellDetected.cs" />
     <Compile Include="Common\SpellDetector\Events\OnTargetedSpellDetected.cs" />
     <Compile Include="Common\Utility\CustomGeometry.cs" />
+    <Compile Include="Common\Utility\DamageClaculator.cs" />
     <Compile Include="Common\Utility\Extensions.cs" />
     <Compile Include="Common\Utility\GameVersion.cs" />
     <Compile Include="Common\Utility\TextureManager\ChampionSprite.cs" />
