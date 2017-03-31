@@ -82,6 +82,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             {
                 var heroIcon = loadSprite(hero.GetChampionName());
                 var heroIconGray = loadSprite(hero.GetChampionName(), true);
+                var CircleheroIcon = loadSprite(hero.GetChampionName(), false, true, hero.IsAlly ? Color.GreenYellow : Color.Red);
                 var spells = new List<SpellSprite>();
                 foreach (var slot in wantedSlots)
                 {
@@ -97,6 +98,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                 var championSprite = new ChampionSprite(hero,
                     new CustomSprite(heroIcon, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}"))),
                     new CustomSprite(heroIconGray, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}gray"))),
+                    new CustomSprite(CircleheroIcon, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}circle"))),
                     new CustomSprite(hp, new CachedTexture("hp", hpTexture, new Bitmap(Properties.Resources.hp), Properties.Resources.hp)),
                     new CustomSprite(mp, new CachedTexture("mp", mpTexture, new Bitmap(Properties.Resources.mp), Properties.Resources.mp)),
                     new CustomSprite(xp, new CachedTexture("xp", xpTexture, new Bitmap(Properties.Resources.xp), Properties.Resources.xp)),
@@ -150,13 +152,13 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             return null;
         }
 
-        private static Sprite loadSprite(string champ, bool gray = false)
+        private static Sprite loadSprite(string champ, bool gray = false, bool circle = false, Color criclecolor = new Color())
         {
             try
             {
                 var folder = FileManager.ChampionFolder(champ);
                 var filePath = $"{folder}/{champ}.png";
-                var cacheName = $"{champ}{(gray ? "gray" : "")}";
+                var cacheName = $"{champ}{(gray ? "gray" : circle ? "circle" : "")}";
                 Texture texture = null;
                 Image image = null;
                 Bitmap bitmap = null;
@@ -170,7 +172,9 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                 else
                 {
                     image = Image.FromFile(filePath);
-                    bitmap = resizeImage(image);
+                    var maxSize = Drawing.Width + Drawing.Height;
+                    var customSize = (int)(maxSize * 0.0225);
+                    bitmap = circle ? ellipse(resizeImage(image, false, customSize), true, criclecolor) : resizeImage(image);
 
                     if (gray)
                         bitmap = ReColor(bitmap);
@@ -183,7 +187,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                 sprite.Rectangle = new SharpDX.Rectangle(0, 0, bitmap.Width, bitmap.Height);
                 return sprite;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Logger.Error($"KappAIO: Failed to load {champ} Sprite");
             }
@@ -219,24 +223,56 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
 
             return bi;
         }
-
-        /*
-        public static Bitmap ColorEdge(Bitmap bi, Color c)
+        
+        public static Bitmap ellipse(Bitmap bi, bool c = false, Color color = new Color())
         {
-            using (var grf = Graphics.FromImage(bi))
+            var btm = new Bitmap(bi.Width, bi.Height);
+            var btm2 = new Bitmap(bi.Width + 5, bi.Height + 5);
+
+            if (c)
             {
-                using (Brush border = new SolidBrush(c))
+                using (var grf = Graphics.FromImage(btm))
                 {
-                    grf.FillRectangle(border, 0, 0, 2.5f, bi.Height);
+                    using (Brush brsh = new SolidBrush(color))
+                    {
+                        grf.FillEllipse(brsh, new Rectangle(0, 0, btm.Width, btm.Height));
+                    }
+                }
+            }
+            else
+            {
+                using (var grf = Graphics.FromImage(bi))
+                {
+                    using (Brush brsh = new SolidBrush(Color.FromArgb(0, 0, 0, 0)))
+                    {
+                        grf.FillRectangle(brsh, new Rectangle(0, 0, bi.Width, bi.Height));
+                    }
+                }
+            }
+            
+            using (var grf = Graphics.FromImage(btm))
+            {
+                using (Brush brsh = new TextureBrush(bi))
+                {
+                    grf.FillEllipse(brsh, 5, 5, bi.Width - 10, bi.Height - 10);
                 }
             }
 
-            return bi;
-        }*/
+            using (var grf = Graphics.FromImage(btm2))
+            {
+                grf.InterpolationMode = InterpolationMode.High;
+                grf.CompositingQuality = CompositingQuality.HighQuality;
+                grf.SmoothingMode = SmoothingMode.HighQuality;
+                grf.DrawImage(btm, new Rectangle(0, 0, bi.Width, bi.Height));
+            }
 
-        private static Bitmap resizeImage(Image img, bool spell = false)
+            return btm2;
+        }
+
+        private static Bitmap resizeImage(Image img, bool spell = false, int sizex = -1)
         {
-            var mod = HUDConfig.IconsSize * 0.01f;
+            sizex = sizex == -1 ? HUDConfig.IconsSize : sizex;
+            var mod = sizex * 0.01f;
             var mod2 = spell ? 0.627f : 1;
             var size = new Size((int)(img.Width * mod * mod2), (int)(img.Height * mod * mod2));
             return new Bitmap(img, size);

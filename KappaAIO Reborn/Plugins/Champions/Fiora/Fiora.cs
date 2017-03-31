@@ -13,8 +13,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 {
     public class Fiora : ChampionBase
     {
-        private static AIHeroClient _rTarget => EntityManager.Heroes.Enemies.OrderBy(e => e.Distance(user, true)).FirstOrDefault(e => e.IsValidTarget(Q2.Range) && e.HasBuff("fiorarmark"));
-        private static AIHeroClient _qTarget => TargetSelector.SelectedTarget.IsValidTarget(Q2.Range) ? TargetSelector.SelectedTarget : Q2.GetTarget();
+        private static AIHeroClient _rTarget => EntityManager.Heroes.Enemies.OrderBy(e => e.Distance(user, true)).FirstOrDefault(e => e.IsValidTarget(Q2.Range + 50) && e.HasBuff("fiorarmark"));
+        private static AIHeroClient _qTarget => TargetSelector.SelectedTarget.IsValidTarget(Q2.Range + 50) ? TargetSelector.SelectedTarget : Q2.GetTarget();
         public static AIHeroClient QTarget => Config.focusRTarget ? _rTarget ?? _qTarget : _qTarget;
 
         public static Spell.Skillshot Q1, Q2, W;
@@ -23,8 +23,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public override void OnLoad()
         {
-            Q1 = new Spell.Skillshot(SpellSlot.Q, 400, SkillShotType.Circular, 0, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
-            Q2 = new Spell.Skillshot(SpellSlot.Q, 700, SkillShotType.Circular, 0, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
+            Q1 = new Spell.Skillshot(SpellSlot.Q, 400, SkillShotType.Circular, 100, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
+            Q2 = new Spell.Skillshot(SpellSlot.Q, 700, SkillShotType.Circular, 100, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
             W = new Spell.Skillshot(SpellSlot.W, 750, SkillShotType.Linear, 500, 3200, 70, DamageType.Magical) { AllowedCollisionCount = int.MaxValue };
             E = new Spell.Active(SpellSlot.E, 275, DamageType.Physical);
             R = new Spell.Targeted(SpellSlot.R, 500, DamageType.True);
@@ -138,12 +138,26 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         private void Orbwalker_OnPostAttack(AttackableUnit target, EventArgs args)
         {
-            if(!target.IsChampion())
+            if (!target.IsValidTarget(user.GetAutoAttackRange(target)))
                 return;
 
-            var combo = Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo);
+            var jungle = Orbwalker.ModeIsActive(Orbwalker.ActiveModes.JungleClear);
 
-            if (combo && target.IsValidTarget(user.GetAutoAttackRange(target)))
+            if (jungle && target is Obj_AI_Minion)
+            {
+                if (Config.Ejungle && E.IsReady())
+                {
+                    E.Cast();
+                    return;
+                }
+            }
+
+            if (!target.IsChampion())
+                return;
+
+            var combo = Orbwalker.ModeIsActive(Orbwalker.ActiveModes.Combo);
+
+            if (combo)
             {
                 if (Config.useEReset && E.IsReady())
                 {
@@ -167,7 +181,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             if (target == null)
                 return null;
 
-            var AAvital = Config.orbAAVital && target.IsKillable(user.GetAutoAttackRange(target) * 1.1f) || !Config.orbAAVital && target.IsKillable(user.GetAutoAttackRange(target) * 1.3f);
+            var AAvital = Config.orbAAVital && target.IsKillable(user.GetAutoAttackRange(target) * 1.15f) || !Config.orbAAVital && target.IsKillable(user.GetAutoAttackRange(target) * 1.35f);
 
             var vital = VitalManager.vital(target);
             if (vital == null)
@@ -187,9 +201,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public override void OnTick()
         {
-            var speed = 500 + Player.Instance.MoveSpeed * 2;
+            /*var speed = 500 + Player.Instance.MoveSpeed * 2.5f;
             Q1.Speed = (int)speed;
-            Q2.Speed = (int)speed;
+            Q2.Speed = (int)speed;*/
         }
 
         public override void Combo()

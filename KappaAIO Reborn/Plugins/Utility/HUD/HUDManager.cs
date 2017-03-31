@@ -19,6 +19,7 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
     {
         private static Text CDText;
         private static Text RecallText;
+        public static bool loadHud;
 
         public static void Init()
         {

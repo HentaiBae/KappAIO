@@ -67,10 +67,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             if (!target.IsValidTarget())
                 return 0;
 
-            var dmgs = new[] { 20f, 35f, 50f, 65f, 80f };
-            var mods = new[] { 0.5f, 0.55f, 0.6f, 0.65f, 0.7f };
-            var scale = Player.Instance.TotalAttackDamage;
-            var currentDmg = dmgs.GetCurrentDamage(mods, SpellSlot.Q, scale);
+            var currentDmg = Darius.Q.CalculateDamage(target);
 
             if (blade)
                 currentDmg *= 2f;
@@ -83,23 +80,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
             if (!target.IsValidTarget())
                 return 0;
 
-            return Player.Instance.CalculateDamageOnUnit(target, DamageType.Physical, Player.Instance.TotalAttackDamage * 0.4f);
+            return Darius.W.CalculateDamage(target);
         }
 
         internal static float Rdmg(Obj_AI_Base target)
         {
             if (!target.IsValidTarget())
                 return 0;
-
-            var index = Player.Instance.Spellbook.GetSpell(SpellSlot.R).Level - 1;
-
-            if (index < 0)
-                return 0;
-
-            var baseDmg = new[] { 100f, 200f, 300f }[index];
-            var mod = 0.75f;
-            var scale = Player.Instance.FlatPhysicalDamageMod;
-            var currentDamage = baseDmg + (scale * mod);
+            
+            var currentDamage = Darius.R.CalculateDamage(target);
             var buff = GetDariusPassive(target);
 
             if (buff == null)

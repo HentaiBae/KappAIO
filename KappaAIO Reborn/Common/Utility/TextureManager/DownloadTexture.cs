@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -28,6 +30,8 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
         public static bool Finished;
 
         public static List<ChampionSpell> ChampionSpells = new List<ChampionSpell>();
+        private static List<string> _downloaded = new List<string>();
+
         private static Stopwatch stopwatch = new Stopwatch();
         public static void Start()
         {
@@ -78,15 +82,14 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
 
             return result;
         }
-
-        private static List<string> _downloaded = new List<string>();
+        
         private static void DownloadSummonerSpells(ChampionSpell spell, string url)
         {
             var currentAbillityURI = new Uri($"{url}/{spell.SpellName}.png");
 
             if (!_downloaded.Contains(spell.SpellName))
             {
-                Download($"{spell.SpellName}.png", FileManager.SummonerSpellsFolder, currentAbillityURI);
+                Download($"{spell.SpellName}.png", FileManager.SummonerSpellsFolder, currentAbillityURI, true);
                 _downloaded.Add(spell.SpellName);
             }
         }
@@ -97,7 +100,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
 
             if (!_downloaded.Contains(spell.SpellName))
             {
-                Download($"{spell.Slot}.png", FileManager.ChampionFolder(spell.ChampionName), currentAbillityURI);
+                Download($"{spell.Slot}.png", FileManager.ChampionFolder(spell.ChampionName), currentAbillityURI, true);
                 _downloaded.Add(spell.SpellName);
             }
         }
@@ -123,7 +126,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             DownloadChampionIcon(spell, championurl);
         }
 
-        private static void Download(string fileName, string folder, Uri uri)
+        private static void Download(string fileName, string folder, Uri uri, bool spell = false)
         {
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);

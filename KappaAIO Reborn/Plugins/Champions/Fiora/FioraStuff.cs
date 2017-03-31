@@ -5,6 +5,7 @@ using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
+using EloBuddy.SDK.Utils;
 using KappAIO_Reborn.Common.Databases.Spells;
 using KappAIO_Reborn.Common.SpellDetector.DetectedData;
 using KappAIO_Reborn.Common.SpellDetector.Detectors;
@@ -385,7 +386,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
                 if (spell == null || !spell.Enabled)
                 {
-                    Console.WriteLine($"{spellname} Not Blocked");
+                    Logger.Warn($"{spellname} Not Blocked");
                     return;
                 }
 
@@ -423,7 +424,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                 if ((spell == null || !spell.Enabled) && !kill)
                 {
-                    Console.WriteLine($"{spellname} Not Blocked");
+                    Logger.Warn($"{spellname} Not Blocked");
                     return;
                 }
 
@@ -453,7 +454,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                 if ((spell == null || !spell.Enabled) && !kill)
                 {
-                    Console.WriteLine($"{spellname} Not Blocked");
+                    Logger.Warn($"{spellname} Not Blocked");
                     return;
                 }
 
@@ -485,7 +486,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                 if ((spell == null || !spell.Enabled) && !kill)
                 {
-                    Console.WriteLine($"{spellname} Not Blocked");
+                    Logger.Warn($"{spellname} Not Blocked");
                     return;
                 }
 
@@ -546,7 +547,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                 if (!spell.Enabled && !kill)
                 {
-                    Console.WriteLine($"{spellname} Not Blocked");
+                    Logger.Warn($"{spellname} Not Blocked");
                     return;
                 }
 
@@ -581,14 +582,17 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     return;
 
                 var wtarget =
-                    TargetSelector.SelectedTarget != null && W.IsInRange(TargetSelector.SelectedTarget) ? TargetSelector.SelectedTarget
-                    : W.GetTarget() != null && W.IsInRange(W.GetTarget()) ? W.GetTarget() : caster;
+                    TargetSelector.SelectedTarget != null && TargetSelector.SelectedTarget.IsKillable(-1, true) && W.IsInRange(W.GetPrediction(TargetSelector.SelectedTarget).CastPosition)
+                    ? TargetSelector.SelectedTarget 
+                    : W.GetTarget().IsKillable(-1, true) && W.IsInRange(W.GetPrediction(W.GetTarget()).CastPosition)
+                    ? W.GetTarget()
+                    : caster;
 
-                var castpos = wtarget != null && W.IsInRange(wtarget) ? wtarget.ServerPosition : Game.CursorPos;
+                var castpos = wtarget.IsKillable(-1, true) && W.IsInRange(W.GetPrediction(wtarget).CastPosition) ? (W.GetPrediction(wtarget).CastPosition + wtarget.ServerPosition) / 2 : Game.CursorPos;
                 
                 W.Cast(castpos);
                 _lastBlock = Core.GameTickCount;
-                Console.WriteLine($"BLOCK {spellname}");
+                Logger.Info($"BLOCK {spellname}");
             }
 
             public static List<EnabledSpell> EnabledSpells = new List<EnabledSpell>();
@@ -620,8 +624,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public static class Config
         {
-            public static Menu ComboMenu, spellblock, ksMenu, LMenu, MiscMenu;
-            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, orbRvit, aaVitl, focusR;
+            public static Menu ComboMenu, spellblock, ksMenu, LMenu, JMenu, MiscMenu;
+            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR;
+            private static Slider Ejungmana;
 
             public static bool validVitals => QValidvitals.CurrentValue;
             public static bool useQShortVital => QShortvital.CurrentValue;
@@ -637,6 +642,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public static bool orbUltVital => orbRvit.CurrentValue;
             public static bool orbAAVital => aaVitl.CurrentValue;
             public static bool focusRTarget => focusR.CurrentValue;
+            public static bool Ejungle => Ejung.CurrentValue && EjungleMana;
+            public static bool EjungleMana => Player.Instance.ManaPercent > Ejungmana.CurrentValue;
 
             public static void Init()
             {
@@ -772,6 +779,14 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 Eunk = LMenu.CreateCheckBox("Eunk", "Use E On Unkillable Minions");
 
                 #endregion laneclear
+
+                #region jungleclear
+
+                JMenu = Program.GlobalMenu.AddSubMenu("JungleClear");
+                Ejung = JMenu.CreateCheckBox("Ejung", "Use E");
+                Ejungmana = JMenu.CreateSlider("Ejungmana", "E Mana Limit", 60);
+
+                #endregion
 
                 #region Killsteal
 

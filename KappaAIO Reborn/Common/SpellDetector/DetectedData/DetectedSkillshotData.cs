@@ -333,16 +333,16 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                         xpoly = new Geometry.Polygon.Rectangle(CurrentPosition, CollideEndPosition, this.Data.Width + 15 + Player.Instance.BoundingRadius);
                         break;
                     case Type.CircleMissile:
-                        xpoly = new Geometry.Polygon.Circle(CollideEndPosition, this.Data.Width + 15 + Player.Instance.BoundingRadius);
+                        xpoly = new Geometry.Polygon.Circle(this.Data.IsMoving ? CurrentPosition : CollideEndPosition, this.Data.Width + 15 + Player.Instance.BoundingRadius);
                         break;
                     case Type.Cone:
-                        xpoly = new Geometry.Polygon.Sector(CurrentPosition, this.CollideEndPosition, (float)((this.Data.Angle + 5) * Math.PI / 180), this.Data.Range + 15);
+                        xpoly = new Geometry.Polygon.Sector(CurrentPosition, this.CollideEndPosition, (float)((this.Data.Angle + 5) * Math.PI / 180), this.Data.Range + 15 + ObjectManager.Player.BoundingRadius);
                         break;
                     case Type.Ring:
-                        xpoly = new CustomGeometry.Ring(this.CollideEndPosition, this.Data.Width + 15 + Player.Instance.BoundingRadius, this.Data.RingRadius).ToSDKPolygon();
+                        xpoly = new CustomGeometry.Ring(this.CollideEndPosition, this.Data.Width + Player.Instance.BoundingRadius + 15, this.Data.RingRadius).ToSDKPolygon();
                         break;
                     case Type.Arc:
-                        xpoly = new CustomGeometry.Arc(this.Start, this.CollideEndPosition, 30 + (int)ObjectManager.Player.BoundingRadius).ToSDKPolygon();
+                        xpoly = new CustomGeometry.Arc(this.Start, this.CollideEndPosition, (int)this.Data.Width + (int)ObjectManager.Player.BoundingRadius).ToSDKPolygon();
                         break;
                 }
 
@@ -353,13 +353,13 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
                     if (this.Data.Explodetype == Type.CircleMissile)
                     {
-                        explodePolygon = new Geometry.Polygon.Circle(CollideEndPosition, this.Data.ExplodeWidth + 25 + Player.Instance.BoundingRadius);
+                        explodePolygon = new Geometry.Polygon.Circle(CollideEndPosition, this.Data.ExplodeWidth + 15 + Player.Instance.BoundingRadius);
                     }
 
                     if (this.Data.Explodetype == Type.LineMissile)
                     {
-                        var st = CollideEndPosition - (CollideEndPosition - CurrentPosition).Normalized().Perpendicular() * (this.Data.ExplodeWidth + 25 + Player.Instance.BoundingRadius);
-                        var en = CollideEndPosition + (CollideEndPosition - CurrentPosition).Normalized().Perpendicular() * (this.Data.ExplodeWidth + 25 + Player.Instance.BoundingRadius);
+                        var st = CollideEndPosition - (CollideEndPosition - CurrentPosition).Normalized().Perpendicular() * (this.Data.ExplodeWidth + 15 + Player.Instance.BoundingRadius);
+                        var en = CollideEndPosition + (CollideEndPosition - CurrentPosition).Normalized().Perpendicular() * (this.Data.ExplodeWidth + 15 + Player.Instance.BoundingRadius);
                         explodePolygon = new Geometry.Polygon.Rectangle(st, en, (this.Data.ExplodeWidth + 25 + Player.Instance.BoundingRadius) / 2);
                     }
 
@@ -367,14 +367,14 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     {
                         var st = CollideEndPosition - Direction * (this.Data.ExplodeWidth * 0.25f);
                         var en = CollideEndPosition + Direction * (this.Data.ExplodeWidth * 3);
-                        explodePolygon = new Geometry.Polygon.Sector(st, en, (float)((this.Data.Angle + 5) * Math.PI / 180), this.Data.ExplodeWidth + 20 + ObjectManager.Player.BoundingRadius);
+                        explodePolygon = new Geometry.Polygon.Sector(st, en, (float)((this.Data.Angle + 5) * Math.PI / 180), this.Data.ExplodeWidth + 15 + ObjectManager.Player.BoundingRadius);
                     }
 
                     var poly = Geometry.ClipPolygons(new[] { newpolygon, explodePolygon });
                     var vectors = new List<IntPoint>();
                     foreach (var p in poly)
                     {
-                        vectors.AddRange(p.ToPolygon().ToClipperPath());
+                        vectors.AddRange(p.ToPolygon().ToClipperPath().Where(x => new Vector2(x.X, x.Y).IsValid()));
                     }
 
                     xpoly = vectors.ToPolygon();

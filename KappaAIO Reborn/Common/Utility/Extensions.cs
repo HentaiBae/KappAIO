@@ -164,9 +164,14 @@ namespace KappAIO_Reborn.Common.Utility
 
         public static string CoolDown(this SpellDataInst spell)
         {
-            var t = (spell.CooldownExpires - Game.Time) + 1;
+            return ToTimeSpan((spell.CooldownExpires - Game.Time) + 1);
+        }
+
+        public static string ToTimeSpan(this float num)
+        {
+            var t = num;
             var ts = TimeSpan.FromSeconds(t);
-            var s = t > 60 ? string.Format("{0}:{1:D2}", ts.Minutes, ts.Seconds) : string.Format("{0:0}", t);
+            var s = t > 60 ? $"{ts.Minutes}:{ts.Seconds:D2}" : t > 5 ? $"{t:0}" : $"{t:0}.{ts.Milliseconds.ToString("D")}";
             return s;
         }
 

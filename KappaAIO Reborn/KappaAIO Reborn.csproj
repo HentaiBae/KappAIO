@@ -100,9 +100,10 @@
     <Compile Include="Plugins\Champions\Darius\Darius.cs" />
     <Compile Include="Plugins\Champions\Fiora\Fiora.cs" />
     <Compile Include="Plugins\Champions\Fiora\FioraStuff.cs" />
-    <Compile Include="Plugins\Utility\Evade\Evade.cs" />
+    <Compile Include="Plugins\Utility\Evade.cs" />
     <Compile Include="Plugins\Utility\HUD\HUDConfig.cs" />
     <Compile Include="Plugins\Utility\HUD\HUDManager.cs" />
+    <Compile Include="Plugins\Utility\LoadUtility.cs" />
     <Compile Include="Plugins\Utility\Tracker\FoW.cs" />
     <Compile Include="Plugins\Utility\Tracker\TeleportsTracker.cs" />
     <Compile Include="Program.cs" />
@@ -134,6 +135,7 @@
   <ItemGroup>
     <None Include="Resources\empty.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

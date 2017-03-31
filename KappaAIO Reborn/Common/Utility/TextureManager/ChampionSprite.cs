@@ -7,7 +7,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
 {
     public class ChampionSprite
     {
-        public ChampionSprite(AIHeroClient champion, CustomSprite icon, CustomSprite grayIcon, CustomSprite hp, CustomSprite mp, CustomSprite xp, CustomSprite empty, params SpellSprite[] spells)
+        public ChampionSprite(AIHeroClient champion, CustomSprite icon, CustomSprite grayIcon, CustomSprite circleIcon, CustomSprite hp, CustomSprite mp, CustomSprite xp, CustomSprite empty, params SpellSprite[] spells)
         {
             this.Champion = champion;
             this.Icon = icon;
@@ -17,6 +17,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             this.XPBar = xp;
             this.EmptyBar = empty;
             this.SpellSprites = spells;
+            this.CircleIcon = circleIcon;
 
             var barWidth = this.Icon.Sprite.Rectangle.Value.Width + spells[0].Icon.Sprite.Rectangle.Value.Width;
             var barHeight = (int)(spells[0].Icon.Sprite.Rectangle.Value.Height * (HUDConfig.BarSize * 0.01f));
@@ -33,6 +34,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
         
         public AIHeroClient Champion;
         public CustomSprite Icon;
+        public CustomSprite CircleIcon;
         public CustomSprite GrayIcon;
         public CustomSprite CurrentIcon => !this.Champion.IsHPBarRendered || this.Champion.IsDead ? this.GrayIcon : this.Icon;
         public CustomSprite HPBar;
@@ -105,5 +107,10 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
         }
         public Sprite Sprite;
         public CachedTexture Texture;
+
+        public void Draw(Vector2 Position)
+        {
+            Sprite.Draw(Position);
+        }
     }
 }

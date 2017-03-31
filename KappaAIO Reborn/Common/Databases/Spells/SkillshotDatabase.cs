@@ -22,6 +22,20 @@ namespace KappAIO_Reborn.Common.Databases.Spells
 				
                new SkillshotData
                   {
+                     type = Type.CircleMissile,
+                     CasterNames = new[] { "SRU_Baron", "jungle" },
+                     Slots = new[] { SpellSlot.E },
+                     GameType = GameType.Normal,
+                     DangerLevel = 3,
+                     CastDelay = 1250,
+                     Range = int.MaxValue,
+                     Speed = int.MaxValue,
+                     Width = 200,
+					 DisplayName = "Tail",
+					 ParticleNames = new[] { "SRU_Baron_Tail_Target.troy" }
+                  },
+               new SkillshotData
+                  {
                      type = Type.LineMissile,
                      CasterNames = new[] { "all" },
                      Slots = new[] { SpellSlot.Unknown },
@@ -845,7 +859,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CasterNames = new[] { "Darius" },
                      Slots = new[] { SpellSlot.E },
                      DangerLevel = 3,
-                     CastDelay = 250,
+                     CastDelay = 200,
                      Range = 550,
                      Speed = 1500,
                      Width = 0,
@@ -4627,7 +4641,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CasterNames = new[] { "Yasuo" },
                      Slots = new[] { SpellSlot.Q },
                      DangerLevel = 2,
-                     CastDelay = 400,
+                     CastDelay = 250,
                      Range = 440,
                      Speed = int.MaxValue,
                      Width = 275,
@@ -4640,7 +4654,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CasterNames = new[] { "Yasuo" },
                      Slots = new[] { SpellSlot.Q },
                      DangerLevel = 3,
-                     CastDelay = 400,
+                     CastDelay = 250,
                      Range = 440,
                      Speed = int.MaxValue,
                      Width = 275,
@@ -4727,7 +4741,8 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      SpellNames = new[] { "ZacE2" },
                      MissileNames = new[] { "ZacE2" },
                      ParticleNames = new[] { "Zac_Base_E_Tar_" },
-					 DontRemoveWithMissile = true
+					 DontRemoveWithMissile = true,
+					 RemoveOnBuffLose = "zacemove"
                    },
                new SkillshotData
                    {

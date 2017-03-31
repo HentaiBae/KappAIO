@@ -4,9 +4,10 @@ using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
+using EloBuddy.SDK.Utils;
 using KappAIO_Reborn.Common.Utility;
 using KappAIO_Reborn.Plugins.Champions;
-using KappAIO_Reborn.Plugins.Utility.Evade;
+using KappAIO_Reborn.Plugins.Utility;
 using KappAIO_Reborn.Plugins.Utility.HUD;
 
 namespace KappAIO_Reborn
@@ -15,7 +16,7 @@ namespace KappAIO_Reborn
     {
         public static float LoadTick { get; private set; }
         public static bool UsingMasterMind;
-        public static Menu GlobalMenu;
+        public static Menu GlobalMenu, UtilityMenu;
 
         static void Main(string[] args)
         {
@@ -26,8 +27,7 @@ namespace KappAIO_Reborn
         {
             LoadTick = Core.GameTickCount;
             GlobalMenu = MainMenu.AddMenu("KappAIO", "kappaio");
-            var evade = GlobalMenu.CreateCheckBox("Evade", "Enable Evade");
-            var hud = GlobalMenu.CreateCheckBox("Hud", "Enable HUD");
+            var utility = GlobalMenu.CreateCheckBox("utility", "Load KappaUtility");
             bool loadedChampion;
 
             try
@@ -38,26 +38,19 @@ namespace KappAIO_Reborn
             }
             catch (Exception)
             {
-                Console.WriteLine($"{Player.Instance.ChampionName} Not Supported");
+                Logger.Error($"KappAIO: {Player.Instance.ChampionName} Not Supported");
                 loadedChampion = false;
             }
 
-            bool loadedEvade = false;
-            if (evade.CurrentValue)
+            if (utility.CurrentValue)
             {
-                if (!loadedChampion)
-                    GlobalMenu.DisplayName = "KappAIO: Evade";
-
-                Evade.Init();
+                UtilityMenu = MainMenu.AddMenu("KappaUtility", "KappaUtility");
+                UtilityMenu.CreateCheckBox("Evade", "Load Evade");
+                UtilityMenu.CreateCheckBox("HUD", "Load HUD");
+                UtilityMenu.CreateCheckBox("Teleports", "Load Teleport Tracker");
+                LoadUtility.Init();
             }
             
-            if (hud.CurrentValue)
-            {
-                if(!loadedEvade && !loadedChampion)
-                    GlobalMenu.DisplayName = "KappAIO: HUD";
-                HUDManager.Init();
-            }
-
             //FoW.Init();
 
             Game.OnTick += Game_OnTick;

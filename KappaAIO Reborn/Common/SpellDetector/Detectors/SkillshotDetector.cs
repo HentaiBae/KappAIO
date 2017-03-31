@@ -852,7 +852,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 
             if (collisionData.Contains(Databases.SpellData.Collision.Minions))
             {
-                var minions = EntityManager.MinionsAndMonsters.Combined.Where(h => h.Team != skill.Caster.Team && !h.IsWard() && h.IsValidTarget() && skill.IsInside(h)).ToList();
+                var minions = EntityManager.MinionsAndMonsters.Combined.Where(h => h.Team != skill.Caster.Team && !h.IsWard() && h.MaxHealth > 5 && h.IsValidTarget() && skill.IsInside(h)).ToList();
+                minions.AddRange(EntityManager.MinionsAndMonsters.OtherMinions.Where(h => h.Team != skill.Caster.Team && h.MaxHealth > 5 && !h.IsWard() && h.IsValidTarget() && skill.IsInside(h)));
                 if (minions != null && minions.Any())
                 {
                     collideobjects.AddRange(minions);

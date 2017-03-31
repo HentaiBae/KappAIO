@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using EloBuddy;
@@ -8,21 +8,21 @@ using KappAIO_Reborn.Common.Databases.Spells;
 using KappAIO_Reborn.Common.SpellDetector.Detectors;
 using KappAIO_Reborn.Common.Utility;
 
-namespace KappAIO_Reborn.Plugins.Utility.Evade
+namespace KappAIO_Reborn.Plugins.Utility
 {
     public static class Evade
     {
         public static Menu menu, DrawMenu;
         public static void Init()
         {
-            menu = Program.GlobalMenu;
+            menu = Program.UtilityMenu;
             DrawMenu = menu.AddSubMenu("Evade: Drawings");
             DrawMenu.AddGroupLabel("Evade: Drawings");
             DrawMenu.CreateCheckBox("enable", "Enable Drawings");
 
             DrawMenu.AddSeparator(0);
 
-            var skillshots = SkillshotDatabase.Current.FindAll(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type)) && (s.IsCasterName(Champion.Unknown) || EntityManager.Heroes.Enemies.Any(h => s.IsCasterName(h.Hero))));
+            var skillshots = SkillshotDatabase.Current.FindAll(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type)) && (s.IsCasterName(Champion.Unknown) || EntityManager.Heroes.Enemies.Any(h => s.IsCasterName((Champion)h.Hero))));
 
             foreach (var skill in skillshots.OrderBy(s => s.CasterNames[0]))
             {

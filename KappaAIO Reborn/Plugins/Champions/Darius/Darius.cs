@@ -180,6 +180,49 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
             new Config();
 
+            Q.AddRawDamage(new RawDamage
+                {
+                    PreCalculatedDamage = () =>
+                    {
+                        var dmgs = new[] { 20f, 35f, 50f, 65f, 80f };
+                        var mods = new[] { 0.5f, 0.55f, 0.6f, 0.65f, 0.7f };
+                        var scale = Player.Instance.TotalAttackDamage;
+                        var currentDmg = dmgs.GetCurrentDamage(mods, SpellSlot.Q, scale);
+                        return currentDmg;
+                    },
+                    Spell = Q,
+                    Source = Player.Instance,
+                    Stage = 1
+                });
+
+            W.AddRawDamage(new RawDamage
+            {
+                PreCalculatedDamage = () => Player.Instance.TotalAttackDamage * 0.4f,
+                Spell = W,
+                Source = Player.Instance,
+                Stage = 1
+            });
+
+            R.AddRawDamage(new RawDamage
+            {
+                PreCalculatedDamage = () =>
+                {
+                    var index = R.Level - 1;
+
+                    if (index < 0)
+                        return 0;
+
+                    var baseDmg = new[] { 100f, 200f, 300f }[index];
+                    var mod = 0.75f;
+                    var scale = Player.Instance.FlatPhysicalDamageMod;
+                    var currentDamage = baseDmg + (scale * mod);
+                    return currentDamage;
+                },
+                Spell = R,
+                Source = Player.Instance,
+                Stage = 1
+            });
+
             Drawing.OnEndScene += this.Drawing_OnEndScene;
             Obj_AI_Base.OnProcessSpellCast += this.Obj_AI_Base_OnProcessSpellCast;
             Orbwalker.OverrideOrbwalkPosition += this.OverrideOrbwalkPosition;

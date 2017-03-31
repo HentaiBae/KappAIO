@@ -54,6 +54,7 @@ namespace KappAIO_Reborn.Common.CustomEvents
                 this._endPosition = value;
             }
         }
+        public Vector3? Position => this._endPosition;
         public string Name
         {
             get
@@ -180,7 +181,7 @@ namespace KappAIO_Reborn.Common.CustomEvents
                 var allied = _alliedNames.Any(sender.Name.EndsWith);
 
                 var tracked = TrackedTeleports.OrderByDescending(t => t.Value.StartTick).FirstOrDefault(t => t.Value.EndPosition == null
-                && (data.Value == Champion.Unknown || data.Value == t.Value.Caster.Hero)
+                && (data.Value == Champion.Unknown || data.Value == t.Value.Caster.Hero) && t.Value.Args.Type == TeleportType.Teleport
                 && ((allied && t.Value.Caster.IsAlly) || (!allied && t.Value.Caster.IsEnemy)));
 
                 if (TrackedTeleports.Contains(tracked))
