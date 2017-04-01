@@ -201,6 +201,9 @@ namespace KappAIO_Reborn.Common.CustomEvents
             var tpargs = new TrackedTeleport(caster, args);
             tpargs.Duration = args.Status == TeleportStatus.Finish || args.Status == TeleportStatus.Abort ? 2000 : args.Duration;
             tpargs.StartTick = Core.GameTickCount;
+            if (args.Type == TeleportType.Recall)
+                tpargs.EndPosition = caster.GetSpawnPoint().Position;
+
             if (TrackedTeleports.ContainsKey(caster.NetworkId))
             {
                 TrackedTeleports[caster.NetworkId] = tpargs;

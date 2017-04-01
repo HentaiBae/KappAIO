@@ -171,7 +171,7 @@ namespace KappAIO_Reborn.Common.Utility
         {
             var t = num;
             var ts = TimeSpan.FromSeconds(t);
-            var s = t > 60 ? $"{ts.Minutes}:{ts.Seconds:D2}" : t > 5 ? $"{t:0}" : $"{t:0}.{ts.Milliseconds.ToString("D")}";
+            var s = t > 60 ? $"{ts.Minutes}:{ts.Seconds:D2}" : t > 3 ? $"{t:0}" : $"{t:0}.{ts.Milliseconds.ToString("D")}";
             return s;
         }
 

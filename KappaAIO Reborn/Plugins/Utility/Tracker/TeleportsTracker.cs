@@ -70,10 +70,13 @@ namespace KappAIO_Reborn.Plugins.Utility.Tracker
             foreach (var tp in TrackedTeleports.Where(t => t.Value.Position != null && !t.Value.Ended).Select(t => t.Value))
             {
                 var end = tp.Position.Value;
-                //end.DrawCircle(100, Color.AliceBlue);
-                var c = tp.Caster.IsEnemy ? System.Drawing.Color.Red : System.Drawing.Color.GreenYellow;
-                tp.Caster.GetSprite().CircleIcon.Draw(end.WorldToScreen());
-                //drawText.Draw($"{tp.Caster.BaseSkinName} ({tp.Name}): {(tp.TicksLeft / 1000f).ToTimeSpan()}", c, end.WorldToScreen());
+                if (end.IsOnScreen())
+                {
+                    //end.DrawCircle(100, Color.AliceBlue);
+                    var c = tp.Caster.IsEnemy ? System.Drawing.Color.Red : System.Drawing.Color.GreenYellow;
+                    tp.Caster.GetSprite().CircleIcon.Draw(end.WorldToScreen());
+                    //drawText.Draw($"{tp.Caster.BaseSkinName} ({tp.Name}): {(tp.TicksLeft / 1000f).ToTimeSpan()}", c, end.WorldToScreen());
+                }
             }
         }
     }
