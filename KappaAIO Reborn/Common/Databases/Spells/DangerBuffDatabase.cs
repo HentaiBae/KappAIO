@@ -58,6 +58,17 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                     },
                 new DangerBuffData
                     {
+                        Hero = Champion.Kalista,
+                        Slot = SpellSlot.E,
+                        BuffName = "KalistaExpungeMarker",
+                        DangerLevel = 2,
+                        StackCount = 5,
+                        MaxStackCount = 15,
+                        RequireCast = true,
+                        Range = 1000
+                    },
+                new DangerBuffData
+                    {
                         Hero = Champion.Tristana,
                         Slot = SpellSlot.E,
                         BuffName = "tristanaechargesound",

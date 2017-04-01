@@ -11,6 +11,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public Obj_AI_Base Target;
         public DangerBuffData Data;
         public BuffInstance Buff;
+        public int StackCount => this.Data.StackCountFromMenu?.Invoke() ?? this.Data.StackCount;
         public float StartTick = Core.GameTickCount;
         public float EndTick
         {
@@ -35,7 +36,10 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             if (target == null)
                 return false;
 
-            if (this.Data.IsRanged)
+            if (this.Data.HasStackCount && this.StackCount > this.Buff.Count)
+                return false;
+
+            if (this.Data.IsRanged && !this.Data.RequireCast)
             {
                 return this.Caster != null && target.IsInRange(this.Caster.PrediectPosition(TicksLeft), this.Data.Range);
             }

@@ -23,7 +23,35 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             {
                 Obj_AI_Base.OnBuffGain += Obj_AI_Base_OnBuffGain;
                 Obj_AI_Base.OnBuffLose += Obj_AI_Base_OnBuffLose;
+                Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
                 Game.OnTick += Game_OnTick;
+            }
+        }
+
+        private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            var caster = sender as AIHeroClient;
+            if(caster == null)
+                return;
+            
+            foreach (var data in _currentBuffs.Where(b => b.Hero.Equals(caster.Hero) && b.RequireCast && !string.IsNullOrEmpty(b.BuffName) && b.Slot == args.Slot))
+            {
+                foreach (var obj in ObjectManager.Get<Obj_AI_Base>().Where(o => o.IsValidTarget() && o.Team != caster.Team && o.HasBuff(data.BuffName)))
+                {
+                    var getBuff = obj.GetBuff(data.BuffName);
+                    if (getBuff != null)
+                    {
+                        var detected = new DetectedDangerBuffData
+                        {
+                            Caster = caster,
+                            Target = obj,
+                            Buff = getBuff,
+                            Data = data
+                        };
+
+                        Add(detected);
+                    }
+                }
             }
         }
 
@@ -42,7 +70,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             var caster = thebuff?.Caster as AIHeroClient;
             if (caster != null && caster.IsValid)
             {
-                foreach (var data in _currentBuffs.Where(b => b.Hero.Equals(caster.Hero) && !string.IsNullOrEmpty(b.BuffName)
+                foreach (var data in _currentBuffs.Where(b => b.Hero.Equals(caster.Hero) && !b.RequireCast && !string.IsNullOrEmpty(b.BuffName)
                 && (b.BuffName.Equals(args.Buff.Name, StringComparison.CurrentCultureIgnoreCase)
                 || b.BuffName.Equals(args.Buff.DisplayName, StringComparison.CurrentCultureIgnoreCase))))
                 {

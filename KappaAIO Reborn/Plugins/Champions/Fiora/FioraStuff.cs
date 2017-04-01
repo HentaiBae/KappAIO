@@ -702,6 +702,11 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                         {
                             spellblock.AddLabel(spellname);
                             spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1);
+                            if (s.HasStackCount)
+                            {
+                                var stackCount = spellblock.CreateSlider("stackCount", "Block at Stack Count", s.StackCount, 1, s.MaxStackCount);
+                                s.StackCountFromMenu = () => stackCount.CurrentValue;
+                            }
                             spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
                             SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
                             spellblock.AddSeparator(0);
