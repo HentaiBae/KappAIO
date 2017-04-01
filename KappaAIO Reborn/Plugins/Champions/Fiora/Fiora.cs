@@ -142,8 +142,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 return;
 
             var jungle = Orbwalker.ModeIsActive(Orbwalker.ActiveModes.JungleClear);
-
-            if (jungle && target is Obj_AI_Minion)
+            var minion = target as Obj_AI_Minion;
+            if (jungle && minion != null && minion.BaseSkinName.StartsWith("SRU_"))
             {
                 if (Config.Ejungle && E.IsReady())
                 {
