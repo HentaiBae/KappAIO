@@ -556,7 +556,7 @@ namespace KappAIO_Reborn.Common.Utility
         }
 
         #endregion
-
+        
         public static DangerLevel[] DangerLevels = {DangerLevel.Low, DangerLevel.Medium, DangerLevel.High, };
     }
 }

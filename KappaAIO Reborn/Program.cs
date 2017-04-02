@@ -45,9 +45,6 @@ namespace KappAIO_Reborn
             if (utility.CurrentValue)
             {
                 UtilityMenu = MainMenu.AddMenu("KappaUtility", "KappaUtility");
-                UtilityMenu.CreateCheckBox("Evade", "Load Evade");
-                UtilityMenu.CreateCheckBox("HUD", "Load HUD");
-                UtilityMenu.CreateCheckBox("Teleports", "Load Teleport Tracker");
                 LoadUtility.Init();
             }
             

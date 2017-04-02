@@ -625,7 +625,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         public static class Config
         {
             public static Menu ComboMenu, spellblock, ksMenu, LMenu, JMenu, MiscMenu;
-            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR;
+            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR, audio;
             private static Slider Ejungmana;
 
             public static bool validVitals => QValidvitals.CurrentValue;
@@ -644,6 +644,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public static bool focusRTarget => focusR.CurrentValue;
             public static bool Ejungle => Ejung.CurrentValue && EjungleMana;
             public static bool EjungleMana => Player.Instance.ManaPercent > Ejungmana.CurrentValue;
+            public static bool PlayAudio => audio.CurrentValue;
 
             public static void Init()
             {
@@ -804,6 +805,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 #region Misc
 
                 MiscMenu = Program.GlobalMenu.AddSubMenu("Fiora: Misc");
+                audio = MiscMenu.CreateCheckBox("audio", "Play Audio");
                 MiscMenu.AddGroupLabel("R Block list");
                 foreach (var e in EntityManager.Heroes.Enemies)
                 {

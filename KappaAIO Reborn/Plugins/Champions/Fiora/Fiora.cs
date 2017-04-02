@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Media;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
@@ -101,6 +102,23 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             Orbwalker.OnPostAttack += this.Orbwalker_OnPostAttack;
             Orbwalker.OnUnkillableMinion += this.Orbwalker_OnUnkillableMinion;
             Drawing.OnEndScene += Drawing_OnDraw;
+            Player.OnIssueOrder += Player_OnIssueOrder;
+        }
+
+        private bool played;
+        private void Player_OnIssueOrder(Obj_AI_Base sender, PlayerIssueOrderEventArgs args)
+        {
+            if (!played && Config.PlayAudio && Game.Time < 240)
+            {
+                played = true;
+                Core.DelayAction(
+                    () =>
+                    {
+                        var player = new SoundPlayer(Properties.Resources.FioraPROJECT);
+                        player.Play();
+                        player.Dispose();
+                    }, 200 + Game.Ping);
+            }
         }
 
         private static void Drawing_OnDraw(EventArgs args)
@@ -143,7 +161,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
             var jungle = Orbwalker.ModeIsActive(Orbwalker.ActiveModes.JungleClear);
             var minion = target as Obj_AI_Minion;
-            if (jungle && minion != null && minion.BaseSkinName.StartsWith("SRU_"))
+            if (jungle && minion != null && minion.BaseSkinName.StartsWith("SRU_") && minion.IsMonster)
             {
                 if (Config.Ejungle && E.IsReady())
                 {

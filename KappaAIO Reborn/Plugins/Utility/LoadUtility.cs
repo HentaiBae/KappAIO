@@ -31,6 +31,9 @@ namespace KappAIO_Reborn.Plugins.Utility
 
         public static void Init()
         {
+            foreach (var a in toloadActions)
+                Program.UtilityMenu.CreateCheckBox(a.Name, $"Load {a.Name}");
+
             var count = toloadActions.Count(a => a.Enabled);
             Logger.Info($"KappAIO: Loading {count} Utility Plugin{(count > 1 ? "s" : "")}");
             foreach (var utility in toloadActions.Where(a => a.Enabled))

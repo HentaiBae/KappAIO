@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using EloBuddy;
@@ -9,6 +10,7 @@ using KappAIO_Reborn.Common.CustomEvents;
 using KappAIO_Reborn.Common.Utility;
 using KappAIO_Reborn.Common.Utility.TextureManager;
 using KappAIO_Reborn.Plugins.Utility.HUD;
+using SharpDX;
 using Color = SharpDX.Color;
 
 namespace KappAIO_Reborn.Plugins.Utility.Tracker
@@ -58,24 +60,49 @@ namespace KappAIO_Reborn.Plugins.Utility.Tracker
             }
             drawText = new Text("Lato", new Font(FontFamily.GenericSerif, 14f, FontStyle.Bold));
             menu = Program.UtilityMenu.AddSubMenu("Teleports Tracker");
-            menu.CreateCheckBox("draw", "Draw Teleprot End Point");
+            menu.CreateCheckBox("draw", "Draw Teleport End Point");
             Drawing.OnEndScene += Drawing_OnEndScene;
         }
+        
+        private static Dictionary<Vector2, List<TrackedTeleport>> toDraw = new Dictionary<Vector2, List<TrackedTeleport>>();
 
-        private static void Drawing_OnEndScene(System.EventArgs args)
+        private static void Drawing_OnEndScene(EventArgs args)
         {
             if(!draw || !TextureManager.CanBeUsed)
                 return;
 
+            toDraw.Clear();
             foreach (var tp in TrackedTeleports.Where(t => t.Value.Position != null && !t.Value.Ended).Select(t => t.Value))
             {
-                var end = tp.Position.Value;
-                if (end.IsOnScreen())
+                var sprite = tp.Caster.GetSprite().CircleIcon;
+                var end = tp.Position.Value.WorldToScreen();
+                var x = Math.Min(Drawing.Width - sprite.Texture.Bitmap.Width, Math.Max(Drawing.Width * 0.05f, end.X)) * 0.95f;
+                var y = Math.Min(Drawing.Height - sprite.Texture.Bitmap.Height, Math.Max(Drawing.Height * 0.05f, end.Y)) * 0.95f;
+                
+                var modpos = new Vector2(x, y);
+
+                if (modpos.IsOnScreen())
                 {
-                    //end.DrawCircle(100, Color.AliceBlue);
-                    var c = tp.Caster.IsEnemy ? System.Drawing.Color.Red : System.Drawing.Color.GreenYellow;
-                    tp.Caster.GetSprite().CircleIcon.Draw(end.WorldToScreen());
-                    //drawText.Draw($"{tp.Caster.BaseSkinName} ({tp.Name}): {(tp.TicksLeft / 1000f).ToTimeSpan()}", c, end.WorldToScreen());
+                    if (!toDraw.ContainsKey(modpos))
+                    {
+                        toDraw.Add(modpos, new List<TrackedTeleport> { tp });
+                    }
+                    //Console.WriteLine(modpos);
+                    //sprite.Draw(modpos);
+                }
+            }
+
+            foreach (var pos in toDraw)
+            {
+                if (pos.Key.IsOnScreen())
+                {
+                    var offset = 0;
+                    foreach (var tp in pos.Value)
+                    {
+                        var sprite = tp.Caster.GetSprite().CircleIcon;
+                        sprite.Draw(new Vector2(pos.Key.X, pos.Key.Y + offset));
+                        offset += sprite.Texture.Bitmap.Width;
+                    }
                 }
             }
         }

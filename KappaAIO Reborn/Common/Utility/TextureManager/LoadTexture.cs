@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -174,10 +175,10 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                     image = Image.FromFile(filePath);
                     var maxSize = Drawing.Width + Drawing.Height;
                     var customSize = (int)(maxSize * 0.0225);
-                    bitmap = circle ? ellipse(resizeImage(image, false, customSize), true, criclecolor) : resizeImage(image);
+                    bitmap = circle ? ellipse(trapsrant(resizeImage(image, false, customSize), 75), true, criclecolor) : trapsrant(resizeImage(image), 95);
 
                     if (gray)
-                        bitmap = ReColor(bitmap);
+                        bitmap = trapsrant(ReColor(bitmap), 95);
 
                     texture = _textureLoader.Load(bitmap, out _textureName);
                     _cacheTexture.Add(new CachedTexture(cacheName, texture, bitmap, image));
@@ -193,6 +194,25 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             }
 
             return null;
+        }
+
+        public static Bitmap trapsrant(Image image, int prec)
+        {
+            var percent = Math.Min(1, prec * 0.01f);
+            var org = new Bitmap(image);
+            var trans = new Bitmap(image.Width, image.Height);
+            var c = Color.Black;
+            var v = Color.Black;
+            for (int i = 0; i < image.Width; i++)
+            {
+                for (int j = 0; j < image.Height; j++)
+                {
+                    c = org.GetPixel(i, j);
+                    v = Color.FromArgb((int)(255 * percent), c.R, c.G, c.B);
+                    trans.SetPixel(i, j, v);
+                }
+            }
+            return trans;
         }
 
         public static Bitmap ReColor(Bitmap bi)
@@ -218,7 +238,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                 grf.InterpolationMode = InterpolationMode.High;
                 grf.CompositingQuality = CompositingQuality.HighQuality;
                 grf.SmoothingMode = SmoothingMode.AntiAlias;
-                grf.DrawImage(bi, new Rectangle(0, 0, bi.Width, bi.Height));
+                //grf.DrawImage(bi, new Rectangle(0, 0, bi.Width, bi.Height));
             }
 
             return bi;
@@ -268,7 +288,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
 
             return btm2;
         }
-
+        
         private static Bitmap resizeImage(Image img, bool spell = false, int sizex = -1)
         {
             sizex = sizex == -1 ? HUDConfig.IconsSize : sizex;

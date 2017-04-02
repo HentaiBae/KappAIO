@@ -160,7 +160,7 @@ namespace KappAIO_Reborn.Common.CustomEvents
             if (!_teleportTargetBuffs.Any(b => args.Buff.DisplayName.Equals(b, StringComparison.CurrentCultureIgnoreCase) || args.Buff.Name.Equals(b, StringComparison.CurrentCultureIgnoreCase)))
                 return;
 
-            var tracked = TrackedTeleports.OrderByDescending(t => t.Value.StartTick).FirstOrDefault(t => t.Value.Caster.IdEquals(args.Buff.Caster));
+            var tracked = TrackedTeleports.OrderByDescending(t => t.Value.StartTick).FirstOrDefault(t => t.Value.Args.Type != TeleportType.Recall && t.Value.Caster.IdEquals(args.Buff.Caster));
             if (TrackedTeleports.Contains(tracked))
             {
                 tracked.Value.EndPosition = sender.ServerPosition;
@@ -181,7 +181,8 @@ namespace KappAIO_Reborn.Common.CustomEvents
                 var allied = _alliedNames.Any(sender.Name.EndsWith);
 
                 var tracked = TrackedTeleports.OrderByDescending(t => t.Value.StartTick).FirstOrDefault(t => t.Value.EndPosition == null
-                && (data.Value == Champion.Unknown || data.Value == t.Value.Caster.Hero) && t.Value.Args.Type == TeleportType.Teleport
+                && t.Value.Args.Type == TeleportType.Teleport
+                && (data.Value == Champion.Unknown || data.Value == t.Value.Caster.Hero)
                 && ((allied && t.Value.Caster.IsAlly) || (!allied && t.Value.Caster.IsEnemy)));
 
                 if (TrackedTeleports.Contains(tracked))
