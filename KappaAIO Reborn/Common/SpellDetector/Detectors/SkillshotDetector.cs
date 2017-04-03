@@ -499,6 +499,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 var detected = new DetectedSkillshotData
                 {
                     Caster = caster,
+                    Target = missile.Target as AIHeroClient,
                     Missile = missile,
                     Start = Misstart,
                     End = Misend,

@@ -625,8 +625,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         public static class Config
         {
             public static Menu ComboMenu, spellblock, ksMenu, LMenu, JMenu, MiscMenu;
-            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR, audio;
-            private static Slider Ejungmana;
+            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR, audio, ETurrets;
+            private static Slider Ejungmana, ELaneMana;
 
             public static bool validVitals => QValidvitals.CurrentValue;
             public static bool useQShortVital => QShortvital.CurrentValue;
@@ -638,13 +638,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public static bool evadeEnabled => spellblockEnable.CurrentValue;
             public static bool useQks => Qks.CurrentValue;
             public static bool useWks => Wks.CurrentValue;
-            public static bool useEUnk => Eunk.CurrentValue;
+            public static bool useEUnk => CanLaneCelarE && Eunk.CurrentValue;
             public static bool orbUltVital => orbRvit.CurrentValue;
             public static bool orbAAVital => aaVitl.CurrentValue;
             public static bool focusRTarget => focusR.CurrentValue;
             public static bool Ejungle => Ejung.CurrentValue && EjungleMana;
             public static bool EjungleMana => Player.Instance.ManaPercent > Ejungmana.CurrentValue;
             public static bool PlayAudio => audio.CurrentValue;
+            public static bool EResetTurrets => CanLaneCelarE && ETurrets.CurrentValue;
+            public static bool CanLaneCelarE => Player.Instance.ManaPercent > ELaneMana.CurrentValue;
 
             public static void Init()
             {
@@ -783,12 +785,14 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                 LMenu = Program.GlobalMenu.AddSubMenu("Fiora: LaneClear");
                 Eunk = LMenu.CreateCheckBox("Eunk", "Use E On Unkillable Minions");
+                ETurrets = LMenu.CreateCheckBox("ETurrets", "Use E Reset On Turrets");
+                ELaneMana = LMenu.CreateSlider("ELaneMana", "E Mana Limit", 60);
 
                 #endregion laneclear
 
                 #region jungleclear
 
-                JMenu = Program.GlobalMenu.AddSubMenu("JungleClear");
+                JMenu = Program.GlobalMenu.AddSubMenu("Fiora: JungleClear");
                 Ejung = JMenu.CreateCheckBox("Ejung", "Use E");
                 Ejungmana = JMenu.CreateSlider("Ejungmana", "E Mana Limit", 60);
 

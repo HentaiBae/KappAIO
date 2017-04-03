@@ -100,7 +100,7 @@ namespace KappAIO_Reborn.Plugins.Utility.Tracker
                     foreach (var tp in pos.Value)
                     {
                         var sprite = tp.Caster.GetSprite().CircleIcon;
-                        sprite.Draw(new Vector2(pos.Key.X, pos.Key.Y + offset));
+                        sprite.Draw(new Vector2(pos.Key.X - offset, pos.Key.Y));
                         offset += sprite.Texture.Bitmap.Width;
                     }
                 }

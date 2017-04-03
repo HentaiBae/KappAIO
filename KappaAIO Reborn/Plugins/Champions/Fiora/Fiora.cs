@@ -170,6 +170,13 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 }
             }
 
+            var lane = Orbwalker.ModeIsActive(Orbwalker.ActiveModes.LaneClear);
+            if (lane && Config.EResetTurrets && E.IsReady() && target is Obj_AI_Turret)
+            {
+                E.Cast();
+                return;
+            }
+
             if (!target.IsChampion())
                 return;
 
@@ -219,9 +226,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public override void OnTick()
         {
-            /*var speed = 500 + Player.Instance.MoveSpeed * 2.5f;
+            var speed = 500 + Player.Instance.MoveSpeed * 2f;
             Q1.Speed = (int)speed;
-            Q2.Speed = (int)speed;*/
+            Q2.Speed = (int)speed;
         }
 
         public override void Combo()
