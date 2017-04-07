@@ -12,8 +12,14 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public MissileClient Missile;
         public Vector3 Start;
         public TargetedSpellData Data;
-        public float CastDelay => this.Missile != null && this.Data.Speed > 0 && this.Data.Speed < int.MaxValue ? 0 : this.Data.CastDelay;
-        public float MaxTravelTime => this.Start.Distance(this.Target.ServerPosition) / this.Data.Speed * 1000 + this.CastDelay;
+        private float? _speed;
+        public float Speed
+        {
+            get { return this._speed ?? this.Data.Speed; }
+            set { _speed = value; }
+        }
+        public float CastDelay => this.Missile != null && this.Data.Speed > 0 && this.Speed < int.MaxValue ? 0 : this.Data.CastDelay;
+        public float MaxTravelTime => this.Start.Distance(this.Target.ServerPosition) / this.Speed * 1000 + this.CastDelay;
         public float StartTick = Core.GameTickCount;
         public float EndTick => this.StartTick + this.MaxTravelTime;
         public float TicksLeft => this.EndTick - Core.GameTickCount;

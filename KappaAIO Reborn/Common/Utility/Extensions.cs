@@ -212,9 +212,9 @@ namespace KappAIO_Reborn.Common.Utility
             if (Game.MapId == GameMapId.CrystalScar)
             {
                 var csTotalXPSum = new[] { 790, 1245, 1785, 2410, 3110, 3900, 4770, 5645, 6575, 7560, 8590, 9660, 10935, 12290, 13715 };
-                return hero.Level <= 3 ? 0 : csTotalXPSum[hero.Level - 4];
+                return hero.Level <= 3 ? 0 : csTotalXPSum[Math.Min(17, hero.Level - 4)];
             }
-            return hero.Level == 1 ? 0 : Totalxp[hero.Level - 2] + aram;
+            return hero.Level == 1 ? 0 : Totalxp[Math.Min(17, hero.Level - 2)] + aram;
         }
 
         public static float XPNeededToNextLevel(this AIHeroClient hero)
@@ -226,7 +226,7 @@ namespace KappAIO_Reborn.Common.Utility
             if (Game.MapId == GameMapId.CrystalScar)
             {
                 var csTotalXP = new[] { 790, 455, 540, 625, 700, 790, 870, 875, 930, 985, 1030, 1070, 1275, 1355, 1425 };
-                return csTotalXP[hero.Level <= 3 ? 0 : hero.Level - 3];
+                return csTotalXP[Math.Min(15, hero.Level <= 3 ? 0 : hero.Level - 3)];
             }
             var aramstart = Game.MapId == GameMapId.HowlingAbyss && hero.Level <= 3;
             var baseexpneeded = 180 + hero.Level * 100;
@@ -379,6 +379,47 @@ namespace KappAIO_Reborn.Common.Utility
         #endregion
 
         #region Gameobjects Extensions
+
+        public static float DeathDuration(this AIHeroClient hero)
+        {
+            var spawntime = 0f;
+
+            if (Game.MapId == GameMapId.HowlingAbyss)
+            {
+                return Math.Max(10f, hero.Level * 2f + 4f);
+            }
+
+            var currentminutes = Game.Time / 60f;
+
+            float BRW = hero.Level * 2.5f + 7.5f;
+
+            if (currentminutes > 15f && currentminutes < 30f)
+            {
+                spawntime = BRW + ((BRW / 100f) * (currentminutes - 15f) * 2f * 0.425f);
+            }
+
+            if (currentminutes > 30f && currentminutes < 45f)
+            {
+                spawntime = BRW + ((BRW / 100f) * (currentminutes - 15f) * 2f * 0.425f) + ((BRW / 100f) * (currentminutes - 30f) * 2f * 0.30f);
+            }
+
+            if (currentminutes > 45f && currentminutes < 53.5f)
+            {
+                spawntime = BRW + ((BRW / 100f) * (currentminutes - 15f) * 2f * 0.425f) + ((BRW / 100f) * (currentminutes - 30f) * 2f * 0.30f) * ((BRW / 100f) * (currentminutes - 45f) * 2f * 1.45f);
+            }
+
+            if (currentminutes > 53.5f)
+            {
+                spawntime = (BRW + ((BRW / 100f) * (currentminutes - 15f) * 2f * 0.425f) + ((BRW / 100f) * (currentminutes - 30f) * 2f * 0.30f) + ((BRW / 100f) * (currentminutes - 45f) * 2f * 1.45f)) * 1.5f;
+            }
+
+            if (spawntime.Equals(0f))
+            {
+                spawntime = BRW;
+            }
+
+            return spawntime;
+        }
 
         private static Dictionary<string, string> reviveBuffs = new Dictionary<string, string>
             {

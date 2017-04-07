@@ -133,25 +133,32 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             Add(detected);
         }
 
-        private static void Add(DetectedTargetedSpellData data)
+        private static void Add(DetectedTargetedSpellData args)
         {
-            if (data == null || DetectedTargetedSpells.Contains(data))
+            if (args == null || DetectedTargetedSpells.Contains(args))
             {
                 Console.WriteLine("Invalid DetectedTargetedSpellData");
                 return;
             }
 
-            if (data.Missile != null)
+            if (args.Missile != null)
             {
-                var detect = DetectedTargetedSpells.FirstOrDefault(s => s.Caster.IdEquals(data.Caster) && s.Missile == null && s.Data.Equals(data.Data));
+                var detect = DetectedTargetedSpells.FirstOrDefault(s => s.Caster.IdEquals(args.Caster) && s.Missile == null && s.Data.Equals(args.Data));
                 if (detect != null)
                 {
                     DetectedTargetedSpells.Remove(detect);
                 }
             }
 
-            OnTargetedSpellDetected.Invoke(data);
-            DetectedTargetedSpells.Add(data);
+            if (args.Caster.Hero == Champion.Nautilus && args.Data.slot == SpellSlot.R && args.Target != null)
+            {
+                args.Start = args.Caster.ServerPosition.Extend(args.Target, args.Caster.GetAutoAttackRange(args.Target)).To3DWorld();
+                if (args.Caster.Distance(args.Target) < args.Caster.GetAutoAttackRange(args.Target))
+                    args.Speed = int.MaxValue;
+            }
+
+            OnTargetedSpellDetected.Invoke(args);
+            DetectedTargetedSpells.Add(args);
         }
     }
 }

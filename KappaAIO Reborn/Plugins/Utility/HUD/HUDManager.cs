@@ -7,6 +7,7 @@ using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Rendering;
 using EloBuddy.SDK.Utils;
+using KappAIO_Reborn.Common.CustomEvents;
 using KappAIO_Reborn.Common.Utility;
 using KappAIO_Reborn.Common.Utility.TextureManager;
 using KappAIO_Reborn.Plugins.Utility.Tracker;
@@ -17,8 +18,7 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
 {
     public static class HUDManager
     {
-        private static Text CDText;
-        private static Text RecallText;
+        private static Text CDText, RecallText, DeadText, LevelText;
         public static bool loadHud;
 
         public static void Init()
@@ -26,8 +26,35 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
             TextureManager.StartLoading();
             HUDConfig.Init();
             Drawing.OnEndScene += Drawing_OnEndScene;
+            Unit.DeathEvent.OnDeath += DeathEvent_OnDeath;
         }
-        
+
+        private static Dictionary<int, Unit.OnDeathArgs> deadHeros = new Dictionary<int, Unit.OnDeathArgs>();
+        private static void DeathEvent_OnDeath(Unit.OnDeathArgs args)
+        {
+            var hero = args.Sender as AIHeroClient;
+            if(hero == null)
+                return;
+
+            var netid = hero.NetworkId;
+            if (deadHeros.ContainsKey(netid))
+            {
+                deadHeros[netid] = args;
+                return;
+            }
+
+            deadHeros.Add(netid, args);
+        }
+
+        public static float GetDeathDuration(this AIHeroClient hero)
+        {
+            var netid = hero.NetworkId;
+            if (!deadHeros.ContainsKey(netid))
+                return 0;
+
+            return (deadHeros[hero.NetworkId].EndTick - Core.GameTickCount) / 1000f;
+        }
+
         private static int allyYoffset;
         private static int enemyYoffset;
         private static void Drawing_OnEndScene(EventArgs args)
@@ -77,6 +104,7 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                 sprite.Offset = 0;
 
                 var vector2 = new Vector2(x, y + Yoffset);
+                var iconPos = vector2;
                 sprite.CurrentIcon.Sprite.Draw(vector2);
 
                 var heroIconHeight = 0;
@@ -117,7 +145,7 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                 {
                     sprite.Offset += barIconHeight;
                     barVector.Y += barIconHeight;
-                    var hp = Math.Min(Math.Max(0, sprite.Champion.HealthPercent), 100);
+                    var hp = sprite.Champion.IsDead ? 0 : Math.Min(Math.Max(0, sprite.Champion.HealthPercent), 100);
                     sprite.HPBar.Sprite.Scale = new Vector2(1 * (hp / 100), 1);
                     sprite.EmptyBar.Sprite.Draw(barVector);
                     sprite.HPBar.Sprite.Draw(barVector);
@@ -127,8 +155,8 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                 {
                     sprite.Offset += barIconHeight;
                     barVector.Y += barIconHeight;
-                    var mp = Math.Min(Math.Max(0, sprite.Champion.ManaPercent), 100);
-                    sprite.HPBar.Sprite.Scale = new Vector2(1 * (mp / 100), 1);
+                    var mp = sprite.Champion.IsDead ? 0 : Math.Min(Math.Max(0, sprite.Champion.ManaPercent), 100);
+                    sprite.MPBar.Sprite.Scale = new Vector2(1 * (mp / 100), 1);
                     sprite.EmptyBar.Sprite.Draw(barVector);
                     sprite.MPBar.Sprite.Draw(barVector);
                 }
@@ -196,6 +224,24 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
 
                     spell.CurrentSprite(sprite.Champion).Draw(vector2);
                     vector2.Y += spellIconHeight;
+                }
+
+                if (LevelText == null)
+                {
+                    var size = (heroIconHeight + heroIconWidth) * 0.1f;
+                    LevelText = new Text("", new Font(FontFamily.GenericSerif, size, FontStyle.Bold));
+                }
+                var lvlpos = new Vector2(iconPos.X + heroIconWidth * 0.7f, iconPos.Y + heroIconHeight * 0.7f);
+                LevelText.Draw(sprite.Champion.Level.ToString(), Color.AliceBlue, lvlpos);
+
+                if (sprite.Champion.IsDead)
+                {
+                    if (DeadText == null)
+                    {
+                        var size = (heroIconHeight + heroIconWidth) * 0.125f;
+                        DeadText = new Text("Arial", new Font(FontFamily.GenericSerif, size, FontStyle.Bold));
+                    }
+                    DeadText.Draw(sprite.Champion.GetDeathDuration().ToTimeSpan(), Color.Red, new Vector2(iconPos.X + heroIconWidth * 0.225f, iconPos.Y + heroIconHeight * 0.375f));
                 }
             }
             catch (Exception e)

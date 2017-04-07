@@ -27,7 +27,7 @@ namespace KappAIO_Reborn.Plugins.Champions
         private void Loading_OnLoadingComplete(EventArgs args)
         {
             menu = Program.GlobalMenu;
-            menu.AddSubMenu($"- Champion: {Player.Instance.ChampionName}");
+            //menu.AddSubMenu($"- Champion: {Player.Instance.ChampionName}");
             this.OnLoad();
             Game.OnTick += this.Game_OnTick;
         }

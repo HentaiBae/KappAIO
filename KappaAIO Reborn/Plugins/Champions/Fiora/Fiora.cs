@@ -171,7 +171,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             }
 
             var lane = Orbwalker.ModeIsActive(Orbwalker.ActiveModes.LaneClear);
-            if (lane && Config.EResetTurrets && E.IsReady() && target is Obj_AI_Turret)
+            if (lane && Config.EResetTurrets && E.IsReady() && target.IsStructure())
             {
                 E.Cast();
                 return;
@@ -226,9 +226,12 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public override void OnTick()
         {
-            var speed = 500 + Player.Instance.MoveSpeed * 2f;
-            Q1.Speed = (int)speed;
-            Q2.Speed = (int)speed;
+            var speed = (int)(500 + Player.Instance.MoveSpeed * 2f);
+            Q1.Speed = speed;
+            Q2.Speed = speed;
+
+            if(Config.AutoHarass)
+                this.Harass();
         }
 
         public override void Combo()
@@ -257,7 +260,10 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public override void Harass()
         {
-
+            if (Q1.IsReady() && Config.QHarass)
+            {
+                useQ(false, true, true, true);
+            }
         }
 
         public override void LaneClear()
@@ -297,20 +303,20 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         {
             if(!Q1.IsReady())
                 return false;
-
-            var target = QTarget;
-            if (qtarget != null)
-                target = qtarget;
-
-            if (!target.IsKillable())
-                return false;
             
-            if(target.HasBuff("PoppyWZone"))
+            if (qtarget == null)
+                qtarget = QTarget;
+
+            if (!qtarget.IsKillable())
+                return false;
+
+            var fuckpoppyW = EntityManager.Heroes.Enemies.Any(e => e.HasBuff("PoppyWZone") && e.IsValidTarget(300, false, qtarget.ServerPosition));
+            if(fuckpoppyW)
                 return false;
 
             if (shortQ || longQ)
             {
-                var vital = VitalManager.vital(target, validVitals);
+                var vital = VitalManager.vital(qtarget, validVitals);
                 var vitalResult = VitalManager.CanQVital(vital, shortQ, longQ);
 
                 if (vitalResult.HasValue)

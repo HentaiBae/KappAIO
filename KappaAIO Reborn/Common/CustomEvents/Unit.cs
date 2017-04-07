@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
+using KappAIO_Reborn.Common.Utility;
 using SharpDX;
 
 namespace KappAIO_Reborn.Common.CustomEvents
@@ -147,6 +148,59 @@ namespace KappAIO_Reborn.Common.CustomEvents
                     }
                 }
             }
+        }
+
+        public class OnDeathArgs
+        {
+            public GameObject Sender;
+            public float StartTick;
+            public float EndTick;
+            public float Duration;
+        }
+        public class DeathEvent
+        {
+            public delegate void Death(OnDeathArgs args);
+
+            public static event Death OnDeath;
+            private static readonly Dictionary<int, OnDeathArgs> invoked = new Dictionary<int, OnDeathArgs>();
+            private static readonly bool loaded;
+
+            static DeathEvent()
+            {
+                if (loaded)
+                    return;
+                loaded = true;
+                Game.OnTick += delegate
+                    {
+                        foreach (var obj in ObjectManager.Get<GameObject>().Where(o => o.IsValid))
+                        {
+                            if (obj != null)
+                            {
+                                var netid = obj.NetworkId;
+                                if (obj.IsDead)
+                                {
+                                    if (!invoked.ContainsKey(netid))
+                                    {
+                                        var args = new OnDeathArgs
+                                            {
+                                                Sender = obj, StartTick = Core.GameTickCount,
+                                                EndTick = obj.IsChampion() ? ((Game.Time + ((AIHeroClient)obj).DeathDuration()) * 1000f) - Game.Ping : int.MaxValue,
+                                                Duration = obj.IsChampion() ? (((AIHeroClient)obj).DeathDuration() * 1000f) - Game.Ping : int.MaxValue,
+                                            };
+                                        invoked.Add(netid, args);
+                                        OnDeath?.Invoke(args);
+                                    }
+                                }
+                                else
+                                {
+                                    if (invoked.ContainsKey(netid))
+                                        invoked.Remove(netid);
+                                }
+                            }
+                        }
+                    };
+            }
+            
         }
     }
 }
