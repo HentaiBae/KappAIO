@@ -231,8 +231,8 @@ namespace KappAIO_Reborn.Plugins.Utility.HUD
                     var size = (heroIconHeight + heroIconWidth) * 0.1f;
                     LevelText = new Text("", new Font(FontFamily.GenericSerif, size, FontStyle.Bold));
                 }
-                var lvlpos = new Vector2(iconPos.X + heroIconWidth * 0.7f, iconPos.Y + heroIconHeight * 0.7f);
-                LevelText.Draw(sprite.Champion.Level.ToString(), Color.AliceBlue, lvlpos);
+                var lvlpos = new Vector2(iconPos.X + heroIconWidth * 0.69f, iconPos.Y + heroIconHeight * 0.69f);
+                LevelText.Draw(sprite.Champion.Level.ToString(), Color.Red, lvlpos);
 
                 if (sprite.Champion.IsDead)
                 {

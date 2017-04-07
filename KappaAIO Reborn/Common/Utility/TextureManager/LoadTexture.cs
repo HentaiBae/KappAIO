@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -212,6 +211,10 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                     trans.SetPixel(i, j, v);
                 }
             }
+
+            org.Dispose();
+            image.Dispose();
+
             return trans;
         }
 
@@ -286,6 +289,9 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                 grf.DrawImage(btm, new Rectangle(0, 0, bi.Width, bi.Height));
             }
 
+            btm.Dispose();
+            bi.Dispose();
+
             return btm2;
         }
         
@@ -295,7 +301,9 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             var mod = sizex * 0.01f;
             var mod2 = spell ? 0.627f : 1;
             var size = new Size((int)(img.Width * mod * mod2), (int)(img.Height * mod * mod2));
-            return new Bitmap(img, size);
+            var newbtm = new Bitmap(img, size);
+            img.Dispose();
+            return newbtm;
         }
     }
 }
