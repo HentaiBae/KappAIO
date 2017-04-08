@@ -24,8 +24,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public override void OnLoad()
         {
-            Q1 = new Spell.Skillshot(SpellSlot.Q, 400, SkillShotType.Circular, 100, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
-            Q2 = new Spell.Skillshot(SpellSlot.Q, 700, SkillShotType.Circular, 100, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
+            Q1 = new Spell.Skillshot(SpellSlot.Q, 400, SkillShotType.Circular, 0, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
+            Q2 = new Spell.Skillshot(SpellSlot.Q, 700, SkillShotType.Circular, 0, 3000, 50, DamageType.Physical) { AllowedCollisionCount = int.MaxValue };
             W = new Spell.Skillshot(SpellSlot.W, 750, SkillShotType.Linear, 500, 3200, 70, DamageType.Magical) { AllowedCollisionCount = int.MaxValue };
             E = new Spell.Active(SpellSlot.E, 275, DamageType.Physical);
             R = new Spell.Targeted(SpellSlot.R, 500, DamageType.True);
@@ -144,6 +144,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         {
             if(Orbwalker.IsAutoAttacking)
                 return;
+
             var minion = target as Obj_AI_Minion;
             if (!Config.useEUnk || minion == null || (HydraItem.Ready && Orbwalker.UseTiamat) || !E.IsReady() || !(Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear) || Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit)))
                 return;
@@ -236,15 +237,17 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public override void Combo()
         {
+            if(Orbwalker.IsAutoAttacking)
+                return;
+
             var target = QTarget;
 
             useQ(false, Config.useQShortVital, Config.useQLongvital, Config.validVitals);
-
             if (Config.useR && target.IsKillable(R.Range, false, true, true))
             {
                 var comboDamage = SpellManager.ComboDamage(target);
                 var validR = (comboDamage >= target.TotalShieldHealth() && target.TotalShieldHealth() >= SpellManager.ComboDamage(target, false)
-                    || target.Health > user.Health && comboDamage >= target.Health) && !target.WillDie(500) && target.Health > user.GetAutoAttackDamage(target, true);
+                              || target.Health > user.Health && comboDamage >= target.Health) && !target.WillDie(500) && target.Health > user.GetAutoAttackDamage(target, true);
                 if (validR)
                 {
                     if (!target.IsUnderHisturret() && (Q1.IsInRange(target) && Q1.IsReady() || target.IsValidTarget(user.GetAutoAttackRange(target))))
@@ -262,7 +265,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         {
             if (Q1.IsReady() && Config.QHarass)
             {
-                useQ(false, true, true, true);
+                useQ(false, true, true, true, null, Config.QHarassTurrets);
             }
         }
 
@@ -288,9 +291,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 {
                     if (!useQ(false, Config.useQShortVital, Config.useQLongvital, false, qtarget))
                         Q2.Cast(qtarget);
-                    return;
                 }
             }
+
             if (W.IsReady() && Config.useWks)
             {
                 var wtarget = W.GetKillStealTarget(SpellManager.WDamage(null), DamageType.Magical);
@@ -299,7 +302,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             }
         }
 
-        private static bool useQ(bool gapCloser, bool shortQ, bool longQ, bool validVitals, AIHeroClient qtarget = null)
+        private static bool useQ(bool gapCloser, bool shortQ, bool longQ, bool validVitals, AIHeroClient qtarget = null, bool turretCheck = false)
         {
             if(!Q1.IsReady())
                 return false;
@@ -322,6 +325,16 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 if (vitalResult.HasValue)
                 {
                     if (SkillshotDetector.SkillshotsDetected.Any(s => s.WillHit(vitalResult.Value.To2D())))
+                    {
+                        return false;
+                    }
+
+                    if (turretCheck && vitalResult.Value.IsUnderEnemyTurret())
+                    {
+                        return false;
+                    }
+
+                    if (vital.Vitalsector.IsInside(Player.Instance.ServerPosition) && Orbwalker.CanAutoAttack)
                     {
                         return false;
                     }

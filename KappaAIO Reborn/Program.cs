@@ -28,18 +28,15 @@ namespace KappAIO_Reborn
             LoadTick = Core.GameTickCount;
             GlobalMenu = MainMenu.AddMenu("KappAIO", "kappaio");
             var utility = GlobalMenu.CreateCheckBox("utility", "Load KappaUtility");
-            bool loadedChampion;
 
             try
             {
                 var Instance = (ChampionBase)Activator.CreateInstance(null, $"KappAIO_Reborn.Plugins.Champions.{Player.Instance.ChampionName}.{Player.Instance.ChampionName}").Unwrap();
                 GlobalMenu.DisplayName = $"KappAIO: {Player.Instance.ChampionName}";
-                loadedChampion = true;
             }
             catch (Exception)
             {
                 Logger.Error($"KappAIO: {Player.Instance.ChampionName} Not Supported");
-                loadedChampion = false;
             }
 
             if (utility.CurrentValue)

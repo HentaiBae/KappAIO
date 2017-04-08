@@ -74,20 +74,20 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public class FioraVital
             {
                 public float startTick;
-                public AIHeroClient Caster { get { return EntityManager.Heroes.AllHeroes.OrderBy(e => e.Distance(this.Vital)).FirstOrDefault(h => HasFioraPassiveBuff(h) && h.Distance(this.Vital) <= 300); } }
+                public AIHeroClient Caster { get { return EntityManager.Heroes.AllHeroes.OrderBy(e => e.Distance(this.Vital)).FirstOrDefault(h => HasFioraPassiveBuff(h) && h.Distance(this.Vital) <= 50); } }
                 public Obj_GeneralParticleEmitter Vital;
                 public bool ValidVital
                 {
                     get
                     {
                         return !this.Vitalsector.Center.IsWall() && this.Vital.IsValid && !this.Vital.IsDead && !this.OrbWalkVitalPos.IsBuilding() 
-                            && (this.Vital.Name.ToLower().Contains("timeout") || (!this.Vital.Name.ToLower().Contains("warning") || Core.GameTickCount - this.startTick > 1500 - (Game.Ping / 2)));
+                            && (this.Vital.Name.ToLower().Contains("timeout") || (!this.Vital.Name.ToLower().Contains("warning") || Core.GameTickCount - this.startTick > 1500 - Game.Ping));
                     }
                 }
 
                 public bool WillBeValid(float time)
                 {
-                    return (this.Vital.Name.ToLower().Contains("timeout") || (!this.Vital.Name.ToLower().Contains("warning") || Core.GameTickCount - this.startTick > 1500 - (Game.Ping / 2) - time))
+                    return (this.Vital.Name.ToLower().Contains("timeout") || (!this.Vital.Name.ToLower().Contains("warning") || Core.GameTickCount - this.startTick > 1500 - Game.Ping - time))
                         && !this.Vitalsector.Center.IsWall() && this.Vital.IsValid && !this.Vital.IsDead && !this.OrbWalkVitalPos.IsBuilding();
                 }
                 public bool IsRVital => this.Vital != null && this.Vital.Name.Contains("_R_Mark");
@@ -95,11 +95,12 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 {
                     get
                     {
-                        var range = 175;
+                        var range = 150;
                         var travelTime = Player.Instance.Distance(CorrectPos) / Player.Instance.MoveSpeed * 1000f;
                         var pos = this.Caster.PrediectPosition(travelTime);
                         var x2 = this.Vital.Name.Contains("_NW") ? range : this.Vital.Name.Contains("_SE") ? -range : 0;
                         var y2 = this.Vital.Name.Contains("_NE") ? range : this.Vital.Name.Contains("_SW") ? -range : 0;
+
                         return new Vector3(pos.X + x2, pos.Y + y2, pos.Z);
                     }
                 }
@@ -107,7 +108,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 {
                     get
                     {
-                        var range = 175;
+                        var range = 150;
                         var x2 = this.Vital.Name.Contains("_NW") ? range : this.Vital.Name.Contains("_SE") ? -range : 0;
                         var y2 = this.Vital.Name.Contains("_NE") ? range : this.Vital.Name.Contains("_SW") ? -range : 0;
                         var predcaster = Q2.GetPrediction(this.Caster).CastPosition;
@@ -624,7 +625,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         public static class Config
         {
             public static Menu ComboMenu, spellblock, ksMenu, LMenu, JMenu, MiscMenu, HMenu;
-            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR, audio, ETurrets, qharass;
+            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR, audio, ETurrets, qharass, qhturret;
             private static Slider Ejungmana, ELaneMana, qHarassMana, qHarassHP;
             private static KeyBind autoHarass;
 
@@ -648,6 +649,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public static bool EResetTurrets => CanLaneCelarE && ETurrets.CurrentValue;
             public static bool CanLaneCelarE => Player.Instance.ManaPercent > ELaneMana.CurrentValue;
             public static bool QHarass => qharass.CurrentValue && Player.Instance.HealthPercent > qHarassHP.CurrentValue && Player.Instance.ManaPercent > qHarassMana.CurrentValue;
+            public static bool QHarassTurrets => qhturret.CurrentValue;
             public static bool AutoHarass => autoHarass.CurrentValue;
 
             public static void Init()
@@ -676,6 +678,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 HMenu = Program.GlobalMenu.AddSubMenu("Fiora: Harass");
                 autoHarass = HMenu.CreateKeyBind("autoHarass", "Auto Harass", false, KeyBind.BindTypes.PressToggle);
                 qharass = HMenu.CreateCheckBox("qharass", "Q Vitals");
+                qhturret = HMenu.CreateCheckBox("qhturret", "Dont Q Dive Enemy Turret");
                 qHarassHP = HMenu.CreateSlider("qHarassHP", "Q Harass Health limit", 40);
                 qHarassMana = HMenu.CreateSlider("qHarassMana", "Q Harass Mana limit", 60);
 

@@ -392,9 +392,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         public override void Combo()
         {
-            if(Config.useComboQ)
+            if (Config.useComboQ)
                 ComboQ(Config.noQAA);
-            
+
             ComboE();
 
             if (Config.useComboR)
@@ -415,7 +415,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Darius
 
         public override void Harass()
         {
-            if(Config.huseQ)
+            if (Config.huseQ)
                 ComboQ(Config.hnoQAA);
         }
 

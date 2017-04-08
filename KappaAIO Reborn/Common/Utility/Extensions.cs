@@ -17,7 +17,12 @@ namespace KappAIO_Reborn.Common.Utility
     static class Extensions
     {
         #region vectors
-        
+
+        public static bool IsUnderEnemyTurret(this Vector3 pos)
+        {
+            return EntityManager.Turrets.Enemies.Any(t => t.IsValidTarget(t.GetAutoAttackRange(), false, pos));
+        }
+
         /// <summary>
         ///     Returns true if you can deal damage to the target.
         /// </summary>

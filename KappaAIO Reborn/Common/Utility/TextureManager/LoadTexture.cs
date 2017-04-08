@@ -90,15 +90,15 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                     var sprite = loadSprite(hero.GetChampionName(), slot, spell.GetSpellName());
                     var spriteGray = loadSprite(hero.GetChampionName(), slot, spell.GetSpellName(), true);
                     var spellSprite = new SpellSprite(spell.GetSpellName(), spell.Slot,
-                        new CustomSprite(sprite, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}{slot}"))),
-                        new CustomSprite(spriteGray, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}{slot}gray"))));
+                        new CustomSprite(sprite, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}{spell.GetSpellName()}"))),
+                        new CustomSprite(spriteGray, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}{spell.GetSpellName()}gray"))));
                     spells.Add(spellSprite);
                 }
 
                 var championSprite = new ChampionSprite(hero,
                     new CustomSprite(heroIcon, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}"))),
                     new CustomSprite(heroIconGray, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}gray"))),
-                    new CustomSprite(CircleheroIcon, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}circle"))),
+                    new CustomSprite(CircleheroIcon, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}circle{(hero.IsAlly ? "green" : "red")}"))),
                     new CustomSprite(hp, new CachedTexture("hp", hpTexture, new Bitmap(Properties.Resources.hp), Properties.Resources.hp)),
                     new CustomSprite(mp, new CachedTexture("mp", mpTexture, new Bitmap(Properties.Resources.mp), Properties.Resources.mp)),
                     new CustomSprite(xp, new CachedTexture("xp", xpTexture, new Bitmap(Properties.Resources.xp), Properties.Resources.xp)),
@@ -116,7 +116,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             {
                 var folder = slot.IsSummonerSpell() ? FileManager.SummonerSpellsFolder : FileManager.ChampionFolder(champ);
                 var filePath = $"{folder}/{(slot.IsSummonerSpell() ? name : slot.ToString())}.png";
-                var cacheName = $"{champ}{slot}{(gray ? "gray" : "")}";
+                var cacheName = $"{champ}{name}{(gray ? "gray" : "")}";
                 Texture texture = null;
                 Image image = null;
                 Bitmap bitmap = null;
@@ -158,7 +158,7 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             {
                 var folder = FileManager.ChampionFolder(champ);
                 var filePath = $"{folder}/{champ}.png";
-                var cacheName = $"{champ}{(gray ? "gray" : circle ? "circle" : "")}";
+                var cacheName = $"{champ}{(gray ? "gray" : circle ? "circle" : "")}{(criclecolor == Color.Red ? "red" : criclecolor == Color.GreenYellow ? "green" : "")}";
                 Texture texture = null;
                 Image image = null;
                 Bitmap bitmap = null;
