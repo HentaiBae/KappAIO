@@ -625,7 +625,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         public static class Config
         {
             public static Menu ComboMenu, spellblock, ksMenu, LMenu, JMenu, MiscMenu, HMenu;
-            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, Hydra, R, spellblockEnable, Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR, audio, ETurrets, qharass, qhturret;
+            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, R, spellblockEnable, Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR, audio, ETurrets, qharass, qhturret;
             private static Slider Ejungmana, ELaneMana, qHarassMana, qHarassHP;
             private static KeyBind autoHarass;
 
@@ -634,7 +634,6 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public static bool useQLongvital => QLongvital.CurrentValue;
             public static bool orbwalk => orbVital.CurrentValue;
             public static bool useEReset => EReset.CurrentValue;
-            public static bool useHydra => Hydra.CurrentValue;
             public static bool useR => R.CurrentValue;
             public static bool evadeEnabled => spellblockEnable.CurrentValue;
             public static bool useQks => Qks.CurrentValue;
@@ -668,7 +667,6 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 focusR = ComboMenu.CreateCheckBox("focusR", "Force Focus Target with R Mark");
                 ComboMenu.AddGroupLabel("Extra Settings");
                 EReset = ComboMenu.CreateCheckBox("EReset", "E Reset Auto Attack");
-                Hydra = ComboMenu.CreateCheckBox("Hydra", "Use Hydra");
                 R = ComboMenu.CreateCheckBox("R", "Auto use R");
 
                 #endregion combo

@@ -24,16 +24,29 @@ namespace KappAIO_Reborn.Plugins.Champions
             Loading.OnLoadingComplete += this.Loading_OnLoadingComplete;
         }
 
+        private static float lastSpellCast;
         private void Loading_OnLoadingComplete(EventArgs args)
         {
             menu = Program.GlobalMenu;
             //menu.AddSubMenu($"- Champion: {Player.Instance.ChampionName}");
             this.OnLoad();
             Game.OnTick += this.Game_OnTick;
+            Spellbook.OnCastSpell += Spellbook_OnCastSpell;
+        }
+
+        private static bool wait => Core.GameTickCount - lastSpellCast < Game.Ping;
+
+        private void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
+        {
+            if (sender.Owner.IsMe && !wait)
+                lastSpellCast = Core.GameTickCount;
         }
 
         private void Game_OnTick(EventArgs args)
         {
+            if (user.IsDead || user.IsRecalling() || wait)
+                return;
+
             this.OnTick();
             this.KillSteal();
             var orbMode = Orbwalker.ActiveModesFlags;

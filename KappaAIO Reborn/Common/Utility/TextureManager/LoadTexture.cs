@@ -71,12 +71,16 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
             var result = new List<ChampionSprite>();
             var hpTexture = _textureLoader.Load("HP", Properties.Resources.hp);
             var hp = new Sprite(hpTexture);
+            var hpBitmap = new Bitmap(Properties.Resources.hp);
             var mpTexture = _textureLoader.Load("MP", Properties.Resources.mp);
             var mp = new Sprite(mpTexture);
+            var mpBitmap = new Bitmap(Properties.Resources.mp);
             var xpTexture = _textureLoader.Load("XP", Properties.Resources.xp);
             var xp = new Sprite(xpTexture);
+            var xpBitmap = new Bitmap(Properties.Resources.mp);
             var emptyTexture = _textureLoader.Load("Empty", Properties.Resources.empty);
             var empty = new Sprite(emptyTexture);
+            var emptybitmap = new Bitmap(Properties.Resources.empty);
 
             foreach (var hero in EntityManager.Heroes.AllHeroes.Where(h => h.ChampionName != "PracticeTool_TargetDummy"))
             {
@@ -99,10 +103,10 @@ namespace KappAIO_Reborn.Common.Utility.TextureManager
                     new CustomSprite(heroIcon, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}"))),
                     new CustomSprite(heroIconGray, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}gray"))),
                     new CustomSprite(CircleheroIcon, _cacheTexture.FirstOrDefault(t => t.TextureName.Equals($"{hero.GetChampionName()}circle{(hero.IsAlly ? "green" : "red")}"))),
-                    new CustomSprite(hp, new CachedTexture("hp", hpTexture, new Bitmap(Properties.Resources.hp), Properties.Resources.hp)),
-                    new CustomSprite(mp, new CachedTexture("mp", mpTexture, new Bitmap(Properties.Resources.mp), Properties.Resources.mp)),
-                    new CustomSprite(xp, new CachedTexture("xp", xpTexture, new Bitmap(Properties.Resources.xp), Properties.Resources.xp)),
-                    new CustomSprite(empty, new CachedTexture("empty", emptyTexture, new Bitmap(Properties.Resources.empty), Properties.Resources.empty)), spells.ToArray());
+                    new CustomSprite(hp, new CachedTexture("hp", hpTexture, hpBitmap, Properties.Resources.hp)),
+                    new CustomSprite(mp, new CachedTexture("mp", mpTexture, mpBitmap, Properties.Resources.mp)),
+                    new CustomSprite(xp, new CachedTexture("xp", xpTexture, xpBitmap, Properties.Resources.xp)),
+                    new CustomSprite(empty, new CachedTexture("empty", emptyTexture, emptybitmap, Properties.Resources.empty)), spells.ToArray());
 
                 result.Add(championSprite);
             }

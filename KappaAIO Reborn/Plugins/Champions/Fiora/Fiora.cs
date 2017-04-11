@@ -190,10 +190,6 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     E.Cast();
                     return;
                 }
-                if (Config.useHydra && HydraItem.Ready)
-                {
-                    HydraItem.Cast();
-                }
             }
         }
 
@@ -227,7 +223,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public override void OnTick()
         {
-            var speed = (int)(500 + Player.Instance.MoveSpeed * 2f);
+            var speed = (int)(500 + Player.Instance.MoveSpeed * 5f);
             Q1.Speed = speed;
             Q2.Speed = speed;
 

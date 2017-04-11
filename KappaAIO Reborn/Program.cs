@@ -2,19 +2,19 @@
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
+using EloBuddy.SDK.Constants;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Utils;
 using KappAIO_Reborn.Common.Utility;
 using KappAIO_Reborn.Plugins.Champions;
 using KappAIO_Reborn.Plugins.Utility;
-using KappAIO_Reborn.Plugins.Utility.HUD;
 
 namespace KappAIO_Reborn
 {
     public class Program
     {
-        public static float LoadTick { get; private set; }
+        public static float LoadTick, LastAAReset;
         public static bool UsingMasterMind;
         public static Menu GlobalMenu, UtilityMenu;
 
@@ -48,6 +48,30 @@ namespace KappAIO_Reborn
             //FoW.Init();
 
             Game.OnTick += Game_OnTick;
+            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
+            Obj_AI_Base.OnBasicAttack += Obj_AI_Base_OnProcessSpellCast;
+            Obj_AI_Base.OnPlayAnimation += Obj_AI_Base_OnPlayAnimation;
+        }
+
+        private static void Obj_AI_Base_OnPlayAnimation(Obj_AI_Base sender, GameObjectPlayAnimationEventArgs args)
+        {
+            if(!sender.IsMe)
+                return;
+
+            if (AutoAttacks.IsDashAutoAttackReset(Player.Instance, args))
+                LastAAReset = Core.GameTickCount;
+        }
+
+        private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            if(!sender.IsMe)
+                return;
+
+            if (AutoAttacks.IsAutoAttackReset(Player.Instance, args))
+                LastAAReset = Core.GameTickCount;
+
+            if (AutoAttacks.IsDashAutoAttackReset(Player.Instance, args))
+                LastAAReset = Core.GameTickCount;
         }
 
         private static void Game_OnTick(EventArgs args)

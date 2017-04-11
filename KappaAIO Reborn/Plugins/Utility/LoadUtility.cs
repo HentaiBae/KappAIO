@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EloBuddy.SDK.Utils;
 using KappAIO_Reborn.Common.Utility;
+using KappAIO_Reborn.Plugins.Utility.Activator;
 using KappAIO_Reborn.Plugins.Utility.HUD;
 using KappAIO_Reborn.Plugins.Utility.Tracker;
 
@@ -25,8 +26,9 @@ namespace KappAIO_Reborn.Plugins.Utility
         private static List<UtilityToLoad> toloadActions = new List<UtilityToLoad>
         {
             new UtilityToLoad("Evade", Evade.Init),
-            new UtilityToLoad("Teleports", TeleportsTracker.Init),
+            new UtilityToLoad("Teleports Tracker", TeleportsTracker.Init),
             new UtilityToLoad("HUD", HUDManager.Init),
+            new UtilityToLoad("Items Activator", ItemActiv.Init),
         };
 
         public static void Init()
