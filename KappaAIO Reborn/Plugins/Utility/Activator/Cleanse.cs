@@ -116,13 +116,15 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
             if(target == null)
                 return;
             
+            Chat.Print($"cast QSS {target.owner.BaseSkinName}");
             this.Item.Cast(target.owner);
         }
 
         private void Obj_AI_Base_OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
         {
-            if (!sender.IsChampion())
+            if (!sender.IsChampion() || !sender.IsAlly)
                 return;
+
             currentDelay = rnd.Next(Cleanse.minDelay, Cleanse.maxDelay);
             this.add(sender as AIHeroClient, args.Buff);
         }
@@ -149,10 +151,10 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
                 {
                     case TargetingType.AllyHeros:
                         if(Cleanse.Allies)
-                            possible.AddRange(this.gainedBuffs.Where(a => a.owner.IsValidTarget(this.Item.Range) && a.owner.IsAlly && Cleanse.Health >= a.owner.HealthPercent));
+                            possible.AddRange(this.gainedBuffs.Where(a => this.Item.IsInRange(a.owner) && a.owner.IsValid && a.owner.IsAlly && Cleanse.Health >= a.owner.HealthPercent));
                         break;
                     case TargetingType.MyHero:
-                        possible.Add(this.gainedBuffs.FirstOrDefault(b => b.owner.IsValidTarget(this.Item.Range) && b.owner.IsMe && Cleanse.Health >= b.owner.HealthPercent));
+                        possible.Add(this.gainedBuffs.FirstOrDefault(b => this.Item.IsInRange(b.owner) && b.owner.IsValid && b.owner.IsMe && Cleanse.Health >= b.owner.HealthPercent));
                         break;
                 }
             }
@@ -160,7 +162,7 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
             if (possible == null || !possible.Any())
                 return null;
 
-            return possible.OrderByDescending(b => b.PassedTicks).FirstOrDefault(b => !b.ended && (b.PassedTicks > this.currentDelay || this.currentDelay > b.Duration) && Cleanse.BuffIsEnabled(b.buff.Type));
+            return possible.Where(b => (b.PassedTicks > this.currentDelay || this.currentDelay > b.Duration) && Cleanse.BuffIsEnabled(b.buff.Type)).OrderByDescending(b => b.PassedTicks).FirstOrDefault();
         }
     }
 }

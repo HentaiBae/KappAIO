@@ -116,12 +116,12 @@ namespace KappAIO_Reborn.Common.Databases.Items
 
         public bool IsInRange(Obj_AI_Base target)
         {
-            return this.IsInRange(target.Position, target.BoundingRadius/2);
+            return target != null && this.IsInRange(target.Position, target.BoundingRadius/2);
         }
 
         public bool IsInRange(AttackableUnit target)
         {
-            return this.IsInRange(target.Position, target.BoundingRadius / 2);
+            return target != null && this.IsInRange(target.Position, target.BoundingRadius / 2);
         }
 
         public bool IsInRange(Vector3 target, float hitbox = 0)

@@ -144,6 +144,9 @@ namespace KappAIO_Reborn.Common.Utility
             if (instance.Name.Equals("TeleportCancel"))
                 return "SummonerTeleport";
 
+            if (instance.Name.Equals("SnowballFollowupCast"))
+                return "SummonerSnowball";
+
             return instance.Name;
         }
 

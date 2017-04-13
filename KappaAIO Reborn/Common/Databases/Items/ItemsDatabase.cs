@@ -77,17 +77,17 @@ namespace KappAIO_Reborn.Common.Databases.Items
                     Width = 525
                 });
 
-                Current.Add(Quicksilver_Sash = new ItemData(3140, ItemCastType.Active, 0, int.MaxValue, 0, TargetingType.MyHero)
+                Current.Add(Quicksilver_Sash = new ItemData(3140, ItemCastType.Active, 1, int.MaxValue, 0, TargetingType.MyHero)
                 {
                     CastTimes = new[] { CastTime.MyHealth, CastTime.Cleanse },
                     MyHP = 95,
                 });
-                Current.Add(Mercurial_Scimitar = new ItemData(3139, ItemCastType.Active, 0, int.MaxValue, 0, TargetingType.MyHero)
+                Current.Add(Mercurial_Scimitar = new ItemData(3139, ItemCastType.Active, 1, int.MaxValue, 0, TargetingType.MyHero)
                 {
                     CastTimes = new[] { CastTime.MyHealth, CastTime.Cleanse },
                     MyHP = 95, 
                 });
-                Current.Add(Dervish_Blade = new ItemData(3137, ItemCastType.Active, 0, int.MaxValue, 0, TargetingType.MyHero)
+                Current.Add(Dervish_Blade = new ItemData(3137, ItemCastType.Active, 1, int.MaxValue, 0, TargetingType.MyHero)
                 {
                     CastTimes = new[] { CastTime.MyHealth, CastTime.Cleanse },
                     MyHP = 95,

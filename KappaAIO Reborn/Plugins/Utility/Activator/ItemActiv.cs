@@ -11,7 +11,7 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
         public static void Init()
         {
             var menu = Program.UtilityMenu.AddSubMenu("Items Activator");
-            foreach (var item in ItemsDatabase.Current.Where(i => i.item.ItemInfo.AvailableForMap))
+            foreach (var item in ItemsDatabase.Current.Where(i => i.item.ItemInfo.AvailableForMap && !i.matchCastType(CastTime.Cleanse)))
                 currentItemsInstances.Add(new ItemInstance(item, menu));
 
             Cleanse.Init(ItemsDatabase.Current.FindAll(i => i.matchCastType(CastTime.Cleanse)).ToArray());

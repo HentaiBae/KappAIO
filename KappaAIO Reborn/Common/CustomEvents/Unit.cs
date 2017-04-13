@@ -184,8 +184,8 @@ namespace KappAIO_Reborn.Common.CustomEvents
                                         var args = new OnDeathArgs
                                             {
                                                 Sender = obj, StartTick = Core.GameTickCount,
-                                                EndTick = obj.IsChampion() ? ((Game.Time + ((AIHeroClient)obj).DeathDuration()) * 1000f) - Game.Ping : int.MaxValue,
-                                                Duration = obj.IsChampion() ? (((AIHeroClient)obj).DeathDuration() * 1000f) - Game.Ping : int.MaxValue,
+                                                EndTick = obj.IsChampion() ? ((Game.Time + ((AIHeroClient)obj).DeathDuration()) * 1000f) : int.MaxValue,
+                                                Duration = obj.IsChampion() ? (((AIHeroClient)obj).DeathDuration() * 1000f) : int.MaxValue,
                                             };
                                         invoked.Add(netid, args);
                                         OnDeath?.Invoke(args);
