@@ -72,7 +72,7 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
             public float StartTick = Core.GameTickCount;
             public float Duration => (this.buff.EndTime - Game.Time) * 1000f;
             public float PassedTicks => Core.GameTickCount - this.StartTick;
-            public bool ended => Game.Time > this.buff.EndTime || !this.buff.IsValid || !this.buff.IsActive;
+            public bool ended => this.buff == null || Game.Time > this.buff.EndTime || !this.buff.IsValid || !this.buff.IsActive;
 
             public gainedBuff(AIHeroClient o, BuffInstance b)
             {
@@ -134,13 +134,14 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
 
         private void verifyBuffs()
         {
-            this.gainedBuffs.RemoveAll(b => b.ended);
+            this.gainedBuffs.RemoveAll(b => b.ended || b.owner.IsDead);
         }
         
         private gainedBuff getQssTarget()
         {
             if (this.gainedBuffs == null || !this.gainedBuffs.Any())
                 return null;
+
             var possible = new List<gainedBuff>();
             foreach (var t in this.Item.TargetType)
             {
