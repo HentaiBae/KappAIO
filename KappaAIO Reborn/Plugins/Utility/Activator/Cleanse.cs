@@ -116,7 +116,6 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
             if(target == null)
                 return;
             
-            Chat.Print($"cast QSS {target.owner.BaseSkinName}");
             this.Item.Cast(target.owner);
         }
 
