@@ -6,6 +6,11 @@ namespace KappAIO_Reborn.Common.Databases.Items
 {
     public static class ItemsDatabase
     {
+        public static ItemData Mercurial_Scimitar;
+        public static ItemData Quicksilver_Sash;
+        public static ItemData Dervish_Blade;
+        public static ItemData Mikaels;
+
         public static ItemData Redemption;
         public static ItemData Randuins;
 
@@ -70,6 +75,27 @@ namespace KappAIO_Reborn.Common.Databases.Items
                     CastTimes = new[] { CastTime.AllyHealth, CastTime.AoE, CastTime.OnTick },
                     AllyHP = 45, AoeHit = 1,
                     Width = 525
+                });
+
+                Current.Add(Quicksilver_Sash = new ItemData(3140, ItemCastType.Active, 0, int.MaxValue, 0, TargetingType.MyHero)
+                {
+                    CastTimes = new[] { CastTime.MyHealth, CastTime.Cleanse },
+                    MyHP = 95,
+                });
+                Current.Add(Mercurial_Scimitar = new ItemData(3139, ItemCastType.Active, 0, int.MaxValue, 0, TargetingType.MyHero)
+                {
+                    CastTimes = new[] { CastTime.MyHealth, CastTime.Cleanse },
+                    MyHP = 95, 
+                });
+                Current.Add(Dervish_Blade = new ItemData(3137, ItemCastType.Active, 0, int.MaxValue, 0, TargetingType.MyHero)
+                {
+                    CastTimes = new[] { CastTime.MyHealth, CastTime.Cleanse },
+                    MyHP = 95,
+                });
+                Current.Add(Mikaels = new ItemData(3222, ItemCastType.Targeted, 600, int.MaxValue, 0, TargetingType.AllyHeros)
+                {
+                    CastTimes = new[] { CastTime.AllyHealth, CastTime.Cleanse },
+                    AllyHP = 80,
                 });
             }
         }

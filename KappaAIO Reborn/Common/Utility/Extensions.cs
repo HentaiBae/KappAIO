@@ -288,11 +288,11 @@ namespace KappAIO_Reborn.Common.Utility
         /// <summary>
         ///     Returns CheckBox Value.
         /// </summary>
-        public static bool CheckBoxValue(this Menu m, string id)
+        public static bool CheckBoxValue(this Menu m, object id)
         {
             try
             {
-                return m[id].Cast<CheckBox>().CurrentValue;
+                return m[id.ToString()].Cast<CheckBox>().CurrentValue;
             }
             catch (Exception)
             {
@@ -604,5 +604,41 @@ namespace KappAIO_Reborn.Common.Utility
         #endregion
         
         public static DangerLevel[] DangerLevels = {DangerLevel.Low, DangerLevel.Medium, DangerLevel.High, };
+        public static List<DangerBuffTypes> CCBuffTypes = new List<DangerBuffTypes>
+            {
+                new DangerBuffTypes(BuffType.AttackSpeedSlow, 2),
+                new DangerBuffTypes(BuffType.Blind, 4),
+                new DangerBuffTypes(BuffType.Charm, 5),
+                new DangerBuffTypes(BuffType.CombatDehancer, 1),
+                new DangerBuffTypes(BuffType.Damage, 1),
+                new DangerBuffTypes(BuffType.Disarm, 1),
+                new DangerBuffTypes(BuffType.Fear, 5),
+                new DangerBuffTypes(BuffType.Flee, 3),
+                new DangerBuffTypes(BuffType.Grounded, 3),
+                new DangerBuffTypes(BuffType.Knockback, 4),
+                new DangerBuffTypes(BuffType.Knockup, 4),
+                new DangerBuffTypes(BuffType.NearSight, 2),
+                new DangerBuffTypes(BuffType.Poison, 1),
+                new DangerBuffTypes(BuffType.Polymorph, 5),
+                new DangerBuffTypes(BuffType.Slow, 2),
+                new DangerBuffTypes(BuffType.Shred, 1),
+                new DangerBuffTypes(BuffType.Silence, 3),
+                new DangerBuffTypes(BuffType.Snare, 5),
+                new DangerBuffTypes(BuffType.Suppression, 5),
+                new DangerBuffTypes(BuffType.Stun, 5),
+                new DangerBuffTypes(BuffType.Taunt, 5),
+            };
+
+    }
+
+    public class DangerBuffTypes
+    {
+        public DangerBuffTypes(BuffType b, int d)
+        {
+            this.BuffType = b;
+            this.DangerLevel = d;
+        }
+        public BuffType BuffType;
+        public int DangerLevel = 1;
     }
 }

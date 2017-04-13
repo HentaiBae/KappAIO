@@ -176,7 +176,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
             time = time.Equals(-1) ? Math.Max(this.TravelTime(target), 0) : time;
             var pred = target.PrediectPosition((int)time);
-            return this.WillHit(pred.To2D()) && WillHit(target.ServerPosition.To2D());
+            return /*this.WillHit(pred.To2D()) &&*/ WillHit(target.ServerPosition.To2D());
         }
         public bool WillHit(Vector2 target)
         {

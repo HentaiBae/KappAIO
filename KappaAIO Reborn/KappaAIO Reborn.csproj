@@ -101,6 +101,7 @@
     <Compile Include="Plugins\Champions\Fiora\Fiora.cs" />
     <Compile Include="Plugins\Champions\Fiora\FioraStuff.cs" />
     <Compile Include="Plugins\Champions\Jhin\JhinStuff.cs" />
+    <Compile Include="Plugins\Utility\Activator\Cleanse.cs" />
     <Compile Include="Plugins\Utility\Activator\ItemActiv.cs" />
     <Compile Include="Plugins\Utility\Activator\ItemInstance.cs" />
     <Compile Include="Plugins\Utility\Evade.cs" />

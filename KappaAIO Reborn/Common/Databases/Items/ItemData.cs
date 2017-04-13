@@ -13,7 +13,7 @@ namespace KappAIO_Reborn.Common.Databases.Items
 
     public enum TargetingType
     {
-        All, AllAllies, AllyHeros, AllyMinions, AllEnemies, EnemyHeros, EnemyMinions
+        All, AllAllies, AllyHeros, AllyMinions, AllEnemies, EnemyHeros, EnemyMinions, MyHero
     }
 
     public enum CastTime
