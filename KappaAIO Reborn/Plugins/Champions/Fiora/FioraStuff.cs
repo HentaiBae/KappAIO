@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
+using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Utils;
@@ -274,8 +275,17 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     {
                         #region skillshot
                         var skillshot = BlockSpell.DetectedData as DetectedSkillshotData;
-                        if (skillshot != null)
+                        if (skillshot != null && Config.BlockSkillshots)
                         {
+                            var dashInfo = Player.Instance.GetDashInfo();
+                            if (dashInfo != null)
+                            {
+                                var travelTime = (Player.Instance.ServerPosition.Distance(dashInfo.EndPos) / Q1.Speed) * 1000f;
+                                var predPos = Player.Instance.PrediectPosition(travelTime);
+                                var skillshotpred = Player.Instance.PrediectPosition(skillshot.TravelTime(predPos.To2D()));
+                                if(predPos.Distance(skillshotpred) > Player.Instance.BoundingRadius)
+                                    continue; // skip if dashing outside of skillshot
+                            }
                             if (skillshot.Ended || !SkillshotDetector.SkillshotsDetected.Contains(skillshot))
                             {
                                 DetectedSpells.Remove(BlockSpell);
@@ -294,7 +304,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                         #region buff
                         var buff = BlockSpell.DetectedData as DetectedDangerBuffData;
-                        if (buff != null)
+                        if (buff != null && Config.BlockBuff)
                         {
                             if (buff.Ended || !DangerBuffDetector.DangerBuffsDetected.Contains(buff))
                             {
@@ -314,7 +324,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                         #region targted
                         var targted = BlockSpell.DetectedData as DetectedTargetedSpellData;
-                        if (targted != null)
+                        if (targted != null && Config.BlockTargeted)
                         {
                             if (targted.Ended || !TargetedSpellDetector.DetectedTargetedSpells.Contains(targted))
                             {
@@ -334,7 +344,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                         #region autoattack
                         var autoattack = BlockSpell.DetectedData as DetectedEmpoweredAttackData;
-                        if (autoattack != null)
+                        if (autoattack != null && Config.BlockAA)
                         {
                             if (autoattack.Ended || !EmpoweredAttackDetector.DetectedEmpoweredAttacks.Contains(autoattack))
                             {
@@ -354,7 +364,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                         #region special
                         var special = BlockSpell.DetectedData as DetectedSpecialSpellData;
-                        if (special != null)
+                        if (special != null && Config.BlockSpecial)
                         {
                             if (special.Ended || !SpecialSpellDetector.DetectedSpecialSpells.Contains(special))
                             {
@@ -384,9 +394,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 
                 var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
-                if (spell == null || !spell.Enabled)
+                if (spell == null)
                 {
-                    Logger.Warn($"{spellname} Not Blocked");
+                    Logger.Warn($"{spellname} Not valid Spell");
+                    return;
+                }
+                
+                if (!spell.Enabled && (!Config.BlockExecute || Player.Instance.PredictHealth(args.TicksLeft) > args.GetSpellDamage(Player.Instance)))
+                {
+                    Logger.Warn($"{spellname} Not Enabled from Menu");
                     return;
                 }
 
@@ -420,11 +436,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
 
-                var kill = args.Caster.GetAutoAttackDamage(args.Target, true) >= args.Target.Health;
-
-                if ((spell == null || !spell.Enabled) && !kill)
+                if (spell == null)
                 {
-                    Logger.Warn($"{spellname} Not Blocked");
+                    Logger.Warn($"{spellname} Not valid Spell");
+                    return;
+                }
+
+                if (!spell.Enabled && (!Config.BlockExecute || Player.Instance.PredictHealth(args.TicksLeft) > args.GetSpellDamage(Player.Instance)))
+                {
+                    Logger.Warn($"{spellname} Not Enabled from Menu");
                     return;
                 }
 
@@ -449,12 +469,16 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                 var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
-
-                var kill = args.Caster.GetSpellDamage(args.Target, args.Data.Slot) >= args.Target.Health;
-
-                if ((spell == null || !spell.Enabled) && !kill)
+                
+                if (spell == null)
                 {
-                    Logger.Warn($"{spellname} Not Blocked");
+                    Logger.Warn($"{spellname} Not valid Spell");
+                    return;
+                }
+
+                if (!spell.Enabled && (!Config.BlockExecute || Player.Instance.PredictHealth(args.TicksLeft) > args.GetSpellDamage(Player.Instance)))
+                {
+                    Logger.Warn($"{spellname} Not Enabled from Menu");
                     return;
                 }
 
@@ -482,11 +506,17 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
 
-                var kill = args.Caster.GetSpellDamage(args.Target, args.Data.slot) >= args.Target.Health;
+                //var kill = args.Caster.GetSpellDamage(args.Target, args.Data.slot) >= args.Target.Health;
 
-                if ((spell == null || !spell.Enabled) && !kill)
+                if (spell == null)
                 {
-                    Logger.Warn($"{spellname} Not Blocked");
+                    Logger.Warn($"{spellname} Not valid Spell");
+                    return;
+                }
+
+                if (!spell.Enabled && (!Config.BlockExecute || Player.Instance.PredictHealth(args.TicksLeft) > args.GetSpellDamage(Player.Instance)))
+                {
+                    Logger.Warn($"{spellname} Not Enabled from Menu");
                     return;
                 }
 
@@ -535,19 +565,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
 
-                bool kill = false;
-                var hero = args.Caster as AIHeroClient;
-                if (hero != null)
+                if (spell == null)
                 {
-                    kill = hero.GetSpellDamage(Player.Instance, args.Data.Slots[0]) >= Player.Instance.Health;
+                    Logger.Warn($"{spellname} Not valid Spell");
+                    return;
                 }
 
-                if (spell == null)
-                    return;
-
-                if (!spell.Enabled && !kill)
+                if (!spell.Enabled && (!Config.BlockExecute || Player.Instance.PredictHealth(args.TravelTime(Player.Instance)) > args.GetSpellDamage(Player.Instance)))
                 {
-                    Logger.Warn($"{spellname} Not Blocked");
+                    Logger.Warn($"{spellname} Not Enabled from Menu");
                     return;
                 }
 
@@ -625,7 +651,10 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         public static class Config
         {
             public static Menu ComboMenu, spellblock, ksMenu, LMenu, JMenu, MiscMenu, HMenu;
-            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, R, spellblockEnable, Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR, audio, ETurrets, qharass, qhturret;
+            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, R, spellblockEnable,
+                Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR, audio, ETurrets, qharass, qhturret, EWard,
+                skillshotBlock, AABlock, buffBlock, targetedBlock, specialBlock,
+                executeBlock;
             private static Slider Ejungmana, ELaneMana, qHarassMana, qHarassHP;
             private static KeyBind autoHarass;
 
@@ -650,6 +679,13 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public static bool QHarass => qharass.CurrentValue && Player.Instance.HealthPercent > qHarassHP.CurrentValue && Player.Instance.ManaPercent > qHarassMana.CurrentValue;
             public static bool QHarassTurrets => qhturret.CurrentValue;
             public static bool AutoHarass => autoHarass.CurrentValue;
+            public static bool EWards => EWard.CurrentValue;
+            public static bool BlockSkillshots => skillshotBlock.CurrentValue;
+            public static bool BlockAA => AABlock.CurrentValue;
+            public static bool BlockBuff => buffBlock.CurrentValue;
+            public static bool BlockTargeted => targetedBlock.CurrentValue;
+            public static bool BlockSpecial => specialBlock.CurrentValue;
+            public static bool BlockExecute => executeBlock.CurrentValue;
 
             public static void Init()
             {
@@ -686,11 +722,13 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
                 spellblock = Program.GlobalMenu.AddSubMenu("Fiora: SpellBlock");
                 spellblockEnable = spellblock.CreateCheckBox("enable", "Enable SpellBlock");
+                executeBlock = spellblock.CreateCheckBox("executeBlock", "Block Any Spell if it will Kill Player");
 
                 var validAttacks = EmpowerdAttackDatabase.Current.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero)));
                 if (validAttacks.Any())
                 {
                     spellblock.AddGroupLabel("Empowered Attacks");
+                    AABlock = spellblock.CreateCheckBox("BlockAA", "Block Empowered Attacks");
                     foreach (var s in validAttacks.OrderBy(s => s.Hero))
                     {
                         var spellname = s.MenuItemName;
@@ -710,6 +748,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("Danger Buffs");
+                    buffBlock = spellblock.CreateCheckBox("buffBlock", "Block Danger Buffs");
 
                     foreach (var s in validBuffs.OrderBy(s => s.Hero))
                     {
@@ -736,6 +775,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("Targeted Spells");
+                    targetedBlock = spellblock.CreateCheckBox("targetedBlock", "Block Targeted Spells");
                     foreach (var s in validTargeted.OrderBy(s => s.hero))
                     {
                         var spellname = s.MenuItemName;
@@ -755,7 +795,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 if (specialSpells.Any())
                 {
                     spellblock.AddSeparator(5);
-                    spellblock.AddGroupLabel("SpecialSpells");
+                    spellblock.AddGroupLabel("Special Spells");
+                    specialBlock = spellblock.CreateCheckBox("specialBlock", "Block Special Spells");
                     foreach (var s in specialSpells)
                     {
                         var display = s.MenuItemName;
@@ -777,6 +818,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("SkillShots");
+                    skillshotBlock = spellblock.CreateCheckBox("skillshotBlock", "Block SkillShots");
 
                     foreach (var s in validskillshots)
                     {
@@ -799,6 +841,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 LMenu = Program.GlobalMenu.AddSubMenu("Fiora: LaneClear");
                 Eunk = LMenu.CreateCheckBox("Eunk", "Use E On Unkillable Minions");
                 ETurrets = LMenu.CreateCheckBox("ETurrets", "Use E Reset On Structures");
+                EWard = LMenu.CreateCheckBox("EWard", "Use E Reset On Wards");
                 ELaneMana = LMenu.CreateSlider("ELaneMana", "E Mana Limit", 60);
 
                 #endregion laneclear

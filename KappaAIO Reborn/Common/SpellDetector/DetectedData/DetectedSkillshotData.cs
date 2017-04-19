@@ -35,6 +35,14 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             }
         }
 
+        public float GetSpellDamage(Obj_AI_Base target)
+        {
+            if (!target.IsValidTarget() || !this.Caster.IsChampion())
+                return 0;
+
+            return (this.Caster as AIHeroClient).GetSpellDamage(target, this.Data.Slots[0]);
+        }
+
         public Type? _type;
         public Type SkillshotType
         {
@@ -175,8 +183,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 return false;
 
             time = time.Equals(-1) ? Math.Max(this.TravelTime(target), 0) : time;
-            var pred = target.PrediectPosition((int)time);
-            return /*this.WillHit(pred.To2D()) &&*/ WillHit(target.ServerPosition.To2D());
+            var pred = target.PrediectPosition(Game.Ping);
+            return this.WillHit(pred.To2D()) && WillHit(target.ServerPosition.To2D());
         }
         public bool WillHit(Vector2 target)
         {

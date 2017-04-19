@@ -162,7 +162,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
             var jungle = Orbwalker.ModeIsActive(Orbwalker.ActiveModes.JungleClear);
             var minion = target as Obj_AI_Minion;
-            if (jungle && minion != null && minion.BaseSkinName.StartsWith("SRU_") && minion.IsMonster)
+            if (jungle && minion != null && minion.BaseSkinName.ToLower().StartsWith("sru_") && minion.IsMonster)
             {
                 if (Config.Ejungle && E.IsReady())
                 {
@@ -172,9 +172,10 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             }
 
             var lane = Orbwalker.ModeIsActive(Orbwalker.ActiveModes.LaneClear);
-            if (lane && Config.EResetTurrets && E.IsReady() && target.IsStructure())
+            if (lane && E.IsReady())
             {
-                E.Cast();
+                if ((Config.EResetTurrets && target.IsStructure()) || (Config.EWards && target.IsWard()))
+                    E.Cast();
                 return;
             }
 

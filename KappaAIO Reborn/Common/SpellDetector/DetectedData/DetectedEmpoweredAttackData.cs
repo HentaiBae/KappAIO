@@ -21,6 +21,11 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public float TicksPassed => this.StartTick - Core.GameTickCount;
         public bool Ended => this.TicksLeft <= 0 || this.TicksPassed > this.AttackCastDelay + Game.Ping && this.Caster.IsMelee;
 
+        public float GetSpellDamage(Obj_AI_Base target)
+        {
+            return !target.IsValidTarget() ? 0 : this.Caster.GetAutoAttackDamage(target, true);
+        }
+
         public bool WillHit(Obj_AI_Base target)
         {
             if (target == null)

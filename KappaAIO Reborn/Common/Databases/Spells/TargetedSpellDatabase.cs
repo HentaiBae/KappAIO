@@ -198,7 +198,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      hero = Champion.Irelia,
                      slot = SpellSlot.E,
                      DangerLevel = 3,
-                     CastDelay = 0,
+                     CastDelay = 200,
                      FastEvade = true
                  },
               new TargetedSpellData
@@ -340,7 +340,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      hero = Champion.Lulu,
                      slot = SpellSlot.E,
                      DangerLevel = 1,
-                     CastDelay = 0,
+                     CastDelay = 100,
                  },
               new TargetedSpellData
                  {
@@ -415,7 +415,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      hero = Champion.Mordekaiser,
                      slot = SpellSlot.R,
                      DangerLevel = 5,
-                     CastDelay = 0,
+                     CastDelay = 100,
                      FastEvade = true
                  },
               new TargetedSpellData

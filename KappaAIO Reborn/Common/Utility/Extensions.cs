@@ -584,11 +584,11 @@ namespace KappAIO_Reborn.Common.Utility
             return target.BaseSkinName;
         }
 
-        public static float PredictHealth(this Obj_AI_Base target, int Time = 250)
+        public static float PredictHealth(this Obj_AI_Base target, float Time = 250f)
         {
-            if (Time == 250)
+            if (Time == 250f)
                 Time += Game.Ping;
-            return Prediction.Health.GetPrediction(target, Time);
+            return Prediction.Health.GetPrediction(target, (int)Time);
         }
 
         public static string GetChampionName(this AIHeroClient target)

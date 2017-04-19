@@ -19,6 +19,11 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public bool Ended => Core.GameTickCount - this.EndTick > 0;
         public bool IsEnemy => this.Caster != null && this.Caster.IsEnemy;
 
+        public float GetSpellDamage(Obj_AI_Base target)
+        {
+            return !target.IsValidTarget() ? 0 : this.Caster.GetSpellDamage(target, this.Data.Slot);
+        }
+
         public bool WillHit(Obj_AI_Base target)
         {
             return target.Distance(this.Position) <= this.Data.Range || this.Target != null && this.Target.IdEquals(target);
