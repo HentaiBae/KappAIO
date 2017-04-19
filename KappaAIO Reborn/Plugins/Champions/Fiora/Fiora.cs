@@ -123,20 +123,27 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            foreach (var vitals in EntityManager.Heroes.Enemies.Where(e => VitalManager.HasFioraPassiveBuff(e) && e.IsValidTarget()).Select(VitalManager.Vitals))
+            if (Config.DrawVitals)
             {
-                foreach (var v in vitals.Where(v => v.ValidVital))
+                foreach (var vitals in EntityManager.Heroes.Enemies.Where(e => VitalManager.HasFioraPassiveBuff(e) && e.IsValidTarget()).Select(VitalManager.Vitals))
                 {
-                    v.QPredVitalPos.DrawCircle(100, Color.AliceBlue);
-                    v.Vitalsector.Draw(System.Drawing.Color.AliceBlue, 2);
+                    foreach (var v in vitals.Where(v => v.ValidVital))
+                    {
+                        //v.QPredVitalPos.DrawCircle(100, Color.AliceBlue);
+                        v.Vitalsector.Draw(System.Drawing.Color.AliceBlue, 2);
+                    }
                 }
             }
 
-            Q1.DrawRange(System.Drawing.Color.AliceBlue);
+            if(Config.DrawQ)
+                Q1.DrawRange(System.Drawing.Color.AliceBlue);
 
-            foreach (var e in EntityManager.Heroes.Enemies.Where(e => e.IsValidTarget()))
+            if (Config.DrawDamage)
             {
-                e.DrawDamage(SpellManager.ComboDamage(e));
+                foreach (var e in EntityManager.Heroes.Enemies.Where(e => e.IsValidTarget()))
+                {
+                    e.DrawDamage(SpellManager.ComboDamage(e));
+                }
             }
         }
 

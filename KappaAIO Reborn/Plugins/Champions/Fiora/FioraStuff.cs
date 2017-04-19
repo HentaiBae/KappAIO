@@ -650,7 +650,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
         public static class Config
         {
-            public static Menu ComboMenu, spellblock, ksMenu, LMenu, JMenu, MiscMenu, HMenu;
+            public static Menu ComboMenu, spellblock, ksMenu, LMenu, JMenu, MiscMenu, HMenu, DMenu;
 
             public static bool validVitals => ComboMenu.CheckBoxValue("QValidvitals");
             public static bool useQShortVital => ComboMenu.CheckBoxValue("QShortvital");
@@ -686,6 +686,10 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public static bool useWks => ksMenu.CheckBoxValue("Wks");
 
             public static bool PlayAudio => MiscMenu.CheckBoxValue("audio");
+
+            public static bool DrawQ => DMenu.CheckBoxValue("DrawQ");
+            public static bool DrawVitals => DMenu.CheckBoxValue("DrawVitals");
+            public static bool DrawDamage => DMenu.CheckBoxValue("DrawDamage");
 
             public static void Init()
             {
@@ -882,6 +886,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 }
 
                 #endregion Misc
+
+                #region Drawing
+
+                DMenu = Program.GlobalMenu.AddSubMenu("Fiora: Drawing");
+                DMenu.CreateCheckBox("DrawQ", "Draw Q Range");
+                DMenu.CreateCheckBox("DrawVitals", "Draw Vitals");
+                DMenu.CreateCheckBox("DrawDamage", "Draw Damage On Enemies");
+
+                #endregion Drawing
             }
         }
     }
