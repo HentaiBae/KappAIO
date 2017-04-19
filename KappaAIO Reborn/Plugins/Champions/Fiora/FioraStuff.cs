@@ -651,41 +651,41 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
         public static class Config
         {
             public static Menu ComboMenu, spellblock, ksMenu, LMenu, JMenu, MiscMenu, HMenu;
-            private static CheckBox QShortvital, QLongvital, QValidvitals, orbVital, EReset, R, spellblockEnable,
-                Qks, Wks, Eunk, Ejung, orbRvit, aaVitl, focusR, audio, ETurrets, qharass, qhturret, EWard,
-                skillshotBlock, AABlock, buffBlock, targetedBlock, specialBlock,
-                executeBlock;
-            private static Slider Ejungmana, ELaneMana, qHarassMana, qHarassHP;
-            private static KeyBind autoHarass;
 
-            public static bool validVitals => QValidvitals.CurrentValue;
-            public static bool useQShortVital => QShortvital.CurrentValue;
-            public static bool useQLongvital => QLongvital.CurrentValue;
-            public static bool orbwalk => orbVital.CurrentValue;
-            public static bool useEReset => EReset.CurrentValue;
-            public static bool useR => R.CurrentValue;
-            public static bool evadeEnabled => spellblockEnable.CurrentValue;
-            public static bool useQks => Qks.CurrentValue;
-            public static bool useWks => Wks.CurrentValue;
-            public static bool useEUnk => CanLaneCelarE && Eunk.CurrentValue;
-            public static bool orbUltVital => orbRvit.CurrentValue;
-            public static bool orbAAVital => aaVitl.CurrentValue;
-            public static bool focusRTarget => focusR.CurrentValue;
-            public static bool Ejungle => Ejung.CurrentValue && EjungleMana;
-            public static bool EjungleMana => Player.Instance.ManaPercent > Ejungmana.CurrentValue;
-            public static bool PlayAudio => audio.CurrentValue;
-            public static bool EResetTurrets => CanLaneCelarE && ETurrets.CurrentValue;
-            public static bool CanLaneCelarE => Player.Instance.ManaPercent > ELaneMana.CurrentValue;
-            public static bool QHarass => qharass.CurrentValue && Player.Instance.HealthPercent > qHarassHP.CurrentValue && Player.Instance.ManaPercent > qHarassMana.CurrentValue;
-            public static bool QHarassTurrets => qhturret.CurrentValue;
-            public static bool AutoHarass => autoHarass.CurrentValue;
-            public static bool EWards => EWard.CurrentValue;
-            public static bool BlockSkillshots => skillshotBlock.CurrentValue;
-            public static bool BlockAA => AABlock.CurrentValue;
-            public static bool BlockBuff => buffBlock.CurrentValue;
-            public static bool BlockTargeted => targetedBlock.CurrentValue;
-            public static bool BlockSpecial => specialBlock.CurrentValue;
-            public static bool BlockExecute => executeBlock.CurrentValue;
+            public static bool validVitals => ComboMenu.CheckBoxValue("QValidvitals");
+            public static bool useQShortVital => ComboMenu.CheckBoxValue("QShortvital");
+            public static bool useQLongvital => ComboMenu.CheckBoxValue("QLongvital");
+            public static bool orbwalk => ComboMenu.CheckBoxValue("orbVital");
+            public static bool useEReset => ComboMenu.CheckBoxValue("EReset");
+            public static bool useR => ComboMenu.CheckBoxValue("R");
+            public static bool orbUltVital => ComboMenu.CheckBoxValue("orbRvit");
+            public static bool orbAAVital => ComboMenu.CheckBoxValue("aaVitl");
+            public static bool focusRTarget => ComboMenu.CheckBoxValue("focusR");
+
+            public static bool AutoHarass => HMenu.KeyBindValue("autoHarass");
+            public static bool QHarass => HMenu.CheckBoxValue("qharass") && Player.Instance.HealthPercent > HMenu.SliderValue("qHarassHP") && Player.Instance.ManaPercent > HMenu.SliderValue("qHarassMana");
+            public static bool QHarassTurrets => HMenu.CheckBoxValue("qhturret");
+
+            public static bool evadeEnabled => spellblock.CheckBoxValue("enable");
+            public static bool BlockExecute => spellblock.CheckBoxValue("executeBlock");
+            public static bool BlockAA => spellblock.CheckBoxValue("AABlock");
+            public static bool BlockBuff => spellblock.CheckBoxValue("buffBlock");
+            public static bool BlockTargeted => spellblock.CheckBoxValue("targetedBlock");
+            public static bool BlockSkillshots => spellblock.CheckBoxValue("skillshotBlock");
+            public static bool BlockSpecial => spellblock.CheckBoxValue("specialBlock");
+
+            public static bool useEUnk => CanLaneCelarE && LMenu.CheckBoxValue("Eunk");
+            public static bool EResetTurrets => CanLaneCelarE && LMenu.CheckBoxValue("ETurrets");
+            public static bool EWards => LMenu.CheckBoxValue("EWard");
+            public static bool CanLaneCelarE => Player.Instance.ManaPercent > LMenu.SliderValue("ELaneMana");
+
+            public static bool Ejungle => JMenu.CheckBoxValue("Ejung") && EjungleMana;
+            public static bool EjungleMana => Player.Instance.ManaPercent > JMenu.SliderValue("Ejungmana");
+
+            public static bool useQks => ksMenu.CheckBoxValue("Qks");
+            public static bool useWks => ksMenu.CheckBoxValue("Wks");
+
+            public static bool PlayAudio => MiscMenu.CheckBoxValue("audio");
 
             public static void Init()
             {
@@ -694,41 +694,42 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 ComboMenu = Program.GlobalMenu.AddSubMenu("Fiora: Combo");
 
                 ComboMenu.AddGroupLabel("Vital Settings");
-                QValidvitals = ComboMenu.CreateCheckBox("QValidvitals", "Q Valid Vitals Only");
-                QShortvital = ComboMenu.CreateCheckBox("QShortvital", "Q Vital in Range");
-                QLongvital = ComboMenu.CreateCheckBox("QLongvital", "Q Vitals Long Range");
-                orbVital = ComboMenu.CreateCheckBox("orbVital", "Orbwalk To Vitals");
-                orbRvit = ComboMenu.CreateCheckBox("orbUltVital", "Orbwalk to R Vitals Only", false);
-                aaVitl = ComboMenu.CreateCheckBox("aaVitl", "Orbwalk to Vitals in AA Range Only");
-                focusR = ComboMenu.CreateCheckBox("focusR", "Force Focus Target with R Mark");
+                ComboMenu.CreateCheckBox("QValidvitals", "Q Valid Vitals Only");
+                ComboMenu.CreateCheckBox("QShortvital", "Q Vital in Range");
+                ComboMenu.CreateCheckBox("QLongvital", "Q Vitals Long Range");
+                ComboMenu.CreateCheckBox("orbVital", "Orbwalk To Vitals");
+                ComboMenu.CreateCheckBox("orbUltVital", "Orbwalk to R Vitals Only", false);
+                ComboMenu.CreateCheckBox("aaVitl", "Orbwalk to Vitals in AA Range Only");
+                ComboMenu.CreateCheckBox("focusR", "Force Focus Target with R Mark");
                 ComboMenu.AddGroupLabel("Extra Settings");
-                EReset = ComboMenu.CreateCheckBox("EReset", "E Reset Auto Attack");
-                R = ComboMenu.CreateCheckBox("R", "Auto use R");
+                ComboMenu.CreateCheckBox("EReset", "E Reset Auto Attack");
+                ComboMenu.CreateCheckBox("R", "Auto use R");
 
                 #endregion combo
 
                 #region Harass
 
                 HMenu = Program.GlobalMenu.AddSubMenu("Fiora: Harass");
-                autoHarass = HMenu.CreateKeyBind("autoHarass", "Auto Harass", false, KeyBind.BindTypes.PressToggle);
-                qharass = HMenu.CreateCheckBox("qharass", "Q Vitals");
-                qhturret = HMenu.CreateCheckBox("qhturret", "Dont Q Dive Enemy Turret");
-                qHarassHP = HMenu.CreateSlider("qHarassHP", "Q Harass Health limit", 40);
-                qHarassMana = HMenu.CreateSlider("qHarassMana", "Q Harass Mana limit", 60);
+                HMenu.CreateKeyBind("autoHarass", "Auto Harass", false, KeyBind.BindTypes.PressToggle);
+                HMenu.CreateCheckBox("qharass", "Q Vitals");
+                HMenu.CreateCheckBox("qhturret", "Dont Q Dive Enemy Turret");
+                HMenu.CreateSlider("qHarassHP", "Q Harass Health limit", 40);
+                HMenu.CreateSlider("qHarassMana", "Q Harass Mana limit", 60);
 
                 #endregion
 
                 #region Evade
 
                 spellblock = Program.GlobalMenu.AddSubMenu("Fiora: SpellBlock");
-                spellblockEnable = spellblock.CreateCheckBox("enable", "Enable SpellBlock");
-                executeBlock = spellblock.CreateCheckBox("executeBlock", "Block Any Spell if it will Kill Player");
+                spellblock.CreateCheckBox("enable", "Enable SpellBlock");
+                spellblock.CreateCheckBox("executeBlock", "Block Any Spell if it will Kill Player");
 
+                #region AutoAttacks
                 var validAttacks = EmpowerdAttackDatabase.Current.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero)));
                 if (validAttacks.Any())
                 {
                     spellblock.AddGroupLabel("Empowered Attacks");
-                    AABlock = spellblock.CreateCheckBox("BlockAA", "Block Empowered Attacks");
+                    spellblock.CreateCheckBox("AABlock", "Block Empowered Attacks");
                     foreach (var s in validAttacks.OrderBy(s => s.Hero))
                     {
                         var spellname = s.MenuItemName;
@@ -742,13 +743,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                         }
                     }
                 }
+                #endregion AutoAttacks
 
+                #region buffs
                 var validBuffs = DangerBuffDataDatabase.Current.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero)));
                 if (validBuffs.Any())
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("Danger Buffs");
-                    buffBlock = spellblock.CreateCheckBox("buffBlock", "Block Danger Buffs");
+                    spellblock.CreateCheckBox("buffBlock", "Block Danger Buffs");
 
                     foreach (var s in validBuffs.OrderBy(s => s.Hero))
                     {
@@ -768,14 +771,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                         }
                     }
                 }
+                #endregion buffs
 
-
+                #region Targeted
                 var validTargeted = TargetedSpellDatabase.Current.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.hero)));
                 if (validTargeted.Any())
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("Targeted Spells");
-                    targetedBlock = spellblock.CreateCheckBox("targetedBlock", "Block Targeted Spells");
+                    spellblock.CreateCheckBox("targetedBlock", "Block Targeted Spells");
                     foreach (var s in validTargeted.OrderBy(s => s.hero))
                     {
                         var spellname = s.MenuItemName;
@@ -790,13 +794,15 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                         }
                     }
                 }
+                #endregion Targeted
 
+                #region Speical spells
                 var specialSpells = SpecialSpellsDatabase.Current.FindAll(s => EntityManager.Heroes.Enemies.Any(h => s.Hero.Equals(h.Hero)));
                 if (specialSpells.Any())
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("Special Spells");
-                    specialBlock = spellblock.CreateCheckBox("specialBlock", "Block Special Spells");
+                    spellblock.CreateCheckBox("specialBlock", "Block Special Spells");
                     foreach (var s in specialSpells)
                     {
                         var display = s.MenuItemName;
@@ -810,7 +816,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                         }
                     }
                 }
+                #endregion Speical spells
 
+                #region SkillShots
                 var validskillshots =
                     SkillshotDatabase.Current.Where(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type))
                     && EntityManager.Heroes.Enemies.Any(h => s.IsCasterName(Champion.Unknown) || s.IsCasterName(h.Hero))).OrderBy(s => s.CasterNames[0]);
@@ -818,7 +826,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 {
                     spellblock.AddSeparator(5);
                     spellblock.AddGroupLabel("SkillShots");
-                    skillshotBlock = spellblock.CreateCheckBox("skillshotBlock", "Block SkillShots");
+                    spellblock.CreateCheckBox("skillshotBlock", "Block SkillShots");
 
                     foreach (var s in validskillshots)
                     {
@@ -833,39 +841,40 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                         }
                     }
                 }
+                #endregion SkillShots
 
                 #endregion evade
 
                 #region laneclear
 
                 LMenu = Program.GlobalMenu.AddSubMenu("Fiora: LaneClear");
-                Eunk = LMenu.CreateCheckBox("Eunk", "Use E On Unkillable Minions");
-                ETurrets = LMenu.CreateCheckBox("ETurrets", "Use E Reset On Structures");
-                EWard = LMenu.CreateCheckBox("EWard", "Use E Reset On Wards");
-                ELaneMana = LMenu.CreateSlider("ELaneMana", "E Mana Limit", 60);
+                LMenu.CreateCheckBox("Eunk", "Use E On Unkillable Minions");
+                LMenu.CreateCheckBox("ETurrets", "Use E Reset On Structures");
+                LMenu.CreateCheckBox("EWard", "Use E Reset On Wards");
+                LMenu.CreateSlider("ELaneMana", "E Mana Limit", 60);
 
                 #endregion laneclear
 
                 #region jungleclear
 
                 JMenu = Program.GlobalMenu.AddSubMenu("Fiora: JungleClear");
-                Ejung = JMenu.CreateCheckBox("Ejung", "Use E");
-                Ejungmana = JMenu.CreateSlider("Ejungmana", "E Mana Limit", 60);
+                JMenu.CreateCheckBox("Ejung", "Use E");
+                JMenu.CreateSlider("Ejungmana", "E Mana Limit", 60);
 
                 #endregion
 
                 #region Killsteal
 
                 ksMenu = Program.GlobalMenu.AddSubMenu("Fiora: Killsteal");
-                Qks = ksMenu.CreateCheckBox("Qks", "Use Q");
-                Wks = ksMenu.CreateCheckBox("Wks", "Use W");
+                ksMenu.CreateCheckBox("Qks", "Use Q");
+                ksMenu.CreateCheckBox("Wks", "Use W");
 
                 #endregion Killsteal
 
                 #region Misc
 
                 MiscMenu = Program.GlobalMenu.AddSubMenu("Fiora: Misc");
-                audio = MiscMenu.CreateCheckBox("audio", "Play Audio");
+                MiscMenu.CreateCheckBox("audio", "Play Audio");
                 MiscMenu.AddGroupLabel("R Block list");
                 foreach (var e in EntityManager.Heroes.Enemies)
                 {
