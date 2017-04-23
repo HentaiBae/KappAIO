@@ -658,7 +658,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public static bool orbwalk => ComboMenu.CheckBoxValue("orbVital");
             public static bool useEReset => ComboMenu.CheckBoxValue("EReset");
             public static bool useR => ComboMenu.CheckBoxValue("R");
-            public static bool orbUltVital => ComboMenu.CheckBoxValue("orbRvit");
+            public static bool orbUltVital => ComboMenu.CheckBoxValue("orbUltVital");
             public static bool orbAAVital => ComboMenu.CheckBoxValue("aaVitl");
             public static bool focusRTarget => ComboMenu.CheckBoxValue("focusR");
 

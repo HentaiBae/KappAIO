@@ -35,7 +35,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public float ExtraRange;
         public float Angle;
         public float Width;
-        public float Speed;
+        public float Speed = int.MaxValue;
         public float CastDelay;
         public bool IsMoving;
         public bool DecaySpeedWithLessRange;
