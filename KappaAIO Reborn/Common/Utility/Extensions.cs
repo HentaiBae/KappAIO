@@ -609,7 +609,7 @@ namespace KappAIO_Reborn.Common.Utility
         public static DangerLevel[] DangerLevels = {DangerLevel.Low, DangerLevel.Medium, DangerLevel.High, };
         public static List<DangerBuffTypes> CCBuffTypes = new List<DangerBuffTypes>
             {
-                new DangerBuffTypes(BuffType.AttackSpeedSlow, 2),
+                //new DangerBuffTypes(BuffType.AttackSpeedSlow, 2),
                 new DangerBuffTypes(BuffType.Blind, 4),
                 new DangerBuffTypes(BuffType.Charm, 5),
                 new DangerBuffTypes(BuffType.CombatDehancer, 1),
@@ -617,7 +617,7 @@ namespace KappAIO_Reborn.Common.Utility
                 new DangerBuffTypes(BuffType.Disarm, 1),
                 new DangerBuffTypes(BuffType.Fear, 5),
                 new DangerBuffTypes(BuffType.Flee, 3),
-                new DangerBuffTypes(BuffType.Grounded, 3),
+                //new DangerBuffTypes(BuffType.Grounded, 3),
                 new DangerBuffTypes(BuffType.Knockback, 4),
                 new DangerBuffTypes(BuffType.Knockup, 4),
                 new DangerBuffTypes(BuffType.NearSight, 2),
