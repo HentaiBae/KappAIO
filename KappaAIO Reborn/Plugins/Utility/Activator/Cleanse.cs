@@ -5,6 +5,7 @@ using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Menu;
 using KappAIO_Reborn.Common.Databases.Items;
+using KappAIO_Reborn.Common.Databases.SpellData;
 using KappAIO_Reborn.Common.Utility;
 using Extensions = KappAIO_Reborn.Common.Utility.Extensions;
 using ItemData = KappAIO_Reborn.Common.Databases.Items.ItemData;
@@ -13,13 +14,14 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
 {
     public static class Cleanse
     {
+        public static bool Enabled => menu.CheckBoxValue("Enable");
+        public static bool Allies => menu.CheckBoxValue("allies");
         public static int minDelay => menu.SliderValue("minDelay");
         public static int maxDelay => menu.SliderValue("maxDelay");
-        public static bool Allies => menu.CheckBoxValue("allies");
         public static int Health => menu.SliderValue("health");
+        public static float lastQssAttempt;
         private static Menu menu;
-
-        public static bool Enabled => menu.CheckBoxValue("Enable");
+        
         public static List<cleanseInstance> instances = new List<cleanseInstance>();
         
         public static void Init(params ItemData[] items)
@@ -59,29 +61,17 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
 
             return menu.CheckBoxValue(buff);
         }
+
+        public static bool HasBuffType(this Obj_AI_Base target, BuffType buff)
+        {
+            return BuffIsEnabled(buff) && target.HasBuffOfType(buff);
+        }
     }
 
     public class cleanseInstance
     {
         private Menu iMenu;
         private ItemData Item;
-        private class gainedBuff
-        {
-            public AIHeroClient owner;
-            public BuffInstance buff;
-            public float StartTick = Core.GameTickCount;
-            public float Duration => (this.buff.EndTime - Game.Time) * 1000f;
-            public float PassedTicks => Core.GameTickCount - this.StartTick;
-            public bool ended => this.buff == null || Game.Time > this.buff.EndTime || !this.buff.IsValid || !this.buff.IsActive;
-
-            public gainedBuff(AIHeroClient o, BuffInstance b)
-            {
-                this.owner = o;
-                this.buff = b;
-            }
-        }
-
-        private List<gainedBuff> gainedBuffs = new List<gainedBuff>();
 
         public cleanseInstance(Menu menu, ItemData item)
         {
@@ -102,21 +92,24 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
         {
             if(!sender.IsChampion())
                 return;
+
             currentDelay = rnd.Next(Cleanse.minDelay, Cleanse.maxDelay);
-            this.gainedBuffs.RemoveAll(b => b.owner.IdEquals(sender) && b.buff.Equals(args.Buff));
         }
 
         private void Game_OnTick(EventArgs args)
         {
             if(!this.iMenu.CheckBoxValue($"{this.Item.Name}enable") || !this.Item.Ready)
                 return;
-
-            this.verifyBuffs();
+            
             var target = this.getQssTarget();
             if(target == null)
                 return;
             
-            this.Item.Cast(target.owner);
+            if (Core.GameTickCount - Cleanse.lastQssAttempt < this.currentDelay + 500)
+                return;
+            
+            Cleanse.lastQssAttempt = Core.GameTickCount;
+            Core.DelayAction(() => this.Item.Cast(target), (int)this.currentDelay);
         }
 
         private void Obj_AI_Base_OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
@@ -125,43 +118,35 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
                 return;
 
             currentDelay = rnd.Next(Cleanse.minDelay, Cleanse.maxDelay);
-            this.add(sender as AIHeroClient, args.Buff);
-        }
-
-        private void add(AIHeroClient sender, BuffInstance buff)
-        {
-            this.gainedBuffs.Add(new gainedBuff(sender, buff));
-        }
-
-        private void verifyBuffs()
-        {
-            this.gainedBuffs.RemoveAll(b => b.ended || b.owner.IsDead);
         }
         
-        private gainedBuff getQssTarget()
+        private AIHeroClient getQssTarget()
         {
-            if (this.gainedBuffs == null || !this.gainedBuffs.Any())
+            var instances = this.getBuffInstances();
+            if (instances == null || !instances.Any())
                 return null;
+            
+            return instances.OrderByDescending(x => x.Data.DangerLevel * TargetSelector.GetPriority(x.Owner)).FirstOrDefault(x => this.Item.IsInRange(x.Owner))?.Owner;
+        }
 
-            var possible = new List<gainedBuff>();
-            foreach (var t in this.Item.TargetType)
+        private List<buffInstance> getBuffInstances()
+        {
+            var result = new List<buffInstance>();
+            foreach (var hero in EntityManager.Heroes.Allies.Where(h => h.IsValidTarget()))
+                result.AddRange(Extensions.CCBuffTypes.Where(x => hero.HasBuffType(x.BuffType)).Select(buff => new buffInstance(hero, buff)));
+
+            return result;
+        }
+
+        private class buffInstance
+        {
+            public buffInstance(AIHeroClient owner, DangerBuffTypes data)
             {
-                switch (t)
-                {
-                    case TargetingType.AllyHeros:
-                        if(Cleanse.Allies)
-                            possible.AddRange(this.gainedBuffs.Where(a => this.Item.IsInRange(a.owner) && a.owner.IsValid && a.owner.IsAlly && Cleanse.Health >= a.owner.HealthPercent));
-                        break;
-                    case TargetingType.MyHero:
-                        possible.Add(this.gainedBuffs.FirstOrDefault(b => this.Item.IsInRange(b.owner) && b.owner.IsValid && b.owner.IsMe && Cleanse.Health >= b.owner.HealthPercent));
-                        break;
-                }
+                this.Owner = owner;
+                this.Data = data;
             }
-
-            if (possible == null || !possible.Any())
-                return null;
-
-            return possible.Where(b => (b.PassedTicks > this.currentDelay || this.currentDelay > b.Duration) && Cleanse.BuffIsEnabled(b.buff.Type)).OrderByDescending(b => b.PassedTicks).FirstOrDefault();
+            public DangerBuffTypes Data;
+            public AIHeroClient Owner;
         }
     }
 }
