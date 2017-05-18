@@ -15,6 +15,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public string[] MissileNames;
         public string[] ParticleNames;
         public string DisplayName;
+        public string DontHaveBuff;
         public string RemoveOnBuffLose;
         public string TargetName;
         public string StartParticalName;
@@ -22,22 +23,25 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public string EndParticalName;
         public string ParticalObjectName;
         public RequireBuff[] RequireBuffs;
-        public int CollideCount;
-        public int DangerLevel;
-        public float ExplodeWidth;
+        public int CollideCount = 0;
+        public int DangerLevel = 1;
+        public float ExplodeWidth = 0;
         public float MoveSpeedScaleMod;
         public float MissileAccel;
         public float MissileMaxSpeed;
         public float MissileMinSpeed;
-        public float ExtraDuration;
-        public float RingRadius;
-        public float Range;
-        public float ExtraRange;
-        public float Angle;
-        public float Width;
+        public float ExtraDuration = 0;
+        public float RingRadius = 0;
+        public float Range = 0;
+        public float ExtraRange = 0;
+        public float Angle = 0;
+        public float Width = 0;
         public float Speed = int.MaxValue;
-        public float CastDelay;
+        public float CastDelay = 0;
+        public bool IsDangerous;
+        public bool IsAutoAttack;
         public bool IsMoving;
+        public bool EndIsBuffHolderPosition;
         public bool DecaySpeedWithLessRange;
         public bool EndSticksToTarget;
         public bool DetectAsOne;
@@ -45,6 +49,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool DontRemoveWithMissile;
         public bool AllowDuplicates;
         public bool HasExplodingEnd;
+        public bool CollideExplode;
         public bool StaticStart;
         public bool StaticEnd;
         public bool EndSticksToMissile;
@@ -52,6 +57,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool DontCross;
         public bool DontAddExtraDuration;
         public bool TakeClosestPath;
+        public bool EndStickToDirection;
         public bool EndIsCasterDirection;
         public bool IsFixedRange;
         public bool DetectByMissile;
@@ -61,6 +67,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool FastEvade;
         public bool StartsFromTarget;
         public Collision[] Collisions;
+        public SkillshotData OnDeleteAdd;
 
         public bool IsCasterName(string name)
         {
@@ -75,6 +82,14 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool IsSlot(SpellSlot slot)
         {
             return this.Slots != null && this.Slots.Any(s => s.Equals(slot));
+        }
+
+        public bool IsSlot(SpellSlot? slot)
+        {
+            if (slot == null)
+                return false;
+
+            return this.IsSlot((SpellSlot)slot);
         }
 
         public bool IsDisplayName(string name)
@@ -94,12 +109,21 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
 
         public bool IsParticleName(string name)
         {
-            return this.ParticleNames != null && this.ParticleNames.Any(name.StartsWith) && name.EndsWith(".troy");
+            return this.ParticleNames != null && this.ParticleNames.Any(x => name.StartsWith(x, StringComparison.CurrentCultureIgnoreCase)) && name.EndsWith(".troy");
         }
 
         public bool HasBuff(Obj_AI_Base caster)
         {
-            if (this.RequireBuffs == null || caster == null)
+            if (caster == null)
+                return false;
+
+            if (!string.IsNullOrEmpty(this.DontHaveBuff))
+            {
+                if (caster.HasBuff(this.DontHaveBuff))
+                    return false;
+            }
+
+            if (this.RequireBuffs == null)
                 return true;
 
             return this.RequireBuffs.Any(b => !string.IsNullOrEmpty(b.Name) && caster.GetBuffCount(b.Name) >= b.Count);
@@ -112,18 +136,17 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool HasExtraRange => this.ExtraRange < int.MaxValue && this.ExtraRange < float.MaxValue && this.ExtraRange > 0;
         public bool HasRingRadius => this.RingRadius < int.MaxValue && this.RingRadius < float.MaxValue && this.RingRadius > 0;
         public bool CanCollide => this.CollideCount > 0 && this.CollideCount < int.MaxValue;
-        public bool ClickRemove => this.CastDelay > 1250 && this.CastDelay < int.MaxValue || this.ExtraDuration > 1000 && this.ExtraDuration < int.MaxValue;
+    }
 
-        public class RequireBuff
+    public class RequireBuff
+    {
+        public RequireBuff(string name, int count)
         {
-            public RequireBuff(string name, int count)
-            {
-                this.Name = name;
-                this.Count = count;
-            }
-            public string Name;
-            public int Count;
+            this.Name = name;
+            this.Count = count;
         }
+        public string Name;
+        public int Count;
     }
 
     public enum Type

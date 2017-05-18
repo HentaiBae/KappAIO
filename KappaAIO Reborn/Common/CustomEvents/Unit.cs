@@ -157,6 +157,7 @@ namespace KappAIO_Reborn.Common.CustomEvents
             public float EndTick;
             public float Duration;
         }
+
         public class DeathEvent
         {
             public delegate void Death(OnDeathArgs args);
@@ -200,7 +201,6 @@ namespace KappAIO_Reborn.Common.CustomEvents
                         }
                     };
             }
-            
         }
     }
 }

@@ -11,10 +11,26 @@ using KappAIO_Reborn.Common.SpellDetector.DetectedData;
 using KappAIO_Reborn.Common.SpellDetector.Events;
 using KappAIO_Reborn.Common.Utility;
 using SharpDX;
+using Collision = KappAIO_Reborn.Common.Databases.SpellData.Collision;
 using Type = KappAIO_Reborn.Common.Databases.SpellData.Type;
 
 namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 {
+    public class OnSkillShotDelete
+    {
+        public delegate void SkillShotDelete(DetectedSkillshotData args);
+        public static event SkillShotDelete OnDelete;
+        internal static bool Invoke(DetectedSkillshotData args)
+        {
+            var invocationList = OnDelete?.GetInvocationList();
+            if (invocationList != null)
+                foreach (var m in invocationList)
+                    m?.DynamicInvoke(args);
+
+            return true;
+        }
+    }
+
     public class SkillshotDetector
     {
         private static bool Loaded;
@@ -22,7 +38,6 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
         {
             if (!Loaded)
             {
-                Collision.Init();
                 Game.OnTick += Game_OnTick;
                 Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
                 GameObject.OnCreate += GameObject_OnCreate;
@@ -32,6 +47,18 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 Obj_AI_Base.OnPlayAnimation += Obj_AI_Base_OnPlayAnimation;
                 Obj_AI_Base.OnBuffLose += Obj_AI_Base_OnBuffLose;
                 Loaded = true;
+                OnSkillShotDelete.OnDelete += OnSkillShotDelete_OnDelete;
+            }
+        }
+        
+        private static void OnSkillShotDelete_OnDelete(DetectedSkillshotData args)
+        {
+            if (args.Data.OnDeleteAdd != null)
+            {
+                var newDetect = args;
+                newDetect.Data = args.Data.OnDeleteAdd;
+                newDetect.StartTick = Core.GameTickCount;
+                Add(newDetect);
             }
         }
 
@@ -55,7 +82,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             public Vector2? Start;
             public Vector2? Mid;
             public Vector2? End;
-            public bool FullyDetected => this.caster != null && Start != null && this.Mid != null && this.End != null;
+            public bool FullyDetected => this.caster != null && this.Start != null && this.Mid != null && this.End != null;
         }
         public class IllaoiTentacle
         {
@@ -78,10 +105,12 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
         public static List<SkillshotMinion> SkillshotMinions = new List<SkillshotMinion>();
         public static List<IllaoiTentacle> IllaoiTentacles = new List<IllaoiTentacle>();
         public static List<LuxRPartical> DetectedLuxRParticals = new List<LuxRPartical>();
+        public static List<Geometry.Polygon> JoinedPolygons = new List<Geometry.Polygon>();
         public static List<DetectedSkillshotData> SkillshotsDetected = new List<DetectedSkillshotData>();
 
         private static void Game_OnTick(EventArgs args)
         {
+            #region lux R FoW
             foreach (var LuxR in DetectedLuxRParticals)
             {
                 var data = SkillshotDatabase.Current.FirstOrDefault(s => s.IsCasterName("Lux") && s.IsSlot(SpellSlot.R));
@@ -160,28 +189,11 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     }
                 }
             }
+            #endregion
 
-            foreach (var minion in SkillshotMinions.OrderBy(s => s.caster.NetworkId).Where(s => s.Minion != null && s.Minion.Any()))
+            foreach (var skill in SkillshotsDetected.Where(s => s != null && !s.Ended && s.Caster != null && s.Caster.IsEnemy && (s.Enabled || s.DrawEnabled)))
             {
-                if (minion.Minion.Count >= 5)
-                {
-                    var start = minion.Minion.FirstOrDefault();
-                    var end = minion.Minion.LastOrDefault();
-                    if (start != null && end != null && !start.IdEquals(end))
-                    {
-                        var newDetect = new DetectedSkillshotData
-                        {
-                            Caster = minion.caster,
-                            Data = minion.Data,
-                            Start = start.ServerPosition.To2D(),
-                            End = end.ServerPosition.To2D(),
-                            StartTick = Core.GameTickCount,
-                        };
-
-                        Add(newDetect);
-                        minion.Remove = true;
-                    }
-                }
+                skill.Update();
             }
             
             SkillshotMinions.RemoveAll(s => Core.GameTickCount - s.StartTick > s.Data.CastDelay || s.Remove);
@@ -191,8 +203,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             SkillshotsDetected.RemoveAll(s => s.Ended && OnSkillShotDelete.Invoke(s));
         }
 
-        private static string[] AlliedNames = { "GreenGround.troy", "Green.troy", "green_team.troy", "Green_Ring.troy", "Ally.troy", "blue.troy", "_ally_green.troy", "_Ground_Ally.troy" };
-        private static string[] ExcludeEnds = { "_explosion.troy" };
+        private static string[] AlliedNames = { "greenground.troy", "green.troy", "green_team.troy", "green_ring.troy", "_ally.troy", "blue.troy", "_ally_green.troy", "_ground_ally.troy", "_cas_green.troy" };
+        private static string[] ExcludeEnds = { "_explosion.troy", "_end.troy", "_mis.troy", "_aoe_explosion.troy", "_impact.troy", "_charge.troy", "_tar.troy", "_end.troy", "_sound.troy" };
 
         private static void Obj_AI_Base_OnPlayAnimation(Obj_AI_Base sender, GameObjectPlayAnimationEventArgs args)
         {
@@ -300,7 +312,6 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 return;
 
             var name = missile.SData.Name;
-
             if (SkillshotsDetected.Any(s => s.Caster != null && s.Missile != null && s.Missile.IdEquals(missile) && caster.IdEquals(s.Caster)))
             {
                 SkillshotsDetected.RemoveAll(s => s.Caster != null && s.Missile != null && !s.Data.DontRemoveWithMissile && s.Missile.IdEquals(missile)
@@ -339,19 +350,22 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             var partical = sender as Obj_GeneralParticleEmitter;
             if (partical != null)
             {
-                var pdata = SkillshotDatabase.Current.FirstOrDefault(s => !ExcludeEnds.Any(partical.Name.EndsWith) && s.IsParticleName(partical.Name));
-
+                var particleName = partical.Name.ToLower();
+                var pdata = SkillshotDatabase.Current.FirstOrDefault(s => !ExcludeEnds.Any(particleName.EndsWith) && s.IsParticleName(particleName) && ObjectManager.Get<Obj_AI_Base>().Any(s.HasBuff));
                 if (pdata != null)
                 {
-                    var isAlly = AlliedNames.Any(n => partical.Name.ToLower().EndsWith(n.ToLower()));
-                    var yasuo = partical.Name.StartsWith("Yasuo_Base_EQ_SwordGlow");
+                    var isAlly = AlliedNames.Any(particleName.EndsWith);
+                    var yasuoEQ = partical.Name.StartsWith("Yasuo_Base_EQ_SwordGlow");
+                    var jungleMob = pdata.IsCasterName("jungle");
 
-                    Obj_AI_Base pcaster = yasuo ? EntityManager.Heroes.AllHeroes.OrderBy(h => h.Distance(partical)).FirstOrDefault(h => h.IsValid && !h.IsDead && pdata.IsCasterName(h.ChampionName)) :
-                        EntityManager.Heroes.AllHeroes.OrderByDescending(x => x.Distance(partical))
-                            .FirstOrDefault(h => (isAlly ? h.IsAlly : h.IsEnemy) && pdata.IsCasterName(h.ChampionName) && h.IsValid && !h.IsDead);
+                    Obj_AI_Base pcaster =
+                        jungleMob ? ObjectManager.Get<Obj_AI_Base>().Where(m => pdata.IsCasterName(m.BaseSkinName) && m.IsValid && !m.IsDead).OrderBy(m => m.Distance(partical)).FirstOrDefault()
+                        : yasuoEQ ? EntityManager.Heroes.AllHeroes.OrderBy(m => m.Distance(partical)).FirstOrDefault(h => h.ChampionName == "Yasuo" && h.IsValid && !h.IsDead)
+                        : EntityManager.Heroes.AllHeroes.OrderByDescending(h => h.Distance(partical)).FirstOrDefault(h => h.IsInRange(partical, 3000) && pdata.IsCasterName(h.BaseSkinName)
+                        && (isAlly ? h.IsAlly : h.IsEnemy) && h.IsValid && !h.IsDead && pdata.HasBuff(h));
 
-                    var correctObject = ObjectManager.Get<Obj_AI_Base>().OrderBy(o => o.Distance(partical)).FirstOrDefault(o => !string.IsNullOrEmpty(pdata.ParticalObjectName) && (o.Name.Equals(pdata.ParticalObjectName) || o.BaseSkinName.Equals(pdata.ParticalObjectName) || o.Model.Equals(pdata.ParticalObjectName))
-                    || pdata.HasBuff(o));
+                    var correctObject = ObjectManager.Get<Obj_AI_Base>().OrderBy(o => o.Distance(partical)).FirstOrDefault(o => !string.IsNullOrEmpty(pdata.ParticalObjectName)
+                    && (o.Name.Equals(pdata.ParticalObjectName) || o.BaseSkinName.Equals(pdata.ParticalObjectName) || o.Model.Equals(pdata.ParticalObjectName) || pdata.HasBuff(o)));
                     if (correctObject != null)
                     {
                         var buff = correctObject.Buffs.FirstOrDefault(b => b.Caster is Obj_AI_Base);
@@ -393,6 +407,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                                             {
                                                 alreadydetected.Data = qcircle;
                                                 alreadydetected.End = pcaster.GetDashInfo() != null ? pcaster.GetDashInfo().EndPos.To2D() : pcaster.ServerPosition.To2D();
+                                                alreadydetected.Update();
                                             }
                                         }
                                         return;
@@ -430,7 +445,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     {
                         pdata = SkillshotDatabase.Current.FirstOrDefault(s => s.IsCasterName(Champion.Lux) && s.IsSlot(SpellSlot.R));
                         var luxInStart = EntityManager.Heroes.AllHeroes.FirstOrDefault(h => h.Hero.Equals(Champion.Lux) && h.IsValidTarget() && h.IsInRange(partical, 275));
-                        pcaster = luxInStart ?? EntityManager.Heroes.AllHeroes.OrderBy(h => h.Distance(partical)).FirstOrDefault(h => h.ChampionName.Equals("Lux") && (h.Spellbook.IsChanneling || h.Spellbook.IsCharging || !h.IsHPBarRendered));
+                        pcaster = luxInStart ?? EntityManager.Heroes.AllHeroes.OrderBy(h => h.Distance(partical)).FirstOrDefault(h => h.BaseSkinName.Equals("Lux") && (h.Spellbook.IsChanneling || h.Spellbook.IsCharging || h.Spellbook.IsCastingSpell || !h.IsHPBarRendered));
 
                         if (pcaster != null)
                         {
@@ -470,7 +485,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 
             var missile = sender as MissileClient;
             var caster = missile?.SpellCaster;
-            if (missile == null || caster == null || (missile.IsAutoAttack() && !caster.BaseSkinName.Equals("Twitch")) || !missile.IsValid)
+            if (missile == null || caster == null || !missile.IsValid)
                 return;
 
             var missilename = missile.SData.Name;
@@ -487,38 +502,35 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             var Misstart = missile.StartPosition.To2D();
             var Misend = missile.EndPosition.To2D();
 
-            foreach (var d in data)
+            if (data.IsCasterName(Champion.Shen) && data.IsSlot(SpellSlot.Q))
             {
-                if (d.IsCasterName(Champion.Shen) && d.IsSlot(SpellSlot.Q))
-                {
-                    Misstart = missile.Position.To2D();
-                    Misend = caster.ServerPosition.To2D();
-                    d.Range = Misstart.Distance(Misend);
-                }
-
-                var detected = new DetectedSkillshotData
-                {
-                    Caster = caster,
-                    Target = missile.Target as AIHeroClient,
-                    Missile = missile,
-                    Start = Misstart,
-                    End = Misend,
-                    Data = d,
-                    StartTick = Core.GameTickCount
-                };
-
-                Add(detected);
+                Misstart = missile.Position.To2D();
+                Misend = caster.ServerPosition.To2D();
+                data.Range = Misstart.Distance(Misend);
             }
+
+            var detected = new DetectedSkillshotData
+            {
+                Caster = caster,
+                Target = missile.Target as AIHeroClient,
+                Missile = missile,
+                Start = Misstart,
+                End = Misend,
+                Data = data,
+                StartTick = Core.GameTickCount
+            };
+
+            Add(detected);
         }
 
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             var caster = sender as AIHeroClient;
             var target = args.Target as AIHeroClient;
-            if (caster == null || !caster.IsValid || args.IsAutoAttack())
+            if (caster == null || !caster.IsValid)
                 return;
 
-            var spellname = args.SData.Name;
+            //var spellname = args.SData.Name;
             //Console.WriteLine(spellname);
 
             var data = GetData(caster, args, null);
@@ -531,92 +543,89 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 
             var start = args.Start.To2D();
             var end = args.End.To2D();
-            foreach (var d in data)
+            if (target != null && (!target.IsMe || caster.IsAlly))
             {
-                if (target != null && (!target.IsMe || caster.IsAlly))
+                if (data.StartsFromTarget)
                 {
-                    if (d.StartsFromTarget)
+                    if (data.IsCasterName("LeeSin") && data.IsSlot(SpellSlot.R))
                     {
-                        if (d.IsCasterName("LeeSin") && d.IsSlot(SpellSlot.R))
-                        {
-                            start = target.ServerPosition.To2D();
-                            end = start.Extend(caster, -d.Range);
-                        }
-
-                        if (d.IsCasterName(Champion.Lissandra) && d.IsSlot(SpellSlot.R))
-                        {
-                            start = target.ServerPosition.To2D();
-                            end = target.ServerPosition.To2D();
-                        }
+                        start = target.ServerPosition.To2D();
+                        end = start.Extend(caster, -data.Range);
                     }
 
-                    if (d.EndSticksToTarget)
+                    if (data.IsCasterName(Champion.Lissandra) && data.IsSlot(SpellSlot.R))
                     {
+                        start = target.ServerPosition.To2D();
                         end = target.ServerPosition.To2D();
-                        start = caster.ServerPosition.To2D();
-
-                        if (d.IsCasterName(Champion.Nautilus))
-                        {
-                            start = caster.ServerPosition.To2D().Extend(end, caster.GetAutoAttackRange());
-                        }
                     }
                 }
 
-                if (d.RangeScaleWithMoveSpeed)
+                if (data.EndSticksToTarget)
                 {
-                    d.Range = caster.MoveSpeed * d.MoveSpeedScaleMod;
+                    end = target.ServerPosition.To2D();
+                    start = caster.ServerPosition.To2D();
 
-                    if (d.IsCasterName(Champion.Warwick) && d.IsSlot(SpellSlot.R))
+                    if (data.IsCasterName(Champion.Nautilus))
                     {
-                        d.Range = Math.Max(275, caster.MoveSpeed * d.MoveSpeedScaleMod);
-                    }
-
-                    end = start.Extend(end, d.Range);
-                }
-
-                if (d.IsCasterName(Champion.Taric) && d.IsSlot(SpellSlot.E))
-                {
-                    var taricAllies = EntityManager.Heroes.AllHeroes.Where(h => h.IsValidTarget() && h.Team.Equals(caster.Team) && !h.IdEquals(caster) && h.HasBuff("taricwleashactive"));
-                    foreach (var ally in taricAllies)
-                    {
-                        var taricAllyE = new DetectedSkillshotData
-                        {
-                            Caster = ally,
-                            Target = target,
-                            Start = ally.ServerPosition.To2D(),
-                            End = ally.ServerPosition.To2D().Extend(end, d.Range),
-                            Data = d,
-                            StartTick = Core.GameTickCount
-                        };
-
-                        Add(taricAllyE);
+                        start = caster.ServerPosition.To2D().Extend(end, caster.GetAutoAttackRange());
                     }
                 }
-
-                if (d.IsSpellName("SiegeLaserAffixShot"))
-                {
-                    var turret = EntityManager.Turrets.AllTurrets.FirstOrDefault(t => t.Team.Equals(caster.Team) && t.Buffs.Any(b => b.Caster.IdEquals(caster)));
-                    if (turret == null)
-                    {
-                        return;
-                    }
-
-                    start = turret.ServerPosition.To2D();
-                    end = start.Extend(args.End.To2D(), d.Range);
-                }
-
-                var detected = new DetectedSkillshotData
-                {
-                    Caster = caster,
-                    Target = target,
-                    Start = start,
-                    End = end,
-                    Data = d,
-                    StartTick = Core.GameTickCount
-                };
-
-                Add(detected);
             }
+
+            if (data.RangeScaleWithMoveSpeed)
+            {
+                data.Range = caster.MoveSpeed * data.MoveSpeedScaleMod;
+
+                if (data.IsCasterName(Champion.Warwick) && data.IsSlot(SpellSlot.R))
+                {
+                    data.Range = Math.Max(275, caster.MoveSpeed * data.MoveSpeedScaleMod);
+                }
+
+                end = start.Extend(end, data.Range);
+            }
+
+            if (data.IsCasterName(Champion.Taric) && data.IsSlot(SpellSlot.E))
+            {
+                var taricAllies = EntityManager.Heroes.AllHeroes.Where(h => h.IsValidTarget() && h.Team.Equals(caster.Team) && !h.IdEquals(caster) && h.HasBuff("taricwleashactive"));
+                foreach (var ally in taricAllies)
+                {
+                    var taricAllyE = new DetectedSkillshotData
+                    {
+                        Caster = ally,
+                        Target = target,
+                        Start = ally.ServerPosition.To2D(),
+                        End = ally.ServerPosition.To2D().Extend(end, data.Range),
+                        Data = data,
+                        StartTick = Core.GameTickCount
+                    };
+
+                    Add(taricAllyE);
+                }
+            }
+
+            if (data.IsSpellName("SiegeLaserAffixShot"))
+            {
+                var turret = EntityManager.Turrets.AllTurrets.FirstOrDefault(t => t.Team.Equals(caster.Team) && t.Buffs.Any(b => b.Caster.IdEquals(caster)));
+                if (turret == null)
+                {
+                    return;
+                }
+
+                start = turret.ServerPosition.To2D();
+                end = start.Extend(args.End.To2D(), data.Range);
+            }
+
+            var detected = new DetectedSkillshotData
+            {
+                Caster = caster,
+                Target = target,
+                Start = start,
+                End = end,
+                Data = data,
+                StartTick = Core.GameTickCount
+            };
+
+            Add(detected);
         }
 
         internal static void Add(DetectedSkillshotData data)
@@ -624,6 +633,11 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             if (data == null)
             {
                 Console.WriteLine("Invalid DetectedSkillshot");
+                return;
+            }
+
+            if (data.Missile == null && data.Data.DetectByMissile)
+            {
                 return;
             }
 
@@ -655,7 +669,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     return;
                 }
 
-                if (SkillshotsDetected.Any(s => s.Caster != null && !s.DetectedMissile && s.Caster.IdEquals(data.Caster) && s.Data.Equals(data.Data)))
+                if (SkillshotsDetected.Any(s => s.Caster != null && !s.DetectedByMissile && s.Caster.IdEquals(data.Caster) && s.Data.Equals(data.Data)))
                     return;
             }
 
@@ -663,8 +677,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             {
                 var start = data.Start;
                 var end = data.End;
-                data.Start = end - (end - start).Normalized().Perpendicular() * (data.Data.Range / 2);
-                data.End = end + (end - start).Normalized().Perpendicular() * (data.Data.Range / 2);
+                data.Start = end - (end - start).Normalized().Perpendicular() * (data.Range / 2);
+                data.End = end + (end - start).Normalized().Perpendicular() * (data.Range / 2);
             }
 
             if (data.Data.IsSpellName("YorickE"))
@@ -697,7 +711,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                         {
                             Data = jarvanEQData,
                             Start = data.Start,
-                            End = jarvanFlag.ServerPosition.To2D().Extend(data.Start, -data.Caster.BoundingRadius),
+                            End = jarvanFlag.ServerPosition.To2D(),
                             Caster = data.Caster,
                             StartTick = Core.GameTickCount,
                         };
@@ -713,11 +727,11 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 data.Speed = data.Data.Speed * (data.Start.Distance(data.EndPosition) / data.Data.Range);
             }
 
-            data.DetectedMissile = data.Missile != null;
+            data.DetectedByMissile = data.Missile != null;
             data.FromFOW = !data.Caster.IsHPBarRendered;
 
             SkillshotsDetected.Add(data);
-            Collision.Check(data);
+            data.Update();
             OnSkillShotDetected.Invoke(data);
 
             if (data.Data.IsSpellName("SyndraE"))
@@ -725,7 +739,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 var qeData = SkillshotDatabase.Current.FirstOrDefault(s => s.IsSpellName("SyndraEQ"));
                 if (qeData != null)
                 {
-                    var syndraBalls = ObjectManager.Get<Obj_AI_Base>().Where(o => o.BaseSkinName.Equals("SyndraSphere") && o.Team == data.Caster.Team && data.Polygon.IsInside(o) && o.IsValid && o.Mana > 17.5);
+                    var syndraBalls = ObjectManager.Get<Obj_AI_Base>().Where(o => o.BaseSkinName.Equals("SyndraSphere") && o.Team == data.Caster.Team && data.IsInside(o) && o.IsValid && o.Mana > 17.5);
                     foreach (var ball in syndraBalls)
                     {
                         var newDetect = new DetectedSkillshotData
@@ -739,212 +753,83 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                         };
 
                         SkillshotsDetected.Add(newDetect);
-                        Collision.Check(newDetect);
+                        newDetect.Update();
                         OnSkillShotDetected.Invoke(newDetect);
                     }
                 }
             }
         }
 
-        internal static List<SkillshotData> GetData(Obj_AI_Base caster, GameObjectProcessSpellCastEventArgs args, MissileClient missile)
+        private static SkillshotData GetData(Obj_AI_Base caster, GameObjectProcessSpellCastEventArgs args, MissileClient missile = null)
         {
-            var result = new List<SkillshotData>();
+            var spellName = args?.SData.Name ?? missile?.SData.Name;
+            var slot = args?.Slot ?? missile?.Slot;
+            var target = (args?.Target ?? missile?.Target) as Obj_AI_Base;
+            var isAutoAttack = (args?.IsAutoAttack() ?? missile?.IsAutoAttack()).GetValueOrDefault();
 
-            List<SkillshotData> AllData = SkillshotDatabase.Current.FindAll(s => s.IsCasterName("all") || caster != null && s.IsCasterName(caster.BaseSkinName));
-            if (AllData == null || !AllData.Any())
-                return result;
+            SkillshotData result = SkillshotDatabase.Current.FirstOrDefault(s =>
+            s.IsCasterName(caster.BaseSkinName) && (missile != null || s.IsSlot(slot)) && s.HasBuff(caster)
+            && ((missile == null && s.IsSpellName(spellName)) || (args == null && s.IsMissileName(spellName)))
+            && (!s.DetectByMissile || missile != null)
+            && (!(s.EndSticksToTarget || s.StartsFromTarget || s.IsAutoAttack) || (target != null && !target.IsMe))
+            && (!isAutoAttack || s.IsAutoAttack));
 
-            var hero = caster as AIHeroClient;
-            if (missile == null)
-            {
-                var slotData = AllData.FindAll(s => s.IsSlot(args.Slot));
-                if (slotData != null && slotData.Any())
-                {
-                    var spellname = args.SData.Name;
-                    var data = slotData.FindAll(s => s.IsSpellName(spellname));
-                    foreach (var d in data)
-                    {
-                        if (!d.DetectByMissile && d.HasBuff(caster))
-                        {
-                            var casterHero = caster as AIHeroClient;
-                            var target = args.Target as Obj_AI_Base;
-                            if (((d.StartsFromTarget || d.EndSticksToTarget) && target != null && (!args.Target.IsMe || caster.IsAlly)
-                                && (casterHero != null && casterHero.Hero.Equals(Champion.LeeSin) && target.Health >= casterHero.GetSpellDamage(target, args.Slot) || casterHero == null || !casterHero.Hero.Equals(Champion.LeeSin))
-                                 || (!d.StartsFromTarget && !d.EndSticksToTarget)))
-                            {
-                                result.Add(d);
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                var missilename = missile.SData.Name;
-                var data = AllData.FindAll(s => s.IsMissileName(missilename));
-                foreach (var d in data)
-                {
-                    if (data != null && !d.AddEndExplode && d.HasBuff(caster) && !d.StartsFromTarget)
-                    {
-                        result.Add(d);
-                    }
-                }
-            }
             return result;
         }
     }
 
-    internal static class Collision
+    public class CollisionResult
     {
-        internal static void Init()
+        public CollisionResult(DetectedSkillshotData skillshot)
         {
-            YasuoWalls.Init();
-            Game.OnTick += Game_OnPreTick;
+            this.Check(skillshot);
         }
 
-        private static void Game_OnPreTick(EventArgs args)
+        public Vector2? CorrectCollidePoint = null;
+        public Vector2? CollidePoint = null;
+
+        private void Check(DetectedSkillshotData skillshot)
         {
-            foreach (var skill in SkillshotDetector.SkillshotsDetected.Where(s => s.IsVisible))
-            {
-                Check(skill);
-            }
-        }
-        
-        public static void Check(DetectedSkillshotData skill)
-        {
-            var collideobjects = new List<Obj_AI_Base>();
-            var collidePoints = new List<Vector2>();
-            collideobjects.Clear();
-            collidePoints.Clear();
-
-            var collisionData = skill.Data.Collisions;
-
-            skill.CollidePoint = null;
-            skill.CollideTarget = null;
-            skill.CollideTargets = null;
-
-            if (collisionData == null || !collisionData.Any())
+            if (skillshot == null)
                 return;
 
-            var polygon = skill.OriginalPolygon;
+            var coll = skillshot.Data.Collisions;
+            var targets = new List<Vector2>();
 
-            if (polygon == null)
+            if (coll.Contains(Collision.Caster) && skillshot.IsInside(skillshot.Caster))
+                targets.Add(skillshot.Caster.ServerPosition.To2D().Extend(skillshot.Start, skillshot.Caster.BoundingRadius - 35));
+
+            if (coll.Contains(Collision.Heros))
+                targets.AddRange(EntityManager.Heroes.AllHeroes.FindAll(h => !h.IsMe && h.IsValidTarget()
+                && h.Team != skillshot.Caster.Team && skillshot.IsInside(h)).Select(h => h.ServerPosition.To2D().Extend(skillshot.Start, h.BoundingRadius - 35)));
+
+            if (coll.Contains(Collision.Minions))
+                targets.AddRange(EntityManager.MinionsAndMonsters.Combined.Where(h => !h.IsMe && h.IsValidTarget()
+                && h.Team != skillshot.Caster.Team && skillshot.IsInside(h)).Select(h => h.ServerPosition.To2D().Extend(skillshot.Start, h.BoundingRadius - 35)));
+
+            if (coll.Contains(Collision.YasuoWall))
+            {
+                var collidePoint = skillshot.CurrentPosition.GetYasuoWallCollision(skillshot.EndPosition, false, true);
+                if (collidePoint.IsValid())
+                    targets.Add(collidePoint.To2D());
+            }
+
+            if (coll.Contains(Collision.Walls))
+                targets.AddRange(this.CellsAnalyze(skillshot.CurrentPosition, skillshot.generatePolygon2()).Select(c => c.WorldPosition.To2D()));
+
+            if (!targets.Any())
                 return;
 
-            bool CollideWithWals = false;
-            if (collisionData.Contains(Databases.SpellData.Collision.Heros))
-            {
-                var heros = EntityManager.Heroes.AllHeroes.Where(h => h.Team != skill.Caster.Team && !h.IsMe && h.IsValidTarget() && skill.IsInside(h)).ToList();
-                if (heros != null && heros.Any())
-                {
-                    collideobjects.AddRange(heros);
-                    collidePoints.AddRange(heros.Select(h => h.ServerPosition.To2D()));
-                }
-            }
+            var orderPoints = targets.OrderBy(t => t.Distance(skillshot.Start)).ToArray();
+            var multiCollide = skillshot.Data.CollideCount > 0;
+            Vector2 collisionPoint = orderPoints[multiCollide && targets.Count > skillshot.Data.CollideCount + 1 ? skillshot.Data.CollideCount : 0];
+            Vector2 extendToCollidePoint = skillshot.Start.Extend(skillshot.EndPosition, skillshot.Start.Distance(collisionPoint));
 
-            if (collisionData.Contains(Databases.SpellData.Collision.Caster))
-            {
-                if (skill.IsInside(skill.Caster))
-                {
-                    collideobjects.Add(skill.Caster);
-                    collidePoints.Add(skill.Caster.ServerPosition.To2D());
-                }
-            }
-
-            if (collisionData.Contains(Databases.SpellData.Collision.Minions))
-            {
-                var minions = EntityManager.MinionsAndMonsters.Combined.Where(h => h.Team != skill.Caster.Team && !h.IsWard() && h.MaxHealth > 5 && h.IsValidTarget() && skill.IsInside(h)).ToList();
-                minions.AddRange(EntityManager.MinionsAndMonsters.OtherMinions.Where(h => h.Team != skill.Caster.Team && h.MaxHealth > 5 && !h.IsWard() && h.IsValidTarget() && skill.IsInside(h)));
-                if (minions != null && minions.Any())
-                {
-                    collideobjects.AddRange(minions);
-                    collidePoints.AddRange(minions.Select(h => h.ServerPosition.To2D()));
-                }
-            }
-
-            if (collisionData.Contains(Databases.SpellData.Collision.Walls))
-            {
-                if (collisionData.Contains(Databases.SpellData.Collision.Walls))
-                {
-                    var wallsDetected = CellsAnalyze(skill.Start, polygon).Select(c => c.WorldPosition.To2D()).ToList();
-                    if (wallsDetected != null && wallsDetected.Any())
-                    {
-                        collidePoints.AddRange(wallsDetected);
-                        CollideWithWals = true;
-                    }
-                }
-            }
-
-            if (collisionData.Contains(Databases.SpellData.Collision.YasuoWall))
-            {
-                foreach (var wall in YasuoWalls.DetectedWalls.Where(w => w.Polygon != null && w.Caster.Team != skill.Caster.Team))
-                {
-                    wall.ExtraWidth = skill.Data.Width / 2;
-                    var points = wall.Polygon.Points.ToArray();
-                    for (int i = 0; i < points.Length; i++)
-                    {
-                        var intersection = points[i].Intersection(points[i >= 3 ? 0 : i + 1], skill.CurrentPosition, skill.EndPosition);
-                        if (intersection.Intersects)
-                        {
-                            collidePoints.Add(intersection.Point);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            var orderedPoints = collidePoints.OrderBy(vector2 => vector2.Distance(skill.Start)).ToArray();
-            var orderedObjects = collideobjects.OrderBy(obj => obj.Distance(skill.Start)).ToArray();
-
-            if (CollideWithWals)
-            {
-                if (orderedPoints.Any())
-                {
-                    var range = Math.Min(skill.Data.Range, orderedPoints[0].Distance(skill.Start));
-                    skill.CollidePoint = skill.Start.Extend(skill.EndPosition, range);
-                }
-            }
-            else
-            {
-                if (orderedPoints.Any())
-                {
-                    var range = orderedPoints[0].Distance(skill.Start);
-                    if (skill.Data.CanCollide)
-                    {
-                        if (orderedPoints.Length > skill.Data.CollideCount)
-                        {
-                            var point = orderedPoints[skill.Data.CollideCount];
-                            range = point.Distance(skill.Start);
-                            var obj = orderedObjects.FirstOrDefault(o => o.ServerPosition.To2D().Equals(point));
-                            if (obj != null)
-                            {
-                                range -= obj.BoundingRadius;
-                            }
-
-                            skill.CollidePoint = skill.Start.Extend(skill.EndPosition, range);
-                        }
-                    }
-                    else
-                    {
-                        skill.CollidePoint = skill.Start.Extend(skill.EndPosition, range);
-                    }
-                }
-            }
-
-            if (orderedObjects.Any())
-            {
-                skill.CollideTargets = orderedObjects;
-                skill.CollideTarget = orderedObjects[0];
-            }
-
-            if (orderedObjects.Any())
-            {
-                skill.CollideTargets = orderedObjects;
-                skill.CollideTarget = orderedObjects[0];
-            }
+            this.CorrectCollidePoint = collisionPoint;
+            this.CollidePoint = extendToCollidePoint;
         }
 
-        private static IEnumerable<NavMeshCell> CellsAnalyze(Vector2 pos, EloBuddy.SDK.Geometry.Polygon poly)
+        private IEnumerable<NavMeshCell> CellsAnalyze(Vector2 pos, Geometry.Polygon poly) // Credits to Hellsing
         {
             var sourceGrid = pos.ToNavMeshCell();
             var GridSize = 50f;

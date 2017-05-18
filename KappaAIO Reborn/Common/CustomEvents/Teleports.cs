@@ -85,6 +85,7 @@ namespace KappAIO_Reborn.Common.CustomEvents
         public bool Started => this.Args.Status == TeleportStatus.Start;
         public bool Finished => this.Args.Status == TeleportStatus.Finish;
         public bool Aborted => this.Args.Status == TeleportStatus.Abort;
+        public bool IsTargeted => this.Args.Type == TeleportType.Shen || this.Args.Type == TeleportType.Teleport;
     }
 
     public class Teleports
@@ -116,7 +117,7 @@ namespace KappAIO_Reborn.Common.CustomEvents
         private static string[] _alliedNames = { "_blue.troy", "_Green.troy" };
         private static Dictionary<string, Champion> _teleports = new Dictionary<string, Champion>
             {
-            { "global_ss_teleport_target_", Champion.Unknown },
+            { "global_ss_teleport_target_", Champion.Unknown }, // Unknown = all
             { "global_ss_teleport_turret_", Champion.Unknown },
             { "TwistedFate_Base_R_Gatemarker_", Champion.TwistedFate },
             };
@@ -139,7 +140,7 @@ namespace KappAIO_Reborn.Common.CustomEvents
                     return;
                 }
 
-                foreach (var teleport in TrackedTeleports.Where(t => t.Value.TeleportTarget == null))
+                foreach (var teleport in TrackedTeleports.Where(t => t.Value.TeleportTarget == null && t.Value.IsTargeted))
                 {
                     var findBuffTarget = ObjectManager.Get<Obj_AI_Base>().FirstOrDefault(o => _teleportTargetBuffs.Any(o.HasBuff));
                     if (findBuffTarget != null)
@@ -160,7 +161,7 @@ namespace KappAIO_Reborn.Common.CustomEvents
             if (!_teleportTargetBuffs.Any(b => args.Buff.DisplayName.Equals(b, StringComparison.CurrentCultureIgnoreCase) || args.Buff.Name.Equals(b, StringComparison.CurrentCultureIgnoreCase)))
                 return;
 
-            var tracked = TrackedTeleports.OrderByDescending(t => t.Value.StartTick).FirstOrDefault(t => t.Value.Args.Type != TeleportType.Recall && t.Value.Caster.IdEquals(args.Buff.Caster));
+            var tracked = TrackedTeleports.OrderByDescending(t => t.Value.StartTick).FirstOrDefault(t => t.Value.IsTargeted && t.Value.Caster.IdEquals(args.Buff.Caster));
             if (TrackedTeleports.Contains(tracked))
             {
                 tracked.Value.EndPosition = sender.ServerPosition;

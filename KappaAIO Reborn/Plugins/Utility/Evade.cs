@@ -22,7 +22,7 @@ namespace KappAIO_Reborn.Plugins.Utility
 
             DrawMenu.AddSeparator(0);
 
-            var skillshots = SkillshotDatabase.Current.FindAll(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type)) && (s.IsCasterName(Champion.Unknown) || EntityManager.Heroes.Enemies.Any(h => s.IsCasterName((Champion)h.Hero))));
+            var skillshots = SkillshotDatabase.Current;
 
             foreach (var skill in skillshots.OrderBy(s => s.CasterNames[0]))
             {
@@ -40,7 +40,7 @@ namespace KappAIO_Reborn.Plugins.Utility
 
             foreach (var skill in SkillshotDetector.SkillshotsDetected.Where(s => s.Caster.IsEnemy && DrawMenu.CheckBoxValue($"Draw{s.Data.MenuItemName}")))
             {
-                skill.Polygon?.Draw(Color.AliceBlue, 2);
+                skill.DrawingPolygon?.Draw(Color.AliceBlue, 2);
             }
         }
     }

@@ -103,6 +103,30 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             Orbwalker.OnUnkillableMinion += this.Orbwalker_OnUnkillableMinion;
             Drawing.OnEndScene += Drawing_OnDraw;
             Player.OnIssueOrder += Player_OnIssueOrder;
+            Spellbook.OnCastSpell += Spellbook_OnCastSpell;
+        }
+
+        private static float lastq, lastw;
+        private void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
+        {
+            if(!sender.Owner.IsMe)
+                return;
+
+            switch (args.Slot)
+            {
+                case SpellSlot.Q:
+                    if (Core.GameTickCount - lastw < Game.Ping + 150)
+                        args.Process = false;
+                    else
+                        lastq = Core.GameTickCount;
+                    return;
+                case SpellSlot.W:
+                    if (Core.GameTickCount - lastq < Game.Ping + 150)
+                        args.Process = false;
+                    else
+                        lastw = Core.GameTickCount;
+                    break;
+            }
         }
 
         private bool played;

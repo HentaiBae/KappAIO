@@ -44,10 +44,10 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 {
                     if (FioraPassive(emitter) && emitter.IsEnemy)
                     {
+                        StoredPassives.RemoveAll(v => (v.Vital != null && (v.Vital.IsDead || !v.Vital.IsValid)) || (v.Caster != null && (!v.Caster.IsValid || v.Caster.IsDead)) || Core.GameTickCount - v.startTick > 15000);
                         var passive = new FioraVital(emitter) { startTick = Core.GameTickCount };
                         if (!StoredPassives.Contains(passive))
                             StoredPassives.Add(passive);
-                        StoredPassives.RemoveAll(v => v.Vital != null && (v.Vital.IsDead || !v.Vital.IsValid) || v.Caster != null && (!v.Caster.IsValid || v.Caster.IsDead) || Core.GameTickCount - v.startTick > 15000);
                     }
                 }
             }
@@ -59,8 +59,8 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 {
                     if (FioraPassive(emitter))
                     {
-                        if (StoredPassives.Any(p => p.Vital.Name.Equals(emitter.Name)))
-                            StoredPassives.RemoveAll(v => v.Vital != null && (v.Vital.IdEquals(emitter) || v.Vital.IsDead || !v.Vital.IsValid) || v.Caster != null && (!v.Caster.IsValid || v.Caster.IsDead) || Core.GameTickCount - v.startTick > 15000);
+                        if (StoredPassives.Any(p => p.Vital.IdEquals(emitter)))
+                            StoredPassives.RemoveAll(v => (v.Vital != null && (v.Vital.IdEquals(emitter) || v.Vital.IsDead || !v.Vital.IsValid)) || (v.Caster != null && (!v.Caster.IsValid || v.Caster.IsDead)) || Core.GameTickCount - v.startTick > 15000);
                     }
                 }
             }
@@ -75,7 +75,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
             public class FioraVital
             {
                 public float startTick;
-                public AIHeroClient Caster { get { return EntityManager.Heroes.AllHeroes.OrderBy(e => e.Distance(this.Vital)).FirstOrDefault(h => HasFioraPassiveBuff(h) && h.Distance(this.Vital) <= 50); } }
+                public AIHeroClient Caster { get { return EntityManager.Heroes.AllHeroes.OrderBy(e => e.Distance(this.Vital)).FirstOrDefault(h => HasFioraPassiveBuff(h) && h.Distance(this.Vital) <= 50 + h.BoundingRadius); } }
                 public Obj_GeneralParticleEmitter Vital;
                 public bool ValidVital
                 {
@@ -97,7 +97,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     get
                     {
                         var range = 150;
-                        var travelTime = Player.Instance.Distance(CorrectPos) / Player.Instance.MoveSpeed * 1000f;
+                        var travelTime = Player.Instance.Distance(this.CorrectPos) / Player.Instance.MoveSpeed * 1000f;
                         var pos = this.Caster.PrediectPosition(travelTime);
                         var x2 = this.Vital.Name.Contains("_NW") ? range : this.Vital.Name.Contains("_SE") ? -range : 0;
                         var y2 = this.Vital.Name.Contains("_NE") ? range : this.Vital.Name.Contains("_SW") ? -range : 0;
@@ -259,7 +259,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 OnTargetedSpellDetected.OnDetect += OnTargetedSpellDetected_OnDetect;
                 OnSkillShotDetected.OnDetect += OnSkillShotDetected_OnDetect;
                 OnSpecialSpellDetected.OnDetect += OnSpecialSpellDetected_OnDetect;
-                Drawing.OnDraw += Drawing_OnDraw;
+                //Drawing.OnDraw += Drawing_OnDraw;
             }
 
             private static float _lastBlock;
@@ -544,7 +544,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
 
             private static void Drawing_OnDraw(EventArgs args)
             {
-                //if (!Config.DrawMenu.CheckBoxValue("draw"))
+                /*if (!Config.DrawMenu.CheckBoxValue("draw"))
                     return;
 
                 foreach (var s in SkillshotDetector.SkillshotsDetected.Where(s=> s.Caster.IsEnemy))
@@ -554,7 +554,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 foreach (var s in SpecialSpellDetector.DetectedSpecialSpells.Where(s => s.IsEnemy))
                 {
                     s.Position.DrawCircle((int)s.Data.Range, Color.AliceBlue);
-                }
+                }*/
             }
 
             private static void OnSkillShotDetected_OnDetect(DetectedSkillshotData args)

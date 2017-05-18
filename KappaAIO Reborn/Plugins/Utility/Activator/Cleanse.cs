@@ -4,8 +4,6 @@ using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Menu;
-using KappAIO_Reborn.Common.Databases.Items;
-using KappAIO_Reborn.Common.Databases.SpellData;
 using KappAIO_Reborn.Common.Utility;
 using Extensions = KappAIO_Reborn.Common.Utility.Extensions;
 using ItemData = KappAIO_Reborn.Common.Databases.Items.ItemData;
