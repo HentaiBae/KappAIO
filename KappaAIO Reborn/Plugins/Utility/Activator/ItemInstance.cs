@@ -141,21 +141,17 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
                     {
                         this.Data.Cast(unitBase);
                     }
-                }, 100 + Math.Min(100, Game.Ping));
+                }, 100 + Math.Min(50, Game.Ping / 2));
         }
 
         private bool healthCheck(AttackableUnit unit)
         {
-            var castTime = new List<CastTime>();
-            if (unit.IsMe)
-            {
-                castTime.Add(CastTime.MyHealth);
-                castTime.Add(CastTime.AllyHealth);
-            }
-            else
-                castTime.Add(unit.IsAlly ? CastTime.AllyHealth : CastTime.EnemyHealth);
+            var castTime = unit.IsMe ? new[] { CastTime.MyHealth, CastTime.AllyHealth }
+                       : new[] { unit.IsAlly ? CastTime.AllyHealth : CastTime.EnemyHealth };
             
-            return this.Data.CastTimes == null || !this.Data.matchCastType(castTime.ToArray()) || castTime.Any(t => this.Data.CastTimes.Contains(t) && this.menu.SliderValue($"{this.Data.Name}{t}") >= unit.HealthPercent);
+            return this.Data.CastTimes == null
+                || !this.Data.matchCastType(castTime.ToArray())
+                || castTime.Any(t => this.Data.CastTimes.Contains(t) && this.menu.SliderValue($"{this.Data.Name}{t}") >= unit.HealthPercent);
         }
 
         private bool ModeActive()
