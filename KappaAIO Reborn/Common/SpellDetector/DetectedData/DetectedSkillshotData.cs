@@ -18,8 +18,9 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public void Update()
         {
             this.CheckCollision();
+            
             var exPolygon = this.generatePolygon(Player.Instance.BoundingRadius + 35);
-            IsDangerous = this.Data.IsDangerous || this.Data.DangerLevel > 2;
+
             this.EvadePolygon = exPolygon;
             this.OriginalPolygon = this.generatePolygon2();
             this.DrawingPolygon = this.generatePolygon();
@@ -32,7 +33,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
             this.CollidePoint = null;
             this.CorrectCollidePoint = null;
-            
+
             var check = new CollisionResult(this);
             this.CorrectCollidePoint = check.CorrectCollidePoint;
             this.CollidePoint = check.CollidePoint;
@@ -71,7 +72,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 {
                     return this.Caster.ServerPosition.To2D();
                 }
-                if (this.DetectedByMissile && this.Missile != null)
+                if (this.Data.SticksToMissile && this.Missile != null)
                 {
                     return this.Missile.Position.Extend(this.Start, -(this.Width / 2f));
                 }
@@ -93,7 +94,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
                 if (this.IsGlobal && this.Data.type == Type.LineMissile)
                 {
-                    return this.CalculatedPosition() + (this.Direction * this.Range);
+                    return this.CurrentPosition.Extend(CurrentPosition + this.Direction, Range);
                 }
 
                 if (this.Data.EndIsBuffHolderPosition && this.BuffHolder != null)
@@ -125,7 +126,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     {
                         end = this.Data.IsCasterName("Riven") ? lastPath : direction;
                     }
-                    if (this.Data.IsCasterName("Sion"))
+                    if (this.Data.IsCasterName("Sion") && this.Data.IsSlot(SpellSlot.R))
                     {
                         this.Speed = this.Caster.MoveSpeed;
                         end = this.Caster.ServerPosition.Extend(this.Start, -this.Range);
@@ -139,11 +140,6 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 if (this.Missile != null && this.Data.EndSticksToMissile)
                 {
                     return this.Missile.Position.To2D();
-                }
-
-                if (this.Target != null && this.Data.EndSticksToTarget)
-                {
-                    return this.Target.ServerPosition.To2D();
                 }
 
                 if (end.IsZero)
@@ -165,7 +161,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 return this.CollidePoint ?? this.EndPosition;
             }
         }
-        
+
         public Vector2 CalculatedPosition(float aftertime = 0)
         {
             var time = Math.Max(0, this.TicksPassed - this.CastDelay);
@@ -194,11 +190,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             return (this.Start + this.Direction * time);
         }
 
-        public bool Enabled = true,
-                    MenuEnabled = true,
-                    DrawEnabled = true,
-                    IsDangerous, DetectedByMissile, FromFOW;
-        public bool IsOnScreen => this.DrawingPolygon.Points.Any(p => p.To3DWorld().IsOnScreen());
+        public bool DetectedByMissile, FromFOW;
+        public bool IsOnScreen => this.DrawingPolygon != null && this.DrawingPolygon.Points.Any(p => p.To3DWorld().IsOnScreen()) || this.Center.To3DWorld().IsOnScreen();
         public bool CollideExplode => this.CorrectCollidePoint.HasValue && this.Data.CollideExplode;
         public bool ExplodeEnd => this.CollidePoint.HasValue && this.Data.HasExplodingEnd;
         public bool IsGlobal
@@ -208,14 +201,10 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 return this.Data.Range >= 4000 && this.Data.Range < 15000;
             }
         }
-        public bool WillHit(Vector2 target) => target.IsValid() && this.EvadePolygon.IsInside(target);
-        public bool WillHit(Obj_AI_Base target) => target.IsValidTarget() && this.EvadePolygon.IsInside(target);
-        public bool IsSafe(Vector2 pos)
-        {
-            return !this.WillHit(pos);
-        }
+        public bool WillHit(Vector2 target) => this.EvadePolygon != null && this.EvadePolygon.IsInside(target);
+        public bool WillHit(Obj_AI_Base target) => target.IsValidTarget() && this.EvadePolygon != null && this.EvadePolygon.IsInside(target);
         public bool IsInside(Vector2 target) => target.IsValid() && this.OriginalPolygon.IsInside(target);
-        public bool IsInside(Obj_AI_Base target) => target.IsValidTarget() && this.generatePolygon2(target.BoundingRadius - 35).IsInside(target);
+        public bool IsInside(Obj_AI_Base target) => target.IsValidTarget() && this.generatePolygon2(target.BoundingRadius).IsInside(target);
         public bool Ended
         {
             get
@@ -259,8 +248,20 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             time += Game.Ping / 2;
             return WillHit(this.Target.ServerPosition.To2D()) && time >= this.TravelTime(unit);
         }
-        
+
         public int DangerLevel;
+
+        public float GetSpellDamage(Obj_AI_Base target)
+        {
+            if (target == null || this.Caster == null || this.Data.Slots == null || !this.Data.Slots.Any())
+                return 0;
+
+            var hero = this.Caster as AIHeroClient;
+            if (hero == null)
+                return 0;
+
+            return hero.GetSpellDamage(target, this.Data.Slots[0]);
+        }
 
         public float StartTick = Core.GameTickCount;
         public float EndTick => this.StartTick + this.MaxTravelTime(this.CollideEndPosition);
@@ -423,32 +424,17 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             return CurrentPosition.Distance(pos) / Speed * 1000f + CastDelay;
         }
 
-        public float GetSpellDamage(Obj_AI_Base target)
-        {
-            if (target == null || this.Caster == null || this.Data.Slots == null || !this.Data.Slots.Any())
-                return 0;
-
-            var hero = this.Caster as AIHeroClient;
-            if (hero == null)
-                return 0;
-
-            return hero.GetSpellDamage(target, this.Data.Slots[0]);
-        }
-
-        public Geometry.Polygon EvadePolygon;
-        public Geometry.Polygon ExplodePolygon;
-        public Geometry.Polygon OriginalPolygon;
-        public Geometry.Polygon DrawingPolygon;
+        public Geometry.Polygon EvadePolygon, ExplodePolygon, OriginalPolygon, DrawingPolygon, PathPolygon;
         private Geometry.Polygon generatePolygon(float extraWidth = 0)
         {
-            var extraAngle = Math.Max(1, Math.Max(1, extraWidth) / 4);
+            var extraAngle = Math.Max(1, Math.Max(1, extraWidth) / 5);
             extraWidth += this.Width;
 
             Geometry.Polygon polygon = null;
             switch (this.Data.type)
             {
                 case Type.LineMissile:
-                    polygon = new Geometry.Polygon.Rectangle(this.CurrentPosition, this.CollideEndPosition, extraWidth);
+                    polygon = new Geometry.Polygon.Rectangle(this.CurrentPosition, this.CollidePoint == null ? this.CollideEndPosition.Extend(this.CurrentPosition, -(extraWidth * 0.75f)) : this.CollideEndPosition, extraWidth);
                     break;
                 case Type.CircleMissile:
                     polygon = new Geometry.Polygon.Circle(this.Data.IsMoving ? this.CurrentPosition : this.CollideEndPosition, extraWidth);
@@ -521,6 +507,63 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             {
                 return new Geometry.Polygon.Rectangle(this.CurrentPosition, this.EndPosition, Math.Max(this.Data.Width, this.Data.Angle));
             }
+        }
+        public Geometry.Polygon PredictedPolygon(float afterTime, float extraWidth = 0)
+        {
+            var extraAngle = Math.Max(1, Math.Max(1, extraWidth) / 4);
+            extraWidth += this.Width;
+
+            Geometry.Polygon polygon = null;
+            switch (this.Data.type)
+            {
+                case Type.LineMissile:
+                    polygon = new Geometry.Polygon.Rectangle(this.CalculatedPosition(afterTime), this.CollideEndPosition, extraWidth);
+                    break;
+                case Type.CircleMissile:
+                    polygon = new Geometry.Polygon.Circle(this.Data.IsMoving ? this.CalculatedPosition(afterTime) : this.CollideEndPosition, extraWidth);
+                    break;
+                case Type.Cone:
+                    polygon = new Geometry.Polygon.Sector(this.CurrentPosition, this.CollideEndPosition, (float)((this.Angle + extraAngle) * Math.PI / 180), this.Range);
+                    break;
+                case Type.Arc:
+                    polygon = new CustomGeometry.Arc(this.Start, this.CollideEndPosition, (int)extraWidth).ToSDKPolygon();
+                    break;
+                case Type.Ring:
+                    polygon = new CustomGeometry.Ring(this.CollideEndPosition, extraWidth, this.RingRadius).ToSDKPolygon();
+                    break;
+            }
+
+            if (polygon != null && (this.ExplodeEnd || this.CollideExplode))
+            {
+                var newpolygon = polygon;
+                var pos = this.CurrentPosition;
+                var collidepoint = this.CollideExplode ? this.CorrectCollidePoint.GetValueOrDefault() : this.CollideEndPosition;
+                switch (this.Data.Explodetype)
+                {
+                    case Type.CircleMissile:
+                        this.ExplodePolygon = new Geometry.Polygon.Circle(collidepoint, this.ExplodeWidth);
+                        break;
+                    case Type.LineMissile:
+                        var st = collidepoint - (collidepoint - pos).Normalized().Perpendicular() * (this.ExplodeWidth);
+                        var en = collidepoint + (collidepoint - pos).Normalized().Perpendicular() * (this.ExplodeWidth);
+                        this.ExplodePolygon = new Geometry.Polygon.Rectangle(st, en, this.ExplodeWidth / 2);
+                        break;
+                    case Type.Cone:
+                        var st2 = collidepoint - Direction * (this.ExplodeWidth * 0.25f);
+                        var en2 = collidepoint + Direction * (this.ExplodeWidth * 3);
+                        this.ExplodePolygon = new Geometry.Polygon.Sector(st2, en2, (float)(this.Angle * Math.PI / 180), this.ExplodeWidth);
+                        break;
+                }
+
+                var poly = Geometry.ClipPolygons(new[] { newpolygon, this.ExplodePolygon });
+                var vectors = new List<IntPoint>();
+                foreach (var p in poly)
+                    vectors.AddRange(p.ToPolygon().ToClipperPath());
+
+                polygon = vectors.ToPolygon();
+            }
+
+            return polygon;
         }
     }
 }

@@ -50,7 +50,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 OnSkillShotDelete.OnDelete += OnSkillShotDelete_OnDelete;
             }
         }
-        
+
         private static void OnSkillShotDelete_OnDelete(DetectedSkillshotData args)
         {
             if (args.Data.OnDeleteAdd != null)
@@ -82,6 +82,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             public Vector2? Start;
             public Vector2? Mid;
             public Vector2? End;
+            public bool Added;
             public bool FullyDetected => this.caster != null && this.Start != null && this.Mid != null && this.End != null;
         }
         public class IllaoiTentacle
@@ -92,115 +93,52 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             public float StartTick = Core.GameTickCount;
             public bool Attacked;
         }
-        public class SkillshotMinion
-        {
-            public AIHeroClient caster;
-            public List<Obj_AI_Minion> Minion;
-            public SkillshotData Data;
-            public int ID;
-            public float StartTick = Core.GameTickCount;
-            public bool Remove;
-        }
 
-        public static List<SkillshotMinion> SkillshotMinions = new List<SkillshotMinion>();
         public static List<IllaoiTentacle> IllaoiTentacles = new List<IllaoiTentacle>();
         public static List<LuxRPartical> DetectedLuxRParticals = new List<LuxRPartical>();
-        public static List<Geometry.Polygon> JoinedPolygons = new List<Geometry.Polygon>();
         public static List<DetectedSkillshotData> SkillshotsDetected = new List<DetectedSkillshotData>();
 
         private static void Game_OnTick(EventArgs args)
         {
-            #region lux R FoW
-            foreach (var LuxR in DetectedLuxRParticals)
+            IllaoiTentacles.RemoveAll(s => Core.GameTickCount - s.StartTick > 1250 || s.Attacked);
+            DetectedLuxRParticals.RemoveAll(s => Core.GameTickCount - s.StartTick > s.Data.CastDelay || SkillshotsDetected.Any(x => s.caster.IdEquals(x.Caster) && s.Data.Equals(x.Data)));
+            SkillshotsDetected.RemoveAll(s => s.Ended && OnSkillShotDelete.Invoke(s));
+
+            foreach (var luxR in DetectedLuxRParticals.Where(r => r.FullyDetected && !r.Added && !SkillshotsDetected.Any(s => s.Caster.IdEquals(r.caster) && s.Data.Equals(r.Data))))
             {
-                var data = SkillshotDatabase.Current.FirstOrDefault(s => s.IsCasterName("Lux") && s.IsSlot(SpellSlot.R));
-                if (data == null)
+                Vector2? start = luxR.Start;
+                Vector2? end = luxR.End;
+                if (!start.HasValue)
                 {
-                    continue;
+                    if (end.HasValue && luxR.Mid.HasValue)
+                        start = end.Value.Extend(luxR.Mid.Value, luxR.Data.Range);
                 }
-
-                if (SkillshotsDetected.Any(s => s.Caster.IdEquals(LuxR.caster) && s.Data.Equals(data)))
+                if (!end.HasValue)
                 {
-                    continue;
-                }
-
-                Vector2? start = null;
-                Vector2? end = null;
-
-                if (LuxR.Start.HasValue)
-                {
-                    start = LuxR.Start.Value;
-                }
-                else
-                {
-                    if (LuxR.Mid.HasValue && LuxR.End.HasValue)
-                    {
-                        start = LuxR.End.Value.Extend(LuxR.Mid.Value, data.Range);
-                    }
-                }
-
-                if (LuxR.End.HasValue)
-                {
-                    end = LuxR.End.Value;
-                }
-                else
-                {
-                    if (LuxR.caster != null && LuxR.caster.IsHPBarRendered)
-                    {
-                        if (LuxR.End.HasValue)
-                        {
-                            end = LuxR.End.Value;
-                        }
-                        if (LuxR.Mid.HasValue)
-                        {
-                            end = LuxR.caster.ServerPosition.Extend(LuxR.Mid.Value, data.Range);
-                        }
-                        else
-                        {
-                            if (LuxR.Start.HasValue)
-                            {
-                                end = LuxR.caster.ServerPosition.Extend(LuxR.Start.Value, data.Range);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (LuxR.Start.HasValue && LuxR.Mid.HasValue)
-                        {
-                            end = LuxR.Start.Value.Extend(LuxR.Mid.Value, data.Range);
-                        }
-                    }
+                    if (start.HasValue && luxR.Mid.HasValue)
+                        end = start.Value.Extend(luxR.Mid.Value, luxR.Data.Range);
                 }
 
                 if (start.HasValue && end.HasValue)
                 {
-                    if (!SkillshotsDetected.Any(s => s.Caster.IdEquals(LuxR.caster) && s.Data.Equals(data)))
+                    var detectd = new DetectedSkillshotData()
                     {
-                        var detected = new DetectedSkillshotData
-                        {
-                            Caster = LuxR.caster,
-                            StartTick = Core.GameTickCount,
-                            Start = start.Value,
-                            End = end.Value,
-                            Data = data
-                        };
+                        Caster = luxR.caster,
+                        StartTick = Core.GameTickCount,
+                        Start = start.Value,
+                        End = end.Value,
+                        Data = luxR.Data
+                    };
 
-                        Add(detected);
-                    }
+                    Add(detectd);
+                    luxR.Added = true;
                 }
             }
-            #endregion
 
-            foreach (var skill in SkillshotsDetected.Where(s => s != null && !s.Ended && s.Caster != null && s.Caster.IsEnemy && (s.Enabled || s.DrawEnabled)))
+            foreach (var skill in SkillshotsDetected.Where(s => s != null && !s.Ended && s.Caster != null && s.Caster.IsEnemy/* && s.IsVisible*/))
             {
                 skill.Update();
             }
-            
-            SkillshotMinions.RemoveAll(s => Core.GameTickCount - s.StartTick > s.Data.CastDelay || s.Remove);
-            IllaoiTentacles.RemoveAll(s => Core.GameTickCount - s.StartTick > 1250 || s.Attacked);
-            DetectedLuxRParticals.RemoveAll(s => Core.GameTickCount - s.StartTick > s.Data.CastDelay || SkillshotsDetected.Any(x => s.caster.IdEquals(x.Caster) && s.Data.Equals(x.Data)));
-
-            SkillshotsDetected.RemoveAll(s => s.Ended && OnSkillShotDelete.Invoke(s));
         }
 
         private static string[] AlliedNames = { "greenground.troy", "green.troy", "green_team.troy", "green_ring.troy", "_ally.troy", "blue.troy", "_ally_green.troy", "_ground_ally.troy", "_cas_green.troy" };
@@ -215,6 +153,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 return;
 
             var tentacles = IllaoiTentacles.FindAll(x => x.Tentacle.IdEquals(sender));
+            var illaoiw = SkillshotDatabase.Current.FirstOrDefault(s => s.IsCasterName("Illaoi") && s.IsSlot(SpellSlot.W));
             if (tentacles.Any())
             {
                 foreach (var t in IllaoiTentacles.Where(x => x.Tentacle.IdEquals(sender) && x.Target != null))
@@ -222,7 +161,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     var detected = new DetectedSkillshotData
                     {
                         Caster = t.caster,
-                        Data = SkillshotDatabase.Current.FirstOrDefault(s => s.IsCasterName("Illaoi") && s.IsSlot(SpellSlot.W)),
+                        Data = illaoiw,
                         Start = sender.ServerPosition.To2D(),
                         End = t.Target.ServerPosition.To2D(),
                         StartTick = Core.GameTickCount
@@ -246,7 +185,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                         var detected = new DetectedSkillshotData
                         {
                             Caster = caster,
-                            Data = SkillshotDatabase.Current.FirstOrDefault(s => s.IsCasterName("Illaoi") && s.IsSlot(SpellSlot.W)),
+                            Data = illaoiw,
                             Start = sender.ServerPosition.To2D(),
                             End = correct.ServerPosition.To2D(),
                             StartTick = Core.GameTickCount
@@ -488,7 +427,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             if (missile == null || caster == null || !missile.IsValid)
                 return;
 
-            var missilename = missile.SData.Name;
+            //var missilename = missile.SData.Name;
             //Console.WriteLine($"{missilename} - mis - {missile.Slot}");
 
             var data = GetData(caster, null, missile);
@@ -649,7 +588,6 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 }
             }
 
-            bool alreadyd = false;
             if (!data.Data.AllowDuplicates)
             {
                 if (SkillshotsDetected.Any(s => s.Missile != null && data.Missile == null && s.Caster != null && data.Caster != null && s.Caster.IdEquals(data.Caster) && s.Data.Equals(data.Data)))
@@ -660,7 +598,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 
                 var replaceByMissile =
                     SkillshotsDetected.FirstOrDefault(s => s.Missile == null && data.Missile != null && s.Caster != null && data.Caster != null && s.Caster.IdEquals(data.Caster) && s.Data.Equals(data.Data));
-                if (replaceByMissile != null && !(data.Data.StaticStart && data.Data.StaticEnd))
+                if (replaceByMissile != null && data.Missile != null && !(data.Data.StaticStart && data.Data.StaticEnd))
                 {
                     // Add the Missile
                     replaceByMissile.Missile = data.Missile;
@@ -730,8 +668,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             data.DetectedByMissile = data.Missile != null;
             data.FromFOW = !data.Caster.IsHPBarRendered;
 
-            SkillshotsDetected.Add(data);
             data.Update();
+            SkillshotsDetected.Add(data);
             OnSkillShotDetected.Invoke(data);
 
             if (data.Data.IsSpellName("SyndraE"))
@@ -752,8 +690,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                             extraDelay = data.TravelTime(ball)
                         };
 
-                        SkillshotsDetected.Add(newDetect);
                         newDetect.Update();
+                        SkillshotsDetected.Add(newDetect);
                         OnSkillShotDetected.Invoke(newDetect);
                     }
                 }
