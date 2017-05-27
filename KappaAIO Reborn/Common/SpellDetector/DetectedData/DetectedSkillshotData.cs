@@ -39,15 +39,12 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             this.CollidePoint = check.CollidePoint;
         }
 
-        public Obj_AI_Base Caster = null, Target = null;
+        public Obj_AI_Base Caster = null, Target = null, Trap = null;
         public Obj_AI_Base BuffHolder
         {
             get
             {
-                if (this.Data.RequireBuffs == null)
-                    return null;
-
-                return EntityManager.Heroes.AllHeroes.OrderBy(h => h.Distance(this.End)).FirstOrDefault(this.Data.HasBuff);
+                return this.Data.RequireBuffs == null ? null : EntityManager.Heroes.AllHeroes.OrderBy(h => h.Distance(this.End)).FirstOrDefault(this.Data.HasBuff);
             }
         }
         public MissileClient Missile = null;
@@ -191,6 +188,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         }
 
         public bool DetectedByMissile, FromFOW;
+        public bool IsEnemy => this.Caster != null && this.Caster.IsEnemy;
         public bool IsOnScreen => this.DrawingPolygon != null && this.DrawingPolygon.Points.Any(p => p.To3DWorld().IsOnScreen()) || this.Center.To3DWorld().IsOnScreen();
         public bool CollideExplode => this.CorrectCollidePoint.HasValue && this.Data.CollideExplode;
         public bool ExplodeEnd => this.CollidePoint.HasValue && this.Data.HasExplodingEnd;
@@ -203,6 +201,10 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         }
         public bool WillHit(Vector2 target) => this.EvadePolygon != null && this.EvadePolygon.IsInside(target);
         public bool WillHit(Obj_AI_Base target) => target.IsValidTarget() && this.EvadePolygon != null && this.EvadePolygon.IsInside(target);
+        public bool IsSafe(Vector2 pos)
+        {
+            return !this.WillHit(pos);
+        }
         public bool IsInside(Vector2 target) => target.IsValid() && this.OriginalPolygon.IsInside(target);
         public bool IsInside(Obj_AI_Base target) => target.IsValidTarget() && this.generatePolygon2(target.BoundingRadius).IsInside(target);
         public bool Ended
@@ -224,15 +226,17 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                     return true;
                 }
 
-                return Core.GameTickCount - this.EndTick > 0 || this.TicksPassed > 30000;
+                if (this.Data.IsTrap && this.Trap != null && this.Trap.IsDead)
+                {
+                    return true;
+                }
+
+                return Core.GameTickCount - this.EndTick > 0 || (this.TicksPassed > 30000 && !this.Data.IsTrap);
             }
         }
         public bool AboutToHit(Obj_AI_Base target, int delay)
         {
-            if (!target.IsValidTarget())
-                return false;
-
-            return AboutToHit(target.ServerPosition.To2D(), delay);
+            return target.IsValidTarget() && this.AboutToHit(target.ServerPosition.To2D(), delay);
         }
         public bool AboutToHit(Vector2 target, int delay = 100)
         {
@@ -249,22 +253,9 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             return WillHit(this.Target.ServerPosition.To2D()) && time >= this.TravelTime(unit);
         }
 
-        public int DangerLevel;
-
-        public float GetSpellDamage(Obj_AI_Base target)
-        {
-            if (target == null || this.Caster == null || this.Data.Slots == null || !this.Data.Slots.Any())
-                return 0;
-
-            var hero = this.Caster as AIHeroClient;
-            if (hero == null)
-                return 0;
-
-            return hero.GetSpellDamage(target, this.Data.Slots[0]);
-        }
-
         public float StartTick = Core.GameTickCount;
-        public float EndTick => this.StartTick + this.MaxTravelTime(this.CollideEndPosition);
+        public float? FixedEndTick = null;
+        public float EndTick => this.FixedEndTick ?? this.StartTick + this.MaxTravelTime(this.CollideEndPosition);
         public float TicksLeft => this.EndTick - Core.GameTickCount;
         public float TicksPassed => Core.GameTickCount - this.StartTick;
         public float extraDelay = 0;
@@ -423,8 +414,20 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         {
             return CurrentPosition.Distance(pos) / Speed * 1000f + CastDelay;
         }
+        public float GetHealthPrediction(Obj_AI_Base target)
+        {
+            return Prediction.Health.GetPrediction(target, (int)Math.Max(1, CurrentTravelTime(target.ServerPosition.To2D()) - Game.Ping));
+        }
+        public float GetSpellDamage(Obj_AI_Base target)
+        {
+            if (target == null || this.Caster == null || this.Data.Slots == null || !this.Data.Slots.Any())
+                return 0;
 
-        public Geometry.Polygon EvadePolygon, ExplodePolygon, OriginalPolygon, DrawingPolygon, PathPolygon;
+            var hero = this.Caster as AIHeroClient;
+            return hero?.GetSpellDamage(target, this.Data.Slots[0]) ?? 0;
+        }
+
+        public Geometry.Polygon EvadePolygon, ExplodePolygon, OriginalPolygon, DrawingPolygon;
         private Geometry.Polygon generatePolygon(float extraWidth = 0)
         {
             var extraAngle = Math.Max(1, Math.Max(1, extraWidth) / 5);
@@ -434,7 +437,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             switch (this.Data.type)
             {
                 case Type.LineMissile:
-                    polygon = new Geometry.Polygon.Rectangle(this.CurrentPosition, this.CollidePoint == null ? this.CollideEndPosition.Extend(this.CurrentPosition, -(extraWidth * 0.75f)) : this.CollideEndPosition, extraWidth);
+                    polygon = new Geometry.Polygon.Rectangle(this.CurrentPosition, this.CollidePoint == null && extraWidth > Width ? this.CollideEndPosition.Extend(this.CurrentPosition, -(extraWidth * 0.75f)) : this.CollideEndPosition, extraWidth);
                     break;
                 case Type.CircleMissile:
                     polygon = new Geometry.Polygon.Circle(this.Data.IsMoving ? this.CurrentPosition : this.CollideEndPosition, extraWidth);

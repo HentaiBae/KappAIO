@@ -295,7 +295,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                             if (skillshot.WillHit(Player.Instance))
                             {
                                 if(skillshot.TravelTime(Player.Instance) <= delay || BlockSpell.FastEvade)
-                                    CastW(skillshot.Caster, BlockSpell.SpellName);
+                                    CastW(skillshot.Caster, BlockSpell.SpellName, skillshot.Start);
                             }
 
                             break;
@@ -335,7 +335,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                             if (targted.WillHit(Player.Instance))
                             {
                                 if (targted.TicksLeft <= delay || BlockSpell.FastEvade)
-                                    CastW(targted.Caster, BlockSpell.SpellName);
+                                    CastW(targted.Caster, BlockSpell.SpellName, targted.Start.To2D());
                             }
 
                             break;
@@ -355,7 +355,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                             if (autoattack.WillHit(Player.Instance))
                             {
                                 if (autoattack.TicksLeft <= delay)
-                                    CastW(autoattack.Caster, BlockSpell.SpellName);
+                                    CastW(autoattack.Caster, BlockSpell.SpellName, autoattack.Start.To2D());
                             }
 
                             break;
@@ -375,7 +375,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                             if (special.WillHit(Player.Instance))
                             {
                                 if (special.TicksLeft <= delay || BlockSpell.FastEvade)
-                                    CastW(special.Caster, BlockSpell.SpellName);
+                                    CastW(special.Caster, BlockSpell.SpellName, special.Position.To2D());
                             }
 
                             break;
@@ -599,7 +599,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 }*/
             }
 
-            private static void CastW(Obj_AI_Base caster, string spellname = "")
+            private static void CastW(Obj_AI_Base caster, string spellname = "", Vector2 castPos = new Vector2())
             {
                 if(!Config.evadeEnabled)
                     return;
@@ -614,7 +614,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     ? W.GetTarget()
                     : caster;
 
-                var castpos = wtarget.IsKillable(-1, true) && W.IsInRange(W.GetPrediction(wtarget).CastPosition) ? (W.GetPrediction(wtarget).CastPosition + wtarget.ServerPosition) / 2 : Game.CursorPos;
+                var castpos = wtarget.IsKillable(-1, true) && W.IsInRange(W.GetPrediction(wtarget).CastPosition)
+                    ? (W.GetPrediction(wtarget).CastPosition + wtarget.ServerPosition) / 2
+                    : castPos != new Vector2() && W.IsInRange(castPos.To3DWorld()) ? castPos.To3DWorld() : Game.CursorPos;
                 
                 W.Cast(castpos);
                 _lastBlock = Core.GameTickCount;

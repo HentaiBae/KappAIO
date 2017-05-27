@@ -14,6 +14,8 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public string[] SpellNames;
         public string[] MissileNames;
         public string[] ParticleNames;
+        public string[] TrapBaseSkinNames;
+        public string TrapBuff;
         public string DisplayName;
         public string DontHaveBuff;
         public string RemoveOnBuffLose;
@@ -38,6 +40,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public float Width = 0;
         public float Speed = int.MaxValue;
         public float CastDelay = 0;
+        public bool IsTrap;
         public bool IsDangerous;
         public bool IsAutoAttack;
         public bool IsMoving;
@@ -82,6 +85,16 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool IsSlot(SpellSlot slot)
         {
             return this.Slots != null && this.Slots.Any(s => s.Equals(slot));
+        }
+
+        public bool IsTrapBaseSkinName(string name)
+        {
+            return this.TrapBaseSkinNames != null && this.TrapBaseSkinNames.Any(s => s.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        public bool IsTrapBuff(string name)
+        {
+            return !string.IsNullOrEmpty(this.TrapBuff) && this.TrapBuff.Equals(name, StringComparison.CurrentCultureIgnoreCase);
         }
 
         public bool IsSlot(SpellSlot? slot)
@@ -136,6 +149,7 @@ namespace KappAIO_Reborn.Common.Databases.SpellData
         public bool HasExtraRange => this.ExtraRange < int.MaxValue && this.ExtraRange < float.MaxValue && this.ExtraRange > 0;
         public bool HasRingRadius => this.RingRadius < int.MaxValue && this.RingRadius < float.MaxValue && this.RingRadius > 0;
         public bool CanCollide => this.CollideCount > 0 && this.CollideCount < int.MaxValue;
+        public bool ClickRemove => this.CastDelay > 1250 && this.CastDelay < int.MaxValue || this.ExtraDuration > 1000 && this.ExtraDuration < int.MaxValue;
     }
 
     public class RequireBuff

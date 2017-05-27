@@ -156,7 +156,9 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
 
         private bool ModeActive()
         {
-            return this.Data.OrbModes == null || (this.Data.ModeIsActive && this.Data.OrbModes.Any(o => Orbwalker.ActiveModesFlags.HasFlag(o) && this.menu.CheckBoxValue($"{this.Data.Name}{o}"))) || this.orbModes.All(m => !m.Value.CurrentValue);
+            return this.Data.OrbModes == null || (this.Data.ModeIsActive
+                && this.Data.OrbModes.Any(o => Orbwalker.ActiveModesFlags.HasFlag(o)
+                && this.menu.CheckBoxValue($"{this.Data.Name}{o}"))) || this.orbModes.All(m => !m.Value.CurrentValue);
         }
         
         private Obj_AI_Base getTarget()
@@ -185,7 +187,7 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
 
         private List<Obj_AI_Base> getAoeTargets()
         {
-            List<Obj_AI_Base> result = new List<Obj_AI_Base>();
+            var result = new List<Obj_AI_Base>();
             foreach (var t in this.Data.TargetType)
             {
                 switch (t)

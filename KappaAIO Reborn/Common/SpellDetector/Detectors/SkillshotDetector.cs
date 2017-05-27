@@ -51,6 +51,66 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             }
         }
 
+        public class LuxRPartical
+        {
+            public SkillshotData Data;
+            public float StartTick = Core.GameTickCount;
+            public AIHeroClient caster;
+            public Vector2? Start;
+            public Vector2? Mid;
+            public Vector2? End;
+            public bool Added;
+            public bool FullyDetected => this.caster != null && ((this.Start != null && (this.Mid != null || this.End != null)) || (this.End != null && (this.Mid != null || this.Start != null)));
+        }
+        public class IllaoiTentacle
+        {
+            public AIHeroClient caster;
+            public Obj_AI_Minion Tentacle;
+            public Obj_AI_Base Target;
+            public float StartTick = Core.GameTickCount;
+            public bool Attacked;
+        }
+
+        public static List<IllaoiTentacle> IllaoiTentacles = new List<IllaoiTentacle>();
+        public static List<LuxRPartical> DetectedLuxRParticals = new List<LuxRPartical>();
+        public static List<DetectedSkillshotData> SkillshotsDetected = new List<DetectedSkillshotData>();
+
+        private static float lastTrapsCheck;
+        private static void FindAndAddTraps()
+        {
+            if (Core.GameTickCount - lastTrapsCheck > 200)
+            {
+                lastTrapsCheck = Core.GameTickCount;
+                foreach (var minion in ObjectManager.Get<Obj_AI_Minion>().Where(x => x.IsValid && !x.IsDead))
+                {
+                    var data = SkillshotDatabase.Current.FirstOrDefault(s => s.IsTrap && s.IsTrapBaseSkinName(minion.BaseSkinName));
+                    if (data != null)
+                    {
+                        var buff = minion.Buffs.FirstOrDefault(b =>
+                        {
+                            var buffCaster = b.Caster as Obj_AI_Base;
+                            return buffCaster != null && b.IsValid && b.IsActive && data.IsCasterName(buffCaster.BaseSkinName)
+                            && (data.IsTrapBuff(b.DisplayName) || data.IsTrapBuff(b.Name));
+                        });
+                        var caster = buff?.Caster as Obj_AI_Base;
+                        if (caster != null)
+                        {
+                            Add(new DetectedSkillshotData
+                            {
+                                Caster = caster,
+                                Trap = minion,
+                                Start = minion.ServerPosition.To2D(),
+                                End = minion.ServerPosition.To2D(),
+                                StartTick = buff.StartTime * 1000f,
+                                FixedEndTick = buff.EndTime * 1000f,
+                                Data = data,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
         private static void OnSkillShotDelete_OnDelete(DetectedSkillshotData args)
         {
             if (args.Data.OnDeleteAdd != null)
@@ -74,32 +134,9 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             }
         }
 
-        public class LuxRPartical
-        {
-            public SkillshotData Data;
-            public float StartTick = Core.GameTickCount;
-            public AIHeroClient caster;
-            public Vector2? Start;
-            public Vector2? Mid;
-            public Vector2? End;
-            public bool Added;
-            public bool FullyDetected => this.caster != null && this.Start != null && this.Mid != null && this.End != null;
-        }
-        public class IllaoiTentacle
-        {
-            public AIHeroClient caster;
-            public Obj_AI_Minion Tentacle;
-            public Obj_AI_Base Target;
-            public float StartTick = Core.GameTickCount;
-            public bool Attacked;
-        }
-
-        public static List<IllaoiTentacle> IllaoiTentacles = new List<IllaoiTentacle>();
-        public static List<LuxRPartical> DetectedLuxRParticals = new List<LuxRPartical>();
-        public static List<DetectedSkillshotData> SkillshotsDetected = new List<DetectedSkillshotData>();
-
         private static void Game_OnTick(EventArgs args)
         {
+            FindAndAddTraps();
             IllaoiTentacles.RemoveAll(s => Core.GameTickCount - s.StartTick > 1250 || s.Attacked);
             DetectedLuxRParticals.RemoveAll(s => Core.GameTickCount - s.StartTick > s.Data.CastDelay || SkillshotsDetected.Any(x => s.caster.IdEquals(x.Caster) && s.Data.Equals(x.Data)));
             SkillshotsDetected.RemoveAll(s => s.Ended && OnSkillShotDelete.Invoke(s));
@@ -121,7 +158,9 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 
                 if (start.HasValue && end.HasValue)
                 {
-                    var detectd = new DetectedSkillshotData()
+                    start = start.Value.Extend(end.Value, -150);
+                    end = end.Value.Extend(start.Value, 150);
+                    var detectd = new DetectedSkillshotData
                     {
                         Caster = luxR.caster,
                         StartTick = Core.GameTickCount,
@@ -135,7 +174,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 }
             }
 
-            foreach (var skill in SkillshotsDetected.Where(s => s != null && !s.Ended && s.Caster != null && s.Caster.IsEnemy/* && s.IsVisible*/))
+            foreach (var skill in SkillshotsDetected.Where(s => s != null && !s.Ended))
             {
                 skill.Update();
             }
@@ -375,9 +414,9 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     var StartluxR =
                         SkillshotDatabase.Current.FirstOrDefault(p => !string.IsNullOrEmpty(p.StartParticalName) && partical.Name.StartsWith(p.StartParticalName) && partical.Name.EndsWith(".troy"));
                     var MidluxR =
-                        SkillshotDatabase.Current.FirstOrDefault(p => !string.IsNullOrEmpty(p.StartParticalName) && partical.Name.StartsWith(p.MidParticalName) && partical.Name.EndsWith(".troy"));
+                        SkillshotDatabase.Current.FirstOrDefault(p => !string.IsNullOrEmpty(p.MidParticalName) && partical.Name.StartsWith(p.MidParticalName) && partical.Name.EndsWith(".troy"));
                     var EndluxR =
-                        SkillshotDatabase.Current.FirstOrDefault(p => !string.IsNullOrEmpty(p.StartParticalName) && partical.Name.StartsWith(p.MidParticalName) && partical.Name.EndsWith(".troy"));
+                        SkillshotDatabase.Current.FirstOrDefault(p => !string.IsNullOrEmpty(p.EndParticalName) && partical.Name.StartsWith(p.EndParticalName) && partical.Name.EndsWith(".troy"));
 
                     AIHeroClient pcaster;
                     if (StartluxR != null || MidluxR != null || EndluxR != null)
@@ -403,20 +442,19 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                                 {
                                     alreadyDetected.End = partical.Position.To2D();
                                 }
+                                return;
                             }
-                            else
+                            var addnew = new LuxRPartical
                             {
-                                var addnew = new LuxRPartical
-                                {
-                                    caster = pcaster,
-                                    Start = StartluxR != null ? partical.Position.To2D() : (Vector2?)null,
-                                    Mid = MidluxR != null ? partical.Position.To2D() : (Vector2?)null,
-                                    End = EndluxR != null ? partical.Position.To2D() : (Vector2?)null,
-                                    Data = pdata
-                                };
+                                caster = pcaster,
+                                Start = StartluxR != null ? partical.Position.To2D() : (Vector2?)null,
+                                Mid = MidluxR != null ? partical.Position.To2D() : (Vector2?)null,
+                                End = EndluxR != null ? partical.Position.To2D() : (Vector2?)null,
+                                Data = pdata
+                            };
 
-                                DetectedLuxRParticals.Add(addnew);
-                            }
+                            DetectedLuxRParticals.Add(addnew);
+                            return;
                         }
                     }
                 }
@@ -574,6 +612,9 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 Console.WriteLine("Invalid DetectedSkillshot");
                 return;
             }
+
+            if (data.Data.IsTrap && SkillshotsDetected.Any(x => x.Trap != null && data.Trap.Equals(x.Trap)))
+                return;
 
             if (data.Missile == null && data.Data.DetectByMissile)
             {

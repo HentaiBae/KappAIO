@@ -21,6 +21,24 @@ namespace KappAIO_Reborn.Common.Databases.Spells
 				#region All
 				
                new SkillshotData
+                   {
+                     type = Type.LineMissile,
+                     CasterNames = new[] { "AscXerath", "jungle" },
+                     Slots = new[] { SpellSlot.Q },
+                     DangerLevel = 2,
+                     CastDelay = 530,
+                     Range = 1025,
+                     Speed = int.MaxValue,
+					 GameType = GameType.Ascension,
+                     Width = 100,
+                     SpellNames = new[] { "AscXerathArcanopulse2" },
+                     MissileNames = new[] { "AscXerathArcanopulse2" },
+                     StaticStart = true,
+					 IsDangerous = true,
+					 AllowDuplicates = true,
+					 IsFixedRange = true
+                   },
+               new SkillshotData
                   {
                      type = Type.CircleMissile,
                      CasterNames = new[] { "Baron", "SRU_Baron", "jungle" },
@@ -57,7 +75,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      Slots = new[] { SpellSlot.Unknown },
                      GameType = (GameType)911,
                      DangerLevel = 5,
-                     CastDelay = 1000,
+                     CastDelay = 2000,
                      Range = 1200,
                      Speed = int.MaxValue,
                      Width = 300,
@@ -328,7 +346,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      CasterNames = new[] { "Annie" },
                      Slots = new[] { SpellSlot.R },
                      DangerLevel = 4,
-                     CastDelay = 250,
+                     CastDelay = 200,
                      Range = 600,
                      Speed = int.MaxValue,
                      Width = 250,
@@ -626,6 +644,23 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      MissileNames = new[] { "CaitlynPiltoverPeacemaker2" },
                      Collisions = new []{ Collision.YasuoWall },
                      SticksToMissile = true
+                   },
+               new SkillshotData
+                   {
+                     type = Type.CircleMissile,
+                     CasterNames = new[] { "Caitlyn" },
+                     Slots = new[] { SpellSlot.W },
+                     DangerLevel = 2,
+                     CastDelay = 90000,
+                     Range = 1500,
+                     Speed = int.MaxValue,
+                     Width = 90,
+                     DisplayName = "Caitlyn W Trap",
+					 TrapBuff = "CaitlynYordleTrap",
+					 TrapBaseSkinNames = new[] { "CaitlynTrap" },
+                     AllowDuplicates = true,
+                     DontCross = true,
+					 IsTrap = true
                    },
                new SkillshotData
                    {
@@ -2060,6 +2095,23 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      Collisions = new []{ Collision.YasuoWall, Collision.Heros },
                      IsFixedRange = true,
                      StaticStart = true
+                   },
+               new SkillshotData
+                   {
+                     type = Type.CircleMissile,
+                     CasterNames = new[] { "Jhin" },
+                     Slots = new[] { SpellSlot.E },
+                     DangerLevel = 2,
+                     CastDelay = 120000,
+                     Range = 1500,
+                     Speed = int.MaxValue,
+                     Width = 150,
+                     DisplayName = "Jhin E Trap",
+					 TrapBuff = "JhinETrap",
+					 TrapBaseSkinNames = new[] { "JhinTrap" },
+                     AllowDuplicates = true,
+                     DontCross = true,
+					 IsTrap = true
                    },
                new SkillshotData
                    {
@@ -4154,6 +4206,28 @@ namespace KappAIO_Reborn.Common.Databases.Spells
 				   
 				#endregion Taric
 				
+				#region Teemo
+				
+               new SkillshotData
+                   {
+                     type = Type.CircleMissile,
+                     CasterNames = new[] { "Teemo" },
+                     Slots = new[] { SpellSlot.R },
+                     DangerLevel = 2,
+                     CastDelay = 300000,
+                     Range = 1500,
+                     Speed = int.MaxValue,
+                     Width = 150,
+                     DisplayName = "Teemo R Trap",
+					 TrapBuff = "BantamTrap",
+					 TrapBaseSkinNames = new[] { "TeemoMushroom" },
+                     AllowDuplicates = true,
+                     DontCross = true,
+					 IsTrap = true
+                   },
+				   
+				#endregion Teemo
+				
 				#region Thresh
 				
                new SkillshotData
@@ -4639,7 +4713,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
 				#endregion Vladimir
 				
 				#region Xayah
-				
+				/*
                new SkillshotData
                    {
                      type = Type.LineMissile,
@@ -4658,7 +4732,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
 					 IsFixedRange = true,
 					 IsAutoAttack = true,
 					 AllowDuplicates = true
-                   },
+                   },*/
                new SkillshotData
                    {
                      type = Type.LineMissile,
