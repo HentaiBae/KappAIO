@@ -1020,7 +1020,7 @@ namespace KappAIO_Reborn.Common.Databases.Spells
                      Range = 4500,
                      Speed = 2000,
                      Width = 160,
-                     SpellNames = new[] { "DravenRCast", "DravenRDoublecast" },
+                     SpellNames = new[] { "DravenRCast" },
                      MissileNames = new[] { "DravenR" },
                      Collisions = new []{ Collision.YasuoWall },
                      IsFixedRange = true,

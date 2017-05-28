@@ -612,7 +612,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                 Console.WriteLine("Invalid DetectedSkillshot");
                 return;
             }
-
+            
             if (data.Data.IsTrap && SkillshotsDetected.Any(x => x.Trap != null && data.Trap.Equals(x.Trap)))
                 return;
 
@@ -620,7 +620,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             {
                 return;
             }
-
+            
             if (data.Data.type == Type.Cone)
             {
                 if (SkillshotsDetected.Any(s => s.Caster.IdEquals(data.Caster) && s.Data.Equals(data.Data)))
@@ -628,7 +628,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     return;
                 }
             }
-
+            
             if (!data.Data.AllowDuplicates)
             {
                 if (SkillshotsDetected.Any(s => s.Missile != null && data.Missile == null && s.Caster != null && data.Caster != null && s.Caster.IdEquals(data.Caster) && s.Data.Equals(data.Data)))
@@ -636,7 +636,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     // Already Detected by Missile
                     return;
                 }
-
+                
                 var replaceByMissile =
                     SkillshotsDetected.FirstOrDefault(s => s.Missile == null && data.Missile != null && s.Caster != null && data.Caster != null && s.Caster.IdEquals(data.Caster) && s.Data.Equals(data.Data));
                 if (replaceByMissile != null && data.Missile != null && !(data.Data.StaticStart && data.Data.StaticEnd))
@@ -647,9 +647,10 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     replaceByMissile.Start = data.Missile.StartPosition.To2D();
                     return;
                 }
-
+                
                 if (SkillshotsDetected.Any(s => s.Caster != null && !s.DetectedByMissile && s.Caster.IdEquals(data.Caster) && s.Data.Equals(data.Data)))
                     return;
+                
             }
 
             if (data.Data.StaticStart && data.Data.StaticEnd && data.Missile == null)
@@ -775,17 +776,19 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             var coll = skillshot.Data.Collisions;
             var targets = new List<Vector2>();
 
-            if (coll.Contains(Collision.Caster) && skillshot.IsInside(skillshot.Caster))
+            if (coll.Contains(Collision.Caster) && skillshot.IsInside(skillshot.Caster) && skillshot.GetHealthPrediction(skillshot.Caster) > 0)
                 targets.Add(skillshot.Caster.ServerPosition.To2D().Extend(skillshot.Start, skillshot.Caster.BoundingRadius - 35));
-
+            
             if (coll.Contains(Collision.Heros))
                 targets.AddRange(EntityManager.Heroes.AllHeroes.FindAll(h => !h.IsMe && h.IsValidTarget()
-                && h.Team != skillshot.Caster.Team && skillshot.IsInside(h)).Select(h => h.ServerPosition.To2D().Extend(skillshot.Start, h.BoundingRadius - 35)));
-
+                && h.Team != skillshot.Caster.Team && skillshot.IsInside(h) && skillshot.GetHealthPrediction(h) > 0)
+                .Select(h => h.ServerPosition.To2D().Extend(skillshot.Start, h.BoundingRadius - 35)));
+            
             if (coll.Contains(Collision.Minions))
                 targets.AddRange(EntityManager.MinionsAndMonsters.Combined.Where(h => !h.IsMe && h.IsValidTarget()
-                && h.Team != skillshot.Caster.Team && skillshot.IsInside(h)).Select(h => h.ServerPosition.To2D().Extend(skillshot.Start, h.BoundingRadius - 35)));
-
+                && h.Team != skillshot.Caster.Team && skillshot.IsInside(h) && skillshot.GetHealthPrediction(h) > 1).
+                Select(h => h.ServerPosition.To2D().Extend(skillshot.Start, h.BoundingRadius - 35)));
+            
             if (coll.Contains(Collision.YasuoWall))
             {
                 var collidePoint = skillshot.CurrentPosition.GetYasuoWallCollision(skillshot.EndPosition, false, true);

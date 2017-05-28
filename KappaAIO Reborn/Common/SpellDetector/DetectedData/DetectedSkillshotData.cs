@@ -33,7 +33,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
 
             this.CollidePoint = null;
             this.CorrectCollidePoint = null;
-
+            
             var check = new CollisionResult(this);
             this.CorrectCollidePoint = check.CorrectCollidePoint;
             this.CollidePoint = check.CollidePoint;
@@ -89,9 +89,9 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 if (this.Data.StaticEnd)
                     return this.End;
 
-                if (this.IsGlobal && this.Data.type == Type.LineMissile)
+                if (this.IsGlobal && this.Missile != null && this.Data.type == Type.LineMissile)
                 {
-                    return this.CurrentPosition.Extend(CurrentPosition + this.Direction, Range);
+                    return this.Missile.Position.To2D().Extend(this.Missile.Position.To2D() + this.Direction, this.Range);
                 }
 
                 if (this.Data.EndIsBuffHolderPosition && this.BuffHolder != null)

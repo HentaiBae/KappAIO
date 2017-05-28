@@ -615,7 +615,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     : caster;
 
                 var castpos = wtarget.IsKillable(-1, true) && W.IsInRange(W.GetPrediction(wtarget).CastPosition)
-                    ? (W.GetPrediction(wtarget).CastPosition + wtarget.ServerPosition) / 2
+                    ? (W.GetPrediction(wtarget).CastPosition + wtarget.ServerPosition)  * 0.75f
                     : castPos != new Vector2() && W.IsInRange(castPos.To3DWorld()) ? castPos.To3DWorld() : Game.CursorPos;
                 
                 W.Cast(castpos);
