@@ -4,7 +4,7 @@ using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Constants;
-using KappAIO_Reborn.Common.Databases.SpellData;
+using EloBuddy.SDK.Utils;
 using KappAIO_Reborn.Common.Databases.Spells;
 using KappAIO_Reborn.Common.SpellDetector.DetectedData;
 using KappAIO_Reborn.Common.SpellDetector.Events;
@@ -58,7 +58,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             DetectedEmpoweredAttacks.RemoveAll(a => a.Ended);
 
             foreach (var attack in DetectedEmpoweredAttacks)
-                OnEmpoweredAttackDetected.Invoke(attack);
+                OnEmpoweredAttackUpdate.Invoke(attack);
         }
 
         private static void Obj_AI_Base_OnBasicAttack(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -114,7 +114,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                     DetectedEmpoweredAttacks.Remove(detect);
                 }
             }
-
+            
             OnEmpoweredAttackDetected.Invoke(data);
             DetectedEmpoweredAttacks.Add(data);
         }

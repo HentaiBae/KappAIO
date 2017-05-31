@@ -29,7 +29,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
         private static void Game_OnTick(EventArgs args)
         {
             foreach (var s in DetectedSpecialSpells)
-                OnSpecialSpellDetected.Invoke(s);
+                OnSpecialSpellUpdate.Invoke(s);
 
             DetectedSpecialSpells.RemoveAll(s => s.Ended);
         }

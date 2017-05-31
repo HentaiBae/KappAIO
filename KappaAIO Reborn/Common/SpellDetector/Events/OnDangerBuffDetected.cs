@@ -13,9 +13,29 @@ namespace KappAIO_Reborn.Common.SpellDetector.Events
             if (invocationList != null)
                 foreach (var m in invocationList)
                     m?.DynamicInvoke(args);
+
+            OnDangerBuffUpdate.Invoke(args);
         }
 
         static OnDangerBuffDetected()
+        {
+            new DangerBuffDetector();
+        }
+    }
+
+    public class OnDangerBuffUpdate
+    {
+        public delegate void UpdateDangerBuff(DetectedDangerBuffData args);
+        public static event UpdateDangerBuff OnUpdate;
+        internal static void Invoke(DetectedDangerBuffData args)
+        {
+            var invocationList = OnUpdate?.GetInvocationList();
+            if (invocationList != null)
+                foreach (var m in invocationList)
+                    m?.DynamicInvoke(args);
+        }
+
+        static OnDangerBuffUpdate()
         {
             new DangerBuffDetector();
         }

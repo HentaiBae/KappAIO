@@ -31,7 +31,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             DetectedTargetedSpells.RemoveAll(s => s.Ended);
 
             foreach (var spell in DetectedTargetedSpells)
-                OnTargetedSpellDetected.Invoke(spell);
+                OnTargetedSpellUpdate.Invoke(spell);
         }
 
         private static void GameObject_OnDelete(GameObject sender, EventArgs args)

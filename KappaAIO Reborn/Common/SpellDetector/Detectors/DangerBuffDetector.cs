@@ -12,12 +12,13 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
 {
     public class DangerBuffDetector
     {
+        private static bool loaded;
         static DangerBuffDetector()
         {
-            foreach (var buff in DangerBuffDataDatabase.Current.Where(a => EntityManager.Heroes.AllHeroes.Any(b => a.Hero.Equals(b.Hero))))
-            {
-                _currentBuffs.Add(buff);
-            }
+            if(loaded)
+                return;
+            loaded = true;
+            _currentBuffs = DangerBuffDataDatabase.Current;
 
             if (_currentBuffs.Any())
             {
@@ -87,7 +88,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             }
         }
 
-        private static List<DangerBuffData> _currentBuffs = new List<DangerBuffData>();
+        private static DangerBuffData[] _currentBuffs = { };
         public static List<DetectedDangerBuffData> DangerBuffsDetected = new List<DetectedDangerBuffData>();
 
         private static void Game_OnTick(EventArgs args)
@@ -95,9 +96,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             DangerBuffsDetected.RemoveAll(b => b.Ended);
 
             foreach (var buff in DangerBuffsDetected)
-            {
-                OnDangerBuffDetected.Invoke(buff);
-            }
+                OnDangerBuffUpdate.Invoke(buff);
 
             /*
             foreach (var target in EntityManager.Heroes.AllHeroes)

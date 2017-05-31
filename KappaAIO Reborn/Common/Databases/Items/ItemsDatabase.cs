@@ -71,7 +71,7 @@ namespace KappAIO_Reborn.Common.Databases.Items
                     MyHP = 90, AoeHit = 2,
                 });
 
-                List.Add(Redemption = new ItemData(3107, ItemCastType.Position, 5500, int.MaxValue, 2500, TargetingType.AllyHeros, TargetingType.EnemyHeros)
+                List.Add(Redemption = new ItemData(3107, ItemCastType.Position, 5500, int.MaxValue, 2500, TargetingType.AllyHeros)
                 {
                     CastTimes = new[] { CastTime.AllyHealth, CastTime.AoE, CastTime.OnTick },
                     AllyHP = 45, AoeHit = 1,

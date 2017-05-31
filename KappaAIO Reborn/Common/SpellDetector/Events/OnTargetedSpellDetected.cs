@@ -13,9 +13,29 @@ namespace KappAIO_Reborn.Common.SpellDetector.Events
             if (invocationList != null)
                 foreach (var m in invocationList)
                     m?.DynamicInvoke(args);
+
+            OnTargetedSpellUpdate.Invoke(args);
         }
 
         static OnTargetedSpellDetected()
+        {
+            new TargetedSpellDetector();
+        }
+    }
+
+    public class OnTargetedSpellUpdate
+    {
+        public delegate void TargetedSpellUpdate(DetectedTargetedSpellData args);
+        public static event TargetedSpellUpdate OnUpdate;
+        internal static void Invoke(DetectedTargetedSpellData args)
+        {
+            var invocationList = OnUpdate?.GetInvocationList();
+            if (invocationList != null)
+                foreach (var m in invocationList)
+                    m?.DynamicInvoke(args);
+        }
+
+        static OnTargetedSpellUpdate()
         {
             new TargetedSpellDetector();
         }

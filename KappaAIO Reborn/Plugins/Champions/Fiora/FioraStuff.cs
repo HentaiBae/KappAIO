@@ -14,6 +14,7 @@ using KappAIO_Reborn.Common.SpellDetector.Events;
 using KappAIO_Reborn.Common.Utility;
 using SharpDX;
 using static KappAIO_Reborn.Plugins.Champions.Fiora.Fiora;
+using Color = System.Drawing.Color;
 
 namespace KappAIO_Reborn.Plugins.Champions.Fiora
 {
@@ -248,161 +249,29 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 return qdmg + wdmg + edmg + rdmg;
             }
         }
-
+        
         public static class SpellBlocker
         {
-            public static void Init()
-            {
-                Game.OnTick += Game_OnTick;
-                OnEmpoweredAttackDetected.OnDetect += OnEmpoweredAttackDetected_OnDetect;
-                OnDangerBuffDetected.OnDetect += OnDangerBuffDetected_OnDetect;
-                OnTargetedSpellDetected.OnDetect += OnTargetedSpellDetected_OnDetect;
-                OnSkillShotDetected.OnDetect += OnSkillShotDetected_OnDetect;
-                OnSpecialSpellDetected.OnDetect += OnSpecialSpellDetected_OnDetect;
-                //Drawing.OnDraw += Drawing_OnDraw;
-            }
+            public static EnabledSpell[] EnabledSpells = { };
 
             private static float _lastBlock;
-            private static void Game_OnTick(EventArgs args)
+
+            private static float delay => W.CastDelay + (Game.Ping * 0.75f);
+
+            public static void Init()
             {
-                if(delay > Core.GameTickCount - _lastBlock || !W.IsReady())
-                    return;
-
-                var BlockSpells = DetectedSpells.OrderByDescending(s => s.DangerLevel);
-                if (BlockSpells != null && BlockSpells.Any())
-                {
-                    foreach (var BlockSpell in BlockSpells)
-                    {
-                        #region skillshot
-                        var skillshot = BlockSpell.DetectedData as DetectedSkillshotData;
-                        if (skillshot != null && Config.BlockSkillshots)
-                        {
-                            if (skillshot == null || skillshot.Ended)
-                            {
-                                DetectedSpells.Remove(BlockSpell);
-                                continue;
-                            }
-
-                            if (!skillshot.WillHit(Player.Instance))
-                            {
-                                 continue;
-                            }
-
-                            var dashInfo = Player.Instance.GetDashInfo();
-                            if (dashInfo != null)
-                            {
-                                var travelTime = (Player.Instance.ServerPosition.Distance(dashInfo.EndPos) / Q1.Speed) * 1000f;
-                                var predPos = Player.Instance.PrediectPosition(travelTime);
-                                var skillshotpred = Player.Instance.PrediectPosition(skillshot.TravelTime(predPos.To2D()));
-                                if(predPos.Distance(skillshotpred) > Player.Instance.BoundingRadius)
-                                    continue; // skip if dashing outside of skillshot
-                            }
-
-                            if (skillshot.TravelTime(Player.Instance) <= delay || BlockSpell.FastEvade)
-                                CastW(skillshot.Caster, BlockSpell.SpellName, skillshot.Start);
-
-                            break;
-                        }
-                        #endregion
-
-                        #region buff
-                        var buff = BlockSpell.DetectedData as DetectedDangerBuffData;
-                        if (buff != null && Config.BlockBuff)
-                        {
-                            if (buff.Ended)
-                            {
-                                DetectedSpells.Remove(BlockSpell);
-                                continue;
-                            }
-
-                            if (!buff.WillHit(Player.Instance))
-                            {
-                                continue;
-                            }
-
-                            if (buff.TicksLeft <= delay)
-                                CastW(buff.Caster, BlockSpell.SpellName);
-
-                            break;
-                        }
-                        #endregion
-
-                        #region targted
-                        var targted = BlockSpell.DetectedData as DetectedTargetedSpellData;
-                        if (targted != null && Config.BlockTargeted)
-                        {
-                            if (targted.Ended)
-                            {
-                                DetectedSpells.Remove(BlockSpell);
-                                continue;
-                            }
-
-                            if (!targted.WillHit(Player.Instance))
-                            {
-                                continue;
-                            }
-
-                            if (targted.TicksLeft <= delay || BlockSpell.FastEvade)
-                                CastW(targted.Caster, BlockSpell.SpellName, targted.Start.To2D());
-
-                            break;
-                        }
-                        #endregion
-
-                        #region autoattack
-                        var autoattack = BlockSpell.DetectedData as DetectedEmpoweredAttackData;
-                        if (autoattack != null && Config.BlockAA)
-                        {
-                            if (autoattack.Ended)
-                            {
-                                DetectedSpells.Remove(BlockSpell);
-                                continue;
-                            }
-
-                            if (!autoattack.WillHit(Player.Instance))
-                            {
-                                continue;
-                            }
-
-                            if (autoattack.TicksLeft <= delay)
-                                CastW(autoattack.Caster, BlockSpell.SpellName, autoattack.Start.To2D());
-
-                            break;
-                        }
-                        #endregion
-
-                        #region special
-                        var special = BlockSpell.DetectedData as DetectedSpecialSpellData;
-                        if (special != null && Config.BlockSpecial)
-                        {
-                            if (special.Ended || !SpecialSpellDetector.DetectedSpecialSpells.Contains(special))
-                            {
-                                DetectedSpells.Remove(BlockSpell);
-                                continue;
-                            }
-
-                            if (!special.WillHit(Player.Instance))
-                            {
-                                continue;
-                            }
-
-                            if (special.TicksLeft <= delay || BlockSpell.FastEvade)
-                                CastW(special.Caster, BlockSpell.SpellName, special.Position.To2D());
-
-                            break;
-                        }
-                        #endregion
-                    }
-                }
+                OnSkillShotUpdate.OnUpdate += OnSkillShotUpdate_OnUpdate;
+                OnTargetedSpellUpdate.OnUpdate += OnTargetedSpellUpdate_OnUpdate;;
+                OnEmpoweredAttackUpdate.OnUpdate += OnEmpoweredAttackUpdate_OnUpdate;
+                OnDangerBuffUpdate.OnUpdate += OnDangerBuffUpdate_OnUpdate;
+                OnSpecialSpellUpdate.OnUpdate += OnSpecialSpellUpdate_OnUpdate;
             }
 
-            private static float delay => W.CastDelay + (Game.Ping / 2f); 
-
-            private static void OnSpecialSpellDetected_OnDetect(DetectedSpecialSpellData args)
+            private static void OnSpecialSpellUpdate_OnUpdate(DetectedSpecialSpellData args)
             {
-                if (!args.IsEnemy || !args.WillHit(Player.Instance))
+                if (!args.IsEnemy || !W.IsReady() || !args.WillHit(Player.Instance))
                     return;
-                
+
                 var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
                 if (spell == null)
@@ -410,38 +279,19 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     Logger.Warn($"{spellname} Not valid Spell");
                     return;
                 }
-                
+
                 if (!spell.Enabled && (!Config.BlockExecute || Player.Instance.PredictHealth(args.TicksLeft) > args.GetSpellDamage(Player.Instance)))
                 {
                     Logger.Warn($"{spellname} Not Enabled from Menu");
                     return;
                 }
 
-                var newSpell = new DetectedSpell
-                {
-                    Caster = args.Caster,
-                    DangerLevel = spell.DangerLevel,
-                    FastEvade = spell.FastEvade,
-                    SpellName = spellname,
-                    DetectedData = args
-                };
-                
-                if (!DetectedSpells.Contains(newSpell))
-                    DetectedSpells.Add(newSpell);
-
-                /*
-                if (spell != null && spell.FastEvade)
-                    CastW(args.Caster, spellname);
-                else
-                {
-                    if (args.TicksLeft <= delay)
-                        CastW(args.Caster, spellname);
-                }*/
+                Block(args, spell);
             }
 
-            private static void OnEmpoweredAttackDetected_OnDetect(DetectedEmpoweredAttackData args)
+            private static void OnDangerBuffUpdate_OnUpdate(DetectedDangerBuffData args)
             {
-                if (args.Caster == null || !args.Caster.IsEnemy || !args.WillHit(Player.Instance))
+                if (args.Caster == null || !W.IsReady() || !args.Caster.IsEnemy || !args.WillHit(Player.Instance))
                     return;
 
                 var spellname = args.Data.MenuItemName;
@@ -459,65 +309,16 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     return;
                 }
 
-                var newSpell = new DetectedSpell
-                {
-                    Caster = args.Caster,
-                    DangerLevel = spell.DangerLevel,
-                    SpellName = spellname,
-                    DetectedData = args
-                };
-
-                if (!DetectedSpells.Contains(newSpell))
-                    DetectedSpells.Add(newSpell);
-
-                //CastW(args.Caster, spellname);
+                Block(args, spell);
             }
 
-            private static void OnDangerBuffDetected_OnDetect(DetectedDangerBuffData args)
+            private static void OnEmpoweredAttackUpdate_OnUpdate(DetectedEmpoweredAttackData args)
             {
-                if (args.Caster == null || !args.Caster.IsEnemy || !args.WillHit(Player.Instance))
+                if (args.Caster == null || !W.IsReady() || !args.Caster.IsEnemy || !args.WillHit(Player.Instance))
                     return;
 
                 var spellname = args.Data.MenuItemName;
                 var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
-                
-                if (spell == null)
-                {
-                    Logger.Warn($"{spellname} Not valid Spell");
-                    return;
-                }
-
-                if (!spell.Enabled && (!Config.BlockExecute || Player.Instance.PredictHealth(args.TicksLeft) > args.GetSpellDamage(Player.Instance)))
-                {
-                    Logger.Warn($"{spellname} Not Enabled from Menu");
-                    return;
-                }
-
-                var newSpell = new DetectedSpell
-                {
-                    Caster = args.Caster,
-                    DangerLevel = spell.DangerLevel,
-                    SpellName = spellname,
-                    DetectedData = args
-                };
-
-                if (!DetectedSpells.Contains(newSpell))
-                    DetectedSpells.Add(newSpell);
-
-                /*
-                if (args.TicksLeft <= delay)
-                    CastW(args.Caster, spellname);*/
-            }
-
-            private static void OnTargetedSpellDetected_OnDetect(DetectedTargetedSpellData args)
-            {
-                if (args.Caster == null || !args.Caster.IsEnemy || !args.Target.IsMe || !args.WillHit(Player.Instance))
-                    return;
-
-                var spellname = args.Data.MenuItemName;
-                var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
-
-                //var kill = args.Caster.GetSpellDamage(args.Target, args.Data.slot) >= args.Target.Health;
 
                 if (spell == null)
                 {
@@ -531,46 +332,35 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     return;
                 }
 
-                var newSpell = new DetectedSpell
-                {
-                    Caster = args.Caster,
-                    DangerLevel = spell.DangerLevel,
-                    FastEvade = spell.FastEvade,
-                    SpellName = spellname,
-                    DetectedData = args
-                };
-
-                if (!DetectedSpells.Contains(newSpell))
-                    DetectedSpells.Add(newSpell);
-
-                /*
-                if (spell != null && spell.FastEvade)
-                    CastW(args.Caster, spellname);
-                else
-                {
-                    if (args.TicksLeft <= delay)
-                        CastW(args.Caster, spellname);
-                }*/
+                Block(args, spell);
             }
 
-            private static void Drawing_OnDraw(EventArgs args)
+            private static void OnTargetedSpellUpdate_OnUpdate(DetectedTargetedSpellData args)
             {
-                /*if (!Config.DrawMenu.CheckBoxValue("draw"))
+                if (args.Caster == null || !W.IsReady() || !args.Caster.IsEnemy || !args.Target.IsMe || !args.WillHit(Player.Instance))
                     return;
 
-                foreach (var s in SkillshotDetector.SkillshotsDetected.Where(s=> s.Caster.IsEnemy))
+                var spellname = args.Data.MenuItemName;
+                var spell = EnabledSpells.FirstOrDefault(s => s.SpellName.Equals(spellname));
+
+                if (spell == null)
                 {
-                    s.Polygon?.Draw(System.Drawing.Color.AliceBlue, 2);
+                    Logger.Warn($"{spellname} Not valid Spell");
+                    return;
                 }
-                foreach (var s in SpecialSpellDetector.DetectedSpecialSpells.Where(s => s.IsEnemy))
+
+                if (!spell.Enabled && (!Config.BlockExecute || Player.Instance.PredictHealth(args.TicksLeft) > args.GetSpellDamage(Player.Instance)))
                 {
-                    s.Position.DrawCircle((int)s.Data.Range, Color.AliceBlue);
-                }*/
+                    Logger.Warn($"{spellname} Not Enabled from Menu");
+                    return;
+                }
+
+                Block(args, spell);
             }
 
-            private static void OnSkillShotDetected_OnDetect(DetectedSkillshotData args)
+            private static void OnSkillShotUpdate_OnUpdate(DetectedSkillshotData args)
             {
-                if (args.Caster == null || !args.Caster.IsEnemy || !args.WillHit(Player.Instance))
+                if (args.Caster == null || !W.IsReady() || !args.IsEnemy || !args.WillHit(Player.Instance))
                     return;
 
                 var spellname = args.Data.MenuItemName;
@@ -588,76 +378,87 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                     return;
                 }
 
-                var newSpell = new DetectedSpell
-                    {
-                        Caster = args.Caster,
-                        DangerLevel = spell.DangerLevel,
-                        FastEvade = spell.FastEvade,
-                        SpellName = spellname,
-                        DetectedData = args
-                    };
+                Block(args, spell);
+            }
+            
+            public static bool Block(object BlockSpell, EnabledSpell menuItem)
+            {
+                if (!W.IsReady())
+                    return false;
 
-                if(!DetectedSpells.Contains(newSpell))
-                    DetectedSpells.Add(newSpell);
-
-                /*
-                if (spell.FastEvade)
-                    CastW(args.Caster, spellname);
-                else
+                var skillshot = BlockSpell as DetectedSkillshotData;
+                if (skillshot != null && Config.BlockSkillshots && (menuItem.FastEvade || skillshot.TravelTime(Player.Instance) <= delay))
                 {
-                    if (args.TravelTime(Player.Instance) <= delay)
-                        CastW(args.Caster, spellname);
-                }*/
+                    var dashInfo = Player.Instance.GetDashInfo();
+                    if (dashInfo != null)
+                    {
+                        var travelTime = (Player.Instance.ServerPosition.Distance(dashInfo.EndPos) / Q1.Speed) * 1000f;
+                        var predPos = Player.Instance.PrediectPosition(travelTime);
+                        var skillshotpred = Player.Instance.PrediectPosition(skillshot.TravelTime(predPos.To2D()));
+                        if (Player.Instance.BoundingRadius > predPos.Distance(skillshotpred))
+                        {
+                            return CastW(skillshot.Caster, skillshot.Data.MenuItemName, skillshot.Start.To3D());
+                        }
+                    }
+                    else
+                    {
+                        return CastW(skillshot.Caster, skillshot.Data.MenuItemName, skillshot.Start.To3D());
+                    }
+                }
+
+                var buff = BlockSpell as DetectedDangerBuffData;
+                if (buff != null && Config.BlockBuff && buff.TicksLeft <= delay)
+                    return CastW(buff.Caster, buff.Data.MenuItemName);
+
+                var targeted = BlockSpell as DetectedTargetedSpellData;
+                if (targeted != null && Config.BlockTargeted && (menuItem.FastEvade || targeted.TicksLeft <= delay))
+                    return CastW(targeted.Caster, targeted.Data.MenuItemName, targeted.Start);
+
+                var autoAttack = BlockSpell as DetectedEmpoweredAttackData;
+                if(autoAttack != null && Config.BlockAA && autoAttack.TicksLeft <= delay)
+                    return CastW(autoAttack.Caster, autoAttack.Data.MenuItemName, autoAttack.Start);
+
+                var specialSpell = BlockSpell as DetectedSpecialSpellData;
+                if (specialSpell != null && Config.BlockSpecial && (menuItem.FastEvade || specialSpell.TicksLeft <= delay))
+                    return CastW(specialSpell.Caster, specialSpell.Data.MenuItemName);
+
+                return false;
             }
 
-            private static void CastW(Obj_AI_Base caster, string spellname = "", Vector2 castPos = new Vector2())
+            private static bool CastW(Obj_AI_Base caster, string spellname = "", Vector3 startPos = new Vector3())
             {
-                if(!Config.evadeEnabled)
-                    return;
+                if (!Config.evadeEnabled)
+                    return false;
 
                 if (!W.IsReady())
-                    return;
+                    return false;
 
                 var wtarget =
                     TargetSelector.SelectedTarget != null && TargetSelector.SelectedTarget.IsKillable(-1, true) && W.IsInRange(W.GetPrediction(TargetSelector.SelectedTarget).CastPosition)
-                    ? TargetSelector.SelectedTarget 
+                    ? TargetSelector.SelectedTarget
                     : W.GetTarget().IsKillable(-1, true) && W.IsInRange(W.GetPrediction(W.GetTarget()).CastPosition)
                     ? W.GetTarget()
                     : caster;
 
                 var castpos = wtarget.IsKillable(-1, true) && W.IsInRange(W.GetPrediction(wtarget).CastPosition)
-                    ? (W.GetPrediction(wtarget).CastPosition + wtarget.ServerPosition)  * 0.75f
-                    : castPos != new Vector2() && W.IsInRange(castPos.To3DWorld()) ? castPos.To3DWorld() : Game.CursorPos;
+                    ? W.GetPrediction(wtarget).CastPosition : startPos != new Vector3() && startPos.IsValid() && W.IsInRange(startPos) ? startPos : Game.CursorPos;
                 
-                W.Cast(castpos);
                 _lastBlock = Core.GameTickCount;
                 Logger.Info($"BLOCK {spellname}");
+                return W.Cast(castpos);
             }
-
-            public static List<EnabledSpell> EnabledSpells = new List<EnabledSpell>();
-
+            
             public class EnabledSpell
             {
                 public EnabledSpell(string spellname)
                 {
                     this.SpellName = spellname;
                 }
-                
+
                 public string SpellName;
                 public bool Enabled { get { return Config.spellblock.CheckBoxValue($"enable{SpellName}"); } }
                 public bool FastEvade { get { return Config.spellblock.CheckBoxValue($"fast{this.SpellName}"); } }
                 public int DangerLevel { get { return Config.spellblock.SliderValue($"danger{this.SpellName}"); } }
-            }
-
-            public static List<DetectedSpell> DetectedSpells = new List<DetectedSpell>();
-
-            public class DetectedSpell
-            {
-                public Obj_AI_Base Caster;
-                public object DetectedData;
-                public string SpellName;
-                public int DangerLevel;
-                public bool FastEvade;
             }
         }
 
@@ -740,6 +541,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 spellblock = Program.GlobalMenu.AddSubMenu("Fiora: SpellBlock");
                 spellblock.CreateCheckBox("enable", "Enable SpellBlock");
                 spellblock.CreateCheckBox("executeBlock", "Block Any Spell if it will Kill Player");
+                var enabledSpells = new List<SpellBlocker.EnabledSpell>();
 
                 #region AutoAttacks
                 var validAttacks = EmpowerdAttackDatabase.Current.Where(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero))).ToArray();
@@ -755,7 +557,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                             spellblock.AddLabel(spellname);
                             spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1 || s.CrowdControl);
                             spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
-                            SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
+                            enabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
                             spellblock.AddSeparator(0);
                         }
                     }
@@ -783,7 +585,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                                 s.StackCountFromMenu = () => stackCount.CurrentValue;
                             }
                             spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
-                            SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
+                            enabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
                             spellblock.AddSeparator(0);
                         }
                     }
@@ -806,7 +608,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                             spellblock.CreateCheckBox("enable" + spellname, "Enable", s.DangerLevel > 1);
                             spellblock.CreateCheckBox("fast" + spellname, "Fast Block (Instant)", s.FastEvade);
                             spellblock.CreateSlider("danger" + spellname, "Danger Level", s.DangerLevel, 1, 5);
-                            SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
+                            enabledSpells.Add(new SpellBlocker.EnabledSpell(spellname));
                             spellblock.AddSeparator(0);
                         }
                     }
@@ -829,7 +631,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                             spellblock.CreateCheckBox($"enable{display}", "Enable", s.DangerLevel > 1);
                             spellblock.CreateCheckBox($"fast{display}", "Fast Block (Instant)", s.DangerLevel > 2);
                             spellblock.CreateSlider($"danger{display}", "Danger Level", s.DangerLevel, 1, 5);
-                            SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(display));
+                            enabledSpells.Add(new SpellBlocker.EnabledSpell(display));
                         }
                     }
                 }
@@ -854,11 +656,13 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                             spellblock.CreateCheckBox($"enable{display}", "Enable", s.DangerLevel > 1);
                             spellblock.CreateCheckBox($"fast{display}", "Fast Block (Instant)", s.FastEvade);
                             spellblock.CreateSlider($"danger{display}", "Danger Level", s.DangerLevel, 1, 5);
-                            SpellBlocker.EnabledSpells.Add(new SpellBlocker.EnabledSpell(display));
+                            enabledSpells.Add(new SpellBlocker.EnabledSpell(display));
                         }
                     }
                 }
                 #endregion SkillShots
+
+                SpellBlocker.EnabledSpells = enabledSpells.ToArray();
 
                 #endregion evade
 

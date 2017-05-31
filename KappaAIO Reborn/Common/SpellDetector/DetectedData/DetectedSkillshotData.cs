@@ -7,6 +7,7 @@ using EloBuddy.SDK;
 using EloBuddy.SDK.Events;
 using KappAIO_Reborn.Common.Databases.SpellData;
 using KappAIO_Reborn.Common.SpellDetector.Detectors;
+using KappAIO_Reborn.Common.SpellDetector.Events;
 using KappAIO_Reborn.Common.Utility;
 using SharpDX;
 using Type = KappAIO_Reborn.Common.Databases.SpellData.Type;
@@ -24,6 +25,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             this.EvadePolygon = exPolygon;
             this.OriginalPolygon = this.generatePolygon2();
             this.DrawingPolygon = this.generatePolygon();
+            OnSkillShotUpdate.Invoke(this);
         }
 
         private void CheckCollision()
