@@ -74,7 +74,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             if (caster == null)
                 return;
 
-            var casterData = SpecialSpellsDatabase.Current.FindAll(s => s.Hero.Equals(caster.Hero));
+            var casterData = SpecialSpellsDatabase.Current.Where(s => s.Hero.Equals(caster.Hero)).ToArray();
             if (casterData == null || !casterData.Any())
                 return;
 

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using KappAIO_Reborn.Common.Databases.SpellData;
@@ -13,10 +12,10 @@ namespace KappAIO_Reborn.Common.Databases.Spells
         static SkillshotDatabase()
         {
             if (Current == null || !Current.Any())
-                Current = List.FindAll(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type)) && (s.IsCasterName("all") || s.IsCasterName("jungle") || EntityManager.Heroes.AllHeroes.Any(h => s.IsCasterName(h.ChampionName)))).ToArray();
+                Current = List.Where(s => (s.GameType.Equals(GameType.Normal) || s.GameType.Equals(Game.Type)) && (s.IsCasterName("all") || s.IsCasterName("jungle") || EntityManager.Heroes.AllHeroes.Any(h => s.IsCasterName(h.ChampionName)))).ToArray();
         }
 
-        private static readonly List<SkillshotData> List = new List<SkillshotData>
+        private static readonly SkillshotData[] List =
             {
 				#region All
 				

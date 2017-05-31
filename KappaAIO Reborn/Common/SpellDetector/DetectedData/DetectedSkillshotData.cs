@@ -207,10 +207,14 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         }
         public bool IsInside(Vector2 target) => target.IsValid() && this.OriginalPolygon.IsInside(target);
         public bool IsInside(Obj_AI_Base target) => target.IsValidTarget() && this.generatePolygon2(target.BoundingRadius).IsInside(target);
+        private bool? _ended;
         public bool Ended
         {
             get
             {
+                if (this._ended.HasValue && this._ended.Value)
+                    return true;
+
                 if ((this.Data.SticksToCaster || this.Data.EndSticksToCaster) && this.Caster.IsDead)
                 {
                     return true;
@@ -232,6 +236,10 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
                 }
 
                 return Core.GameTickCount - this.EndTick > 0 || (this.TicksPassed > 30000 && !this.Data.IsTrap);
+            }
+            set
+            {
+                this._ended = value;
             }
         }
         public bool AboutToHit(Obj_AI_Base target, int delay)

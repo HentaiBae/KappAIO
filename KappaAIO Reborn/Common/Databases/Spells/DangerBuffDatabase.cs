@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using KappAIO_Reborn.Common.Databases.SpellData;
@@ -8,17 +7,17 @@ namespace KappAIO_Reborn.Common.Databases.Spells
 {
     public static class DangerBuffDataDatabase
     {
-        public static List<DangerBuffData> Current;
+        public static DangerBuffData[] Current;
 
         static DangerBuffDataDatabase()
         {
             if(Current != null)
                 return;
 
-            Current = List.FindAll(s => s.Hero == Champion.Unknown || EntityManager.Heroes.AllHeroes.Any(h => s.Hero.Equals(h.Hero)));
+            Current = List.Where(s => s.Hero == Champion.Unknown || EntityManager.Heroes.AllHeroes.Any(h => s.Hero.Equals(h.Hero))).ToArray();
         }
 
-        private static List<DangerBuffData> List = new List<DangerBuffData>
+        private static DangerBuffData[] List =
             {
                 new DangerBuffData
                     {

@@ -24,7 +24,8 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
         public float EndTick => this.StartTick + this.MaxTravelTime;
         public float TicksLeft => this.EndTick - Core.GameTickCount;
         public float TicksPassed => Core.GameTickCount - this.StartTick;
-        public bool Ended => this.TicksLeft <= 0;
+        private bool? _ended;
+        public bool Ended {get {return this._ended ?? this.TicksLeft <= 0; } set { this._ended = value; } }
 
         public float GetSpellDamage(Obj_AI_Base target)
         {

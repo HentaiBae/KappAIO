@@ -14,7 +14,7 @@ namespace KappAIO_Reborn.Plugins.Utility.Activator
             foreach (var item in ItemsDatabase.Current.Where(i => i.item.ItemInfo.AvailableForMap && !i.matchCastType(CastTime.Cleanse)))
                 currentItemsInstances.Add(new ItemInstance(item, menu));
 
-            Cleanse.Init(ItemsDatabase.Current.FindAll(i => i.matchCastType(CastTime.Cleanse)).ToArray());
+            Cleanse.Init(ItemsDatabase.Current.Where(i => i.matchCastType(CastTime.Cleanse)).ToArray());
         }
     }
 }

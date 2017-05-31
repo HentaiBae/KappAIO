@@ -4,6 +4,7 @@ using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Constants;
+using KappAIO_Reborn.Common.Databases.SpellData;
 using KappAIO_Reborn.Common.Databases.Spells;
 using KappAIO_Reborn.Common.SpellDetector.DetectedData;
 using KappAIO_Reborn.Common.SpellDetector.Events;
@@ -75,19 +76,17 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             }
         }
 
-        private static DetectedEmpoweredAttackData[] getData(AIHeroClient caster, Obj_AI_Base target, Vector3 start, string AttackName, MissileClient missile = null)
+        private static IEnumerable<DetectedEmpoweredAttackData> getData(AIHeroClient caster, Obj_AI_Base target, Vector3 start, string AttackName, MissileClient missile = null)
         {
-            var result = new List<DetectedEmpoweredAttackData>();
-            var infos = EmpowerdAttackDatabase.Current.FindAll(s => s.Hero.Equals(caster.Hero) || s.Hero == Champion.Unknown);
-            foreach (var info in infos)
-            {
-                var attackname = string.IsNullOrEmpty(info.AttackName) || info.AttackName.Equals(AttackName, StringComparison.CurrentCultureIgnoreCase);
-                var requirebuff = string.IsNullOrEmpty(info.RequireBuff) || caster.GetBuffCount(info.RequireBuff) >= info.RequiredBuffCount;
-                var targetrequirebuff = string.IsNullOrEmpty(info.TargetRequiredBuff) || target.GetBuffCount(info.TargetRequiredBuff) >= info.TargetRequiredBuffCount;
-                var donthavebuff = string.IsNullOrEmpty(info.DontHaveBuff) || !target.HasBuff(info.DontHaveBuff);
-                if (attackname && requirebuff && targetrequirebuff && donthavebuff)
-                {
-                    var detected = new DetectedEmpoweredAttackData
+            var infos = EmpowerdAttackDatabase.Current.Where(s => s.Hero.Equals(caster.Hero) || s.Hero == Champion.Unknown);
+
+            return (from info in infos
+                    let attackname = string.IsNullOrEmpty(info.AttackName) || info.AttackName.Equals(AttackName, StringComparison.CurrentCultureIgnoreCase)
+                    let requirebuff = string.IsNullOrEmpty(info.RequireBuff) || caster.GetBuffCount(info.RequireBuff) >= info.RequiredBuffCount
+                    let targetrequirebuff = string.IsNullOrEmpty(info.TargetRequiredBuff) || target.GetBuffCount(info.TargetRequiredBuff) >= info.TargetRequiredBuffCount
+                    let donthavebuff = string.IsNullOrEmpty(info.DontHaveBuff) || !target.HasBuff(info.DontHaveBuff)
+                    where attackname && requirebuff && targetrequirebuff && donthavebuff
+                    select new DetectedEmpoweredAttackData
                     {
                         Start = start,
                         Caster = caster,
@@ -96,13 +95,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                         AttackCastDelay = missile != null ? 0 : caster.AttackCastDelay * 1000f,
                         Speed = caster.IsMelee ? int.MaxValue : missile?.SData.MissileSpeed ?? caster.BasicAttack.MissileSpeed,
                         StartTick = Core.GameTickCount
-                    };
-
-                    result.Add(detected);
-                }
-            }
-
-            return result.ToArray();
+                        });
         }
 
         private static void Add(DetectedEmpoweredAttackData data)

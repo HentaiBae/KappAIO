@@ -61,7 +61,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             b.Buff.Caster.IdEquals(args.Buff.Caster)
             && b.Buff.DisplayName.Equals(args.Buff.DisplayName)
             && args.Buff.Name.Equals(b.Buff.Name)
-            && b.Target.IdEquals(sender));
+            && b.Target.IdEquals(sender) && (b.Ended = true));
         }
 
         private static void Obj_AI_Base_OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)

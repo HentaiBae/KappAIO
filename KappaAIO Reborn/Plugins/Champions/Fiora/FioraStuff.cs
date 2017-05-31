@@ -277,6 +277,17 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                         var skillshot = BlockSpell.DetectedData as DetectedSkillshotData;
                         if (skillshot != null && Config.BlockSkillshots)
                         {
+                            if (skillshot == null || skillshot.Ended)
+                            {
+                                DetectedSpells.Remove(BlockSpell);
+                                continue;
+                            }
+
+                            if (!skillshot.WillHit(Player.Instance))
+                            {
+                                 continue;
+                            }
+
                             var dashInfo = Player.Instance.GetDashInfo();
                             if (dashInfo != null)
                             {
@@ -286,17 +297,9 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                                 if(predPos.Distance(skillshotpred) > Player.Instance.BoundingRadius)
                                     continue; // skip if dashing outside of skillshot
                             }
-                            if (skillshot.Ended || !SkillshotDetector.SkillshotsDetected.Contains(skillshot))
-                            {
-                                DetectedSpells.Remove(BlockSpell);
-                                continue;
-                            }
 
-                            if (skillshot.WillHit(Player.Instance))
-                            {
-                                if(skillshot.TravelTime(Player.Instance) <= delay || BlockSpell.FastEvade)
-                                    CastW(skillshot.Caster, BlockSpell.SpellName, skillshot.Start);
-                            }
+                            if (skillshot.TravelTime(Player.Instance) <= delay || BlockSpell.FastEvade)
+                                CastW(skillshot.Caster, BlockSpell.SpellName, skillshot.Start);
 
                             break;
                         }
@@ -306,17 +309,19 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                         var buff = BlockSpell.DetectedData as DetectedDangerBuffData;
                         if (buff != null && Config.BlockBuff)
                         {
-                            if (buff.Ended || !DangerBuffDetector.DangerBuffsDetected.Contains(buff))
+                            if (buff.Ended)
                             {
                                 DetectedSpells.Remove(BlockSpell);
                                 continue;
                             }
 
-                            if (buff.WillHit(Player.Instance))
+                            if (!buff.WillHit(Player.Instance))
                             {
-                                if (buff.TicksLeft <= delay)
-                                    CastW(buff.Caster, BlockSpell.SpellName);
+                                continue;
                             }
+
+                            if (buff.TicksLeft <= delay)
+                                CastW(buff.Caster, BlockSpell.SpellName);
 
                             break;
                         }
@@ -326,17 +331,19 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                         var targted = BlockSpell.DetectedData as DetectedTargetedSpellData;
                         if (targted != null && Config.BlockTargeted)
                         {
-                            if (targted.Ended || !TargetedSpellDetector.DetectedTargetedSpells.Contains(targted))
+                            if (targted.Ended)
                             {
                                 DetectedSpells.Remove(BlockSpell);
                                 continue;
                             }
 
-                            if (targted.WillHit(Player.Instance))
+                            if (!targted.WillHit(Player.Instance))
                             {
-                                if (targted.TicksLeft <= delay || BlockSpell.FastEvade)
-                                    CastW(targted.Caster, BlockSpell.SpellName, targted.Start.To2D());
+                                continue;
                             }
+
+                            if (targted.TicksLeft <= delay || BlockSpell.FastEvade)
+                                CastW(targted.Caster, BlockSpell.SpellName, targted.Start.To2D());
 
                             break;
                         }
@@ -346,17 +353,19 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                         var autoattack = BlockSpell.DetectedData as DetectedEmpoweredAttackData;
                         if (autoattack != null && Config.BlockAA)
                         {
-                            if (autoattack.Ended || !EmpoweredAttackDetector.DetectedEmpoweredAttacks.Contains(autoattack))
+                            if (autoattack.Ended)
                             {
                                 DetectedSpells.Remove(BlockSpell);
                                 continue;
                             }
 
-                            if (autoattack.WillHit(Player.Instance))
+                            if (!autoattack.WillHit(Player.Instance))
                             {
-                                if (autoattack.TicksLeft <= delay)
-                                    CastW(autoattack.Caster, BlockSpell.SpellName, autoattack.Start.To2D());
+                                continue;
                             }
+
+                            if (autoattack.TicksLeft <= delay)
+                                CastW(autoattack.Caster, BlockSpell.SpellName, autoattack.Start.To2D());
 
                             break;
                         }
@@ -372,11 +381,13 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                                 continue;
                             }
 
-                            if (special.WillHit(Player.Instance))
+                            if (!special.WillHit(Player.Instance))
                             {
-                                if (special.TicksLeft <= delay || BlockSpell.FastEvade)
-                                    CastW(special.Caster, BlockSpell.SpellName, special.Position.To2D());
+                                continue;
                             }
+
+                            if (special.TicksLeft <= delay || BlockSpell.FastEvade)
+                                CastW(special.Caster, BlockSpell.SpellName, special.Position.To2D());
 
                             break;
                         }
@@ -731,7 +742,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 spellblock.CreateCheckBox("executeBlock", "Block Any Spell if it will Kill Player");
 
                 #region AutoAttacks
-                var validAttacks = EmpowerdAttackDatabase.Current.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero)));
+                var validAttacks = EmpowerdAttackDatabase.Current.Where(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero))).ToArray();
                 if (validAttacks.Any())
                 {
                     spellblock.AddGroupLabel("Empowered Attacks");
@@ -752,7 +763,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 #endregion AutoAttacks
 
                 #region buffs
-                var validBuffs = DangerBuffDataDatabase.Current.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero)));
+                var validBuffs = DangerBuffDataDatabase.Current.Where(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.Hero))).ToArray();
                 if (validBuffs.Any())
                 {
                     spellblock.AddSeparator(5);
@@ -780,7 +791,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 #endregion buffs
 
                 #region Targeted
-                var validTargeted = TargetedSpellDatabase.Current.FindAll(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.hero)));
+                var validTargeted = TargetedSpellDatabase.Current.Where(x => EntityManager.Heroes.Enemies.Any(h => h.Hero.Equals(x.hero))).ToArray();
                 if (validTargeted.Any())
                 {
                     spellblock.AddSeparator(5);
@@ -803,7 +814,7 @@ namespace KappAIO_Reborn.Plugins.Champions.Fiora
                 #endregion Targeted
 
                 #region Speical spells
-                var specialSpells = SpecialSpellsDatabase.Current.FindAll(s => EntityManager.Heroes.Enemies.Any(h => s.Hero.Equals(h.Hero)));
+                var specialSpells = SpecialSpellsDatabase.Current.Where(s => EntityManager.Heroes.Enemies.Any(h => s.Hero.Equals(h.Hero))).ToArray();
                 if (specialSpells.Any())
                 {
                     spellblock.AddSeparator(5);

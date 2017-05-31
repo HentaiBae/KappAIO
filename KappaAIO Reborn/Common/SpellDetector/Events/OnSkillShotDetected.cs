@@ -27,11 +27,12 @@ namespace KappAIO_Reborn.Common.SpellDetector.Events
         public static event SkillShotDelete OnDelete;
         internal static bool Invoke(DetectedSkillshotData args)
         {
+            args.Ended = true;
             var invocationList = OnDelete?.GetInvocationList();
             if (invocationList != null)
                 foreach (var m in invocationList)
                     m?.DynamicInvoke(args);
-
+            
             return true;
         }
     }

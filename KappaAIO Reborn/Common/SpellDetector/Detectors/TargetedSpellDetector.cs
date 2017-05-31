@@ -41,7 +41,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
             if (caster == null)
                 return;
 
-            DetectedTargetedSpells.RemoveAll(a => a.Caster != null && a.Caster.IdEquals(caster) && a.Missile != null && a.Missile.IdEquals(missile));
+            DetectedTargetedSpells.RemoveAll(a => a.Caster != null && a.Caster.IdEquals(caster) && a.Missile != null && a.Missile.Equals(missile) && (a.Ended = true));
         }
 
         private static void GameObject_OnCreate(GameObject sender, EventArgs args)
@@ -71,6 +71,7 @@ namespace KappAIO_Reborn.Common.SpellDetector.Detectors
                                 Start = xcaster.ServerPosition,
                                 StartTick = Core.GameTickCount
                             });
+                            return;
                         }
                     }
                 }

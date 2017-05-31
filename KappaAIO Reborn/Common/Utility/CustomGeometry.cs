@@ -2,13 +2,12 @@
 using EloBuddy;
 using EloBuddy.SDK;
 using SharpDX;
-using Color = System.Drawing.Color;
 
 namespace KappAIO_Reborn.Common.Utility
 {
     public class CustomGeometry
     {
-        public class Arc
+        public class Arc : Geometry.Polygon
         {
             public Vector2 Start { get; }
             public Vector2 End { get; }
@@ -67,7 +66,7 @@ namespace KappAIO_Reborn.Common.Utility
             }
         }
 
-        public class Ring
+        public class Ring : Geometry.Polygon
         {
             public Vector2 Center;
             public float Radius;
@@ -102,6 +101,51 @@ namespace KappAIO_Reborn.Common.Utility
                 }
 
                 return result;
+            }
+        }
+
+        public class Sector2 : Geometry.Polygon
+        {
+            public float Angle;
+            public Vector2 Center;
+            public Vector2 Direction;
+            public float Radius;
+            private readonly int _quality;
+
+            public Sector2(Vector3 center, Vector3 direction, float angle, float radius, int quality = 20)
+                : this(center.To2D(), direction.To2D(), angle, radius, quality)
+            {
+            }
+
+            public Sector2(Vector2 center, Vector2 direction, float angle, float radius, int quality = 20)
+            {
+                Center = center;
+                Direction = (direction - center).Normalized();
+                Angle = angle;
+                Radius = radius;
+                _quality = quality;
+                UpdatePolygon();
+            }
+
+            public void UpdatePolygon(int offset = 0)
+            {
+                Points.Clear();
+                var outRadius = (Radius + offset) / (float)Math.Cos(2 * Math.PI / _quality);
+                var angle2 = (Angle + (float)(30f * Math.PI / 180f));
+                var side1 = Direction.Rotated(-Angle * 0.5f);
+                var side2 = Direction.Rotated(-angle2 * 3.5f);
+                var lq = this._quality / 2;
+                for (var i = 0; i <= _quality; i++)
+                {
+                    var cDirection = side1.Rotated(i * Angle / _quality).Normalized();
+                    Points.Add(new Vector2(Center.X + outRadius * cDirection.X, Center.Y + outRadius * cDirection.Y));
+                }
+                var start = this.Center.Extend(this.Center + this.Direction, -150);
+                for (var i = 0; i <= lq; i++)
+                {
+                    var cDirection = side2.Rotated(-i * angle2 / lq).Normalized();
+                    Points.Add(new Vector2(start.X + 300 * cDirection.X, start.Y + 300 * cDirection.Y));
+                }
             }
         }
 

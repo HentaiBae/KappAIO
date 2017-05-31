@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using KappAIO_Reborn.Common.Databases.SpellData;
@@ -8,17 +7,17 @@ namespace KappAIO_Reborn.Common.Databases.Spells
 {
     public static class SpecialSpellsDatabase
     {
-        public static List<SpecialSpellData> Current;
+        public static SpecialSpellData[] Current;
 
         static SpecialSpellsDatabase()
         {
             if (Current != null)
                 return;
 
-            Current = List.FindAll(s => s.Hero == Champion.Unknown || EntityManager.Heroes.AllHeroes.Any(h => s.Hero.Equals(h.Hero)));
+            Current = List.Where(s => s.Hero == Champion.Unknown || EntityManager.Heroes.AllHeroes.Any(h => s.Hero.Equals(h.Hero))).ToArray();
         }
 
-        private static List<SpecialSpellData> List = new List<SpecialSpellData>
+        private static SpecialSpellData[] List =
             {
                 new SpecialSpellData
                     {

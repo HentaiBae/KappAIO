@@ -29,7 +29,18 @@ namespace KappAIO_Reborn.Common.SpellDetector.DetectedData
             }
         }
         public float TicksLeft => this.EndTick - Core.GameTickCount;
-        public bool Ended => this.TicksLeft <= 0 || (this.Caster != null && this.Caster.IsDead) || (this.Target != null && this.Target.IsDead);
+        private bool? _ended;
+        public bool Ended
+        {
+            get
+            {
+                return _ended ?? (this.TicksLeft <= 0 || (this.Caster != null && this.Caster.IsDead) || (this.Target != null && this.Target.IsDead));
+            }
+            set
+            {
+                _ended = value;
+            }
+        }
 
         public float GetSpellDamage(Obj_AI_Base target)
         {
